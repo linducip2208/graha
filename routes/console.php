@@ -21,3 +21,5 @@ Schedule::call(function (): void {
         ->selectRaw('company_id, count(*) as total')->groupBy('company_id')->get()
         ->each(fn ($row) => Log::warning('Approval melewati SLA.', ['company_id' => $row->company_id, 'total' => $row->total]));
 })->name('approval-sla-monitor')->hourly()->withoutOverlapping();
+
+Schedule::command('backup:database --retention-days=14')->name('database-backup')->dailyAt('02:15')->withoutOverlapping()->onOneServer();

@@ -12,3 +12,7 @@
 - ADR-010 Accepted: pemilik corrective action tidak boleh menjadi verifier efektivitas, dan auditor tidak boleh sama dengan auditee.
 - ADR-011 Accepted: revisi PO menyimpan snapshot versi lama dan men-supersede approval aktif; receipt dibatasi kuantitas PO dan invoice memakai three-way matching.
 - ADR-012 Accepted: posting procurement memakai event accounting mapping configurable; invoice exception tidak boleh masuk AP.
+- ADR-013 Accepted: signature provider dikonfigurasi berdasarkan format API generik; signature selalu mengikat document version dan SHA-256 tertentu.
+- ADR-014 Accepted: progress billing memisahkan gross, retention, advance recovery dan net AR; posting hanya setelah approval serta memakai mapping akun configurable.
+- ADR-015 Accepted: penerimaan/pembayaran bank memakai jurnal idempotent dan batas outstanding; period closing ditolak sebelum approval atau selama statement belum direkonsiliasi.
+- ADR-016 Accepted: release retensi direklasifikasi dari retention receivable ke AR hanya sebesar saldo retensi posted dan setelah approval.

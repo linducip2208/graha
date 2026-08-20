@@ -13,3 +13,4 @@ Gunakan PHP 8.3+, MySQL 8.4, Composer, Node 24+, Nginx, worker dan scheduler. Sa
 7. Sebelum rilis jalankan `php artisan test`, `vendor/bin/pint --test`, `npm run build`, dan `php artisan about --only=environment`.
 
 Scheduler menjalankan monitoring SLA approval per jam dan pembaruan status evidence QMS kedaluwarsa setiap hari pukul 01:30. Gunakan timezone `Asia/Jakarta` atau timezone perusahaan yang telah disepakati.
+Backup database dijalankan pukul 02:15 melalui `backup:database`. Salin hasil private backup ke off-site encrypted storage dan monitor exit code scheduler. Password MySQL diberikan lewat environment proses, bukan command-line argument.

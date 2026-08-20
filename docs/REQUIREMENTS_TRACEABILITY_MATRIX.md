@@ -52,3 +52,18 @@
 | PRC-005 | PO activation gate wajib approval selesai | PurchaseOrderService::activateApproved | PurchaseOrderMatchingTest | Implemented |
 | APR-006 | Approval inbox/configuration/delegation UI | ApprovalController/approvals.index | AdvancedApprovalTest | Implemented core |
 | ACC-004 | GR Inventory/GRNI dan invoice GRNI/AP dari mapping | ProcurementAccountingService | ProcurementPostingTest | Implemented core |
+| SIG-001 | Internal signature terikat version/hash | DocumentSignatureService::signInternal | DocumentSignatureTest | Implemented |
+| SIG-002 | Provider signature generic dan secret encrypted | SignatureProvider | DocumentSignatureTest | Implemented core |
+| SIG-003 | Webhook HMAC, idempotency dan replay limit | DocumentSignatureService::handleWebhook | DocumentSignatureTest | Implemented |
+| BILL-001 | Progress billing retention/advance/net dengan decimal | ProgressBillingService::create | ProgressBillingTest | Implemented core |
+| BILL-002 | Billing activation gate dan contract cap | ProgressBillingService | ProgressBillingTest | Implemented |
+| BILL-003 | AR/retention/advance/revenue balanced posting | ProgressBillingService::post | ProgressBillingTest | Implemented core |
+| HSE-001 | JSA approval gate dan permit validity | HseService | HseWorkflowTest | Implemented core |
+| HSE-002 | Incident action independent verification/close gate | HseService | HseWorkflowTest | Implemented core |
+| QMS-005 | Management review automatic evidence snapshot | ManagementReviewService | HseWorkflowTest | Implemented core |
+| SEC-001 | Security response headers | SecurityHeaders | SecurityHeadersTest | Implemented |
+| OPS-001 | Scheduled private MySQL backup dan retention | BackupDatabase/routes console | deployment verification | Implemented core |
+| CASH-001 | Penerimaan AR dan pembayaran AP capped serta idempotent | CashBankService | CashBankClosingTest | Implemented core |
+| BANK-001 | Statement bank immutable dan rekonsiliasi terkontrol | CashBankService::reconcile | CashBankClosingTest | Implemented core |
+| CLOSE-001 | Period closing wajib approval dan statement bersih | FiscalPeriodClosingService | CashBankClosingTest | Implemented core |
+| BILL-004 | Release retensi capped, approved, idempotent dan balanced | RetentionReleaseService | RetentionReleaseTest | Implemented core |

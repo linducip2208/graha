@@ -1,8 +1,11 @@
 <?php
 
 use App\Http\Controllers\ApprovalController;
+use App\Http\Controllers\BillingController;
+use App\Http\Controllers\CashBankController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FinanceController;
+use App\Http\Controllers\HseController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\OperationsController;
 use App\Http\Controllers\OrganizationController;
@@ -10,6 +13,7 @@ use App\Http\Controllers\ProcurementController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\QmsController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SignatureController;
 use App\Http\Controllers\TenderController;
 use App\Models\BoredPile;
 use App\Models\Project;
@@ -134,4 +138,43 @@ Route::middleware(['auth', 'company', 'permission:approval.view'])->prefix('admi
     Route::post('/workflows/{workflow}/steps', [ApprovalController::class, 'step'])->middleware('permission:approval.manage');
     Route::post('/{approval}/decide', [ApprovalController::class, 'decide'])->middleware('permission:approval.decide');
     Route::post('/delegations', [ApprovalController::class, 'delegation'])->middleware('permission:approval.manage');
+});
+Route::middleware(['auth', 'company', 'permission:signature.view'])->prefix('admin/signatures')->group(function () {
+    Route::get('/', [SignatureController::class, 'index'])->name('signatures.index');
+    Route::post('/providers', [SignatureController::class, 'provider'])->middleware('permission:signature.manage');
+    Route::post('/versions/{version}/internal', [SignatureController::class, 'internal'])->middleware('permission:signature.sign');
+    Route::post('/versions/{version}/external', [SignatureController::class, 'external'])->middleware('permission:signature.manage');
+});
+Route::post('/webhooks/signatures/{provider}', [SignatureController::class, 'webhook'])->middleware('throttle:60,1')->name('signatures.webhook');
+Route::middleware(['auth', 'company', 'permission:finance.view'])->prefix('admin/billing')->group(function () {
+    Route::get('/', [BillingController::class, 'index'])->name('billing.index');
+    Route::post('/', [BillingController::class, 'store'])->middleware('permission:finance.manage');
+    Route::post('/{billing}/submit', [BillingController::class, 'submit'])->middleware('permission:finance.manage');
+    Route::post('/{billing}/activate', [BillingController::class, 'activate'])->middleware('permission:finance.manage');
+    Route::post('/{billing}/post', [BillingController::class, 'post'])->middleware('permission:accounting.post');
+    Route::post('/retention-releases', [BillingController::class, 'storeRelease'])->middleware('permission:finance.manage');
+    Route::post('/retention-releases/{release}/submit', [BillingController::class, 'submitRelease'])->middleware('permission:finance.manage');
+    Route::post('/retention-releases/{release}/activate', [BillingController::class, 'activateRelease'])->middleware('permission:finance.manage');
+    Route::post('/retention-releases/{release}/post', [BillingController::class, 'postRelease'])->middleware('permission:accounting.post');
+});
+Route::middleware(['auth', 'company', 'permission:finance.view'])->prefix('admin/cash-bank')->group(function () {
+    Route::get('/', [CashBankController::class, 'index'])->name('cash-bank.index');
+    Route::post('/accounts', [CashBankController::class, 'bank'])->middleware('permission:finance.manage');
+    Route::post('/receipts', [CashBankController::class, 'receipt'])->middleware('permission:accounting.post');
+    Route::post('/payments', [CashBankController::class, 'payment'])->middleware('permission:accounting.post');
+    Route::post('/statements', [CashBankController::class, 'statement'])->middleware('permission:finance.manage');
+    Route::post('/statements/{line}/reconcile', [CashBankController::class, 'reconcile'])->middleware('permission:finance.manage');
+    Route::post('/periods/{period}/close', [CashBankController::class, 'close'])->middleware('permission:accounting.post');
+});
+Route::middleware(['auth', 'company', 'permission:hse.view'])->prefix('admin/hse')->group(function () {
+    Route::get('/', [HseController::class, 'index'])->name('hse.index');
+    Route::post('/jsa', [HseController::class, 'jsa'])->middleware('permission:hse.manage');
+    Route::post('/jsa/{jsa}/submit', [HseController::class, 'submitJsa'])->middleware('permission:hse.manage');
+    Route::post('/jsa/{jsa}/activate', [HseController::class, 'activateJsa'])->middleware('permission:hse.manage');
+    Route::post('/jsa/{jsa}/permits', [HseController::class, 'permit'])->middleware('permission:hse.manage');
+    Route::post('/incidents', [HseController::class, 'incident'])->middleware('permission:hse.manage');
+    Route::post('/incidents/{incident}/actions', [HseController::class, 'action'])->middleware('permission:hse.manage');
+    Route::post('/actions/{action}/verify', [HseController::class, 'verify'])->middleware('permission:hse.verify');
+    Route::post('/incidents/{incident}/close', [HseController::class, 'close'])->middleware('permission:hse.verify');
+    Route::post('/management-reviews', [HseController::class, 'review'])->middleware('permission:hse.manage');
 });
