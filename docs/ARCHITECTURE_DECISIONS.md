@@ -7,3 +7,6 @@
 - ADR-005 Accepted: approval polymorphic, sequential foundation, idempotent, dan melarang self-approval.
 - ADR-006 Accepted: standard/edition/amendment/clause ISO kelak configurable; tidak menyalin standar dan tidak mengklaim sertifikasi.
 - ADR-007 Pending: BPM Level 0 wajib direkonsiliasi setelah workbook tersedia.
+- ADR-008 Accepted: accounting posting terpusat, idempotent, period-controlled, memakai decimal/BCMath dan menolak jurnal tidak seimbang.
+- ADR-009 Accepted: stock movement adalah ledger immutable; mutasi saldo memakai transaksi serta row lock dan stok negatif ditolak tanpa override berwenang.
+- ADR-010 Accepted: pemilik corrective action tidak boleh menjadi verifier efektivitas, dan auditor tidak boleh sama dengan auditee.

@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
         $user = User::firstOrCreate(['email' => 'admin@grahapondasi.test'], ['name' => 'Super Admin', 'password' => 'password']);
         $company->users()->syncWithoutDetaching([$user->id => ['is_default' => true, 'is_active' => true]]);
         $role = Role::firstOrCreate(['company_id' => $company->id, 'code' => 'super-admin'], ['name' => 'Super Admin', 'is_system' => true]);
-        foreach (['organization.view', 'organization.manage', 'approval.view', 'approval.decide', 'document.view', 'document.manage', 'audit.view', 'tender.view', 'tender.manage', 'contract.view', 'contract.manage'] as $code) {
+        foreach (['organization.view', 'organization.manage', 'approval.view', 'approval.decide', 'document.view', 'document.manage', 'audit.view', 'tender.view', 'tender.manage', 'contract.view', 'contract.manage', 'project.view', 'project.manage', 'inventory.view', 'inventory.manage', 'procurement.view', 'procurement.manage', 'manufacturing.view', 'manufacturing.manage', 'equipment.view', 'equipment.manage', 'finance.view', 'finance.manage', 'accounting.post', 'qms.view', 'qms.manage', 'qms.verify', 'qms.audit', 'report.view', 'report.export'] as $code) {
             $permission = Permission::firstOrCreate(['code' => $code], ['name' => str($code)->replace('.', ' ')->title(), 'module' => str($code)->before('.')]);
             $role->permissions()->syncWithoutDetaching([$permission->id]);
         }
@@ -33,5 +33,6 @@ class DatabaseSeeder extends Seeder
         NumberSequence::firstOrCreate(['company_id' => $company->id, 'document_type' => 'generic'], ['prefix' => 'GP', 'last_reset_year' => now()->year]);
         NumberSequence::firstOrCreate(['company_id' => $company->id, 'document_type' => 'tender'], ['prefix' => 'TND', 'last_reset_year' => now()->year]);
         NumberSequence::firstOrCreate(['company_id' => $company->id, 'document_type' => 'project'], ['prefix' => 'PRJ', 'last_reset_year' => now()->year]);
+        NumberSequence::firstOrCreate(['company_id' => $company->id, 'document_type' => 'journal'], ['prefix' => 'JV', 'last_reset_year' => now()->year]);
     }
 }

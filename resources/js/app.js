@@ -1,1 +1,2 @@
 //
+const sidebar=document.querySelector('#admin-sidebar');const overlay=document.querySelector('#sidebar-overlay');document.querySelectorAll('[data-sidebar-open]').forEach(b=>b.addEventListener('click',()=>{sidebar?.classList.remove('-translate-x-full');overlay?.classList.remove('hidden')}));document.querySelectorAll('[data-sidebar-close]').forEach(b=>b.addEventListener('click',()=>{sidebar?.classList.add('-translate-x-full');overlay?.classList.add('hidden')}));

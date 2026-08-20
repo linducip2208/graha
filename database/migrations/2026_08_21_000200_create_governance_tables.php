@@ -84,7 +84,7 @@ return new class extends Migration
             $t->text('comment')->nullable();
             $t->timestamp('decided_at');
             $t->timestamps();
-            $t->unique(['approval_request_id', 'approval_step_id', 'decided_by']);
+            $t->unique(['approval_request_id', 'approval_step_id', 'decided_by'], 'approval_decision_actor_unique');
         });
         Schema::create('audit_logs', function (Blueprint $t) {
             $t->id();
