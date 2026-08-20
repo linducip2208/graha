@@ -16,3 +16,6 @@
 - ADR-014 Accepted: progress billing memisahkan gross, retention, advance recovery dan net AR; posting hanya setelah approval serta memakai mapping akun configurable.
 - ADR-015 Accepted: penerimaan/pembayaran bank memakai jurnal idempotent dan batas outstanding; period closing ditolak sebelum approval atau selama statement belum direkonsiliasi.
 - ADR-016 Accepted: release retensi direklasifikasi dari retention receivable ke AR hanya sebesar saldo retensi posted dan setelah approval.
+- ADR-017 Accepted: actual cost bersumber dari immutable project cost ledger; forecast ETC adalah snapshot terpisah dan EAC dihitung saat baca untuk mencegah angka turunan basi.
+- ADR-018 Accepted: depresiasi aset memakai straight-line berbasis decimal, satu posting per aset/periode, dan mapping akun configurable.
+- ADR-019 Accepted: Manufacturing Control menjadi workspace fokus; setiap perpindahan Raw Material/WIP/Finished Goods wajib mempunyai stock movement dan jurnal idempotent yang saling terkait.

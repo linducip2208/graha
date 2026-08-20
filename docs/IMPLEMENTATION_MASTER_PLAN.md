@@ -70,3 +70,22 @@ Roadmap mengikuti delapan fase master command. Migration additive dan backward-c
 - Selesai: release retensi dengan approval gate, saldo cap, project row lock, idempotency, audit trail, dan balanced posting.
 - Selesai: UI draft/submit/activate/post serta accounting mapping configurable.
 - Verifikasi: `RetentionReleaseTest` mencakup cap, approval, balanced journal, dan duplicate posting.
+
+# Pembaruan 2026-08-21 — Project Costing
+
+- Selesai: ringkasan budget/RAP, actual ledger, committed PO, CTC, EAC, variance, dan contract value.
+- Selesai: forecast snapshot idempotent dengan basis estimasi dan company isolation.
+- Verifikasi: `ProjectCostingTest` memastikan idempotency serta kalkulasi decimal EAC/variance.
+
+# Pembaruan 2026-08-21 — Enterprise UX Copy
+
+- Selesai: HSE workspace menjelaskan alur JSA/permit dan incident/corrective action beserta statistik dan empty state.
+- Selesai: kamus microcopy lintas modul memperluas istilah teknis dan menjelaskan tujuan bisnis setiap workspace.
+- Standar berkelanjutan: `docs/UX_COPY_STANDARD.md`.
+
+# Pembaruan 2026-08-21 — Manufacturing Control
+
+- Selesai: workspace produksi end-to-end untuk BOM, komponen, production order, material issue, completion, traceability lot/heat, dan biaya WIP.
+- Selesai: BOM tanpa komponen ditolak saat pembuatan production order.
+- Selesai: material issue dan completion otomatis membentuk jurnal Raw Material → WIP → Finished Goods.
+- UI menjelaskan tujuan, prasyarat, hasil stok, dan dampak jurnal setiap tindakan.

@@ -67,3 +67,7 @@
 | BANK-001 | Statement bank immutable dan rekonsiliasi terkontrol | CashBankService::reconcile | CashBankClosingTest | Implemented core |
 | CLOSE-001 | Period closing wajib approval dan statement bersih | FiscalPeriodClosingService | CashBankClosingTest | Implemented core |
 | BILL-004 | Release retensi capped, approved, idempotent dan balanced | RetentionReleaseService | RetentionReleaseTest | Implemented core |
+| COST-001 | Actual, committed, CTC, EAC dan variance per proyek | ProjectCostingService | ProjectCostingTest | Implemented core |
+| ASSET-001 | Fixed asset straight-line depreciation period-controlled | FixedAssetService | FixedAssetTest | Implemented core |
+| MFG-004 | Material issue otomatis Raw Material ke Manufacturing WIP | ManufacturingService | ManufacturingTraceabilityTest | Implemented |
+| MFG-005 | Production completion otomatis WIP ke Finished Goods | ManufacturingService | ManufacturingTraceabilityTest | Implemented |

@@ -17,6 +17,21 @@ class FinanceController extends Controller
         return view('finance.index', ['accounts' => Account::where('company_id', $current->id())->orderBy('code')->get(), 'mappings' => AccountingMapping::where('company_id', $current->id())->with('account')->orderBy('event_type')->get(), 'periods' => FiscalPeriod::where('company_id', $current->id())->latest('starts_at')->get(), 'journals' => Journal::where('company_id', $current->id())->with('entries')->latest('journal_date')->paginate(25)]);
     }
 
+    public function accounts(CurrentCompany $current)
+    {
+        return view('finance.accounts', ['accounts' => Account::where('company_id', $current->id())->orderBy('code')->paginate(50)]);
+    }
+
+    public function periods(CurrentCompany $current)
+    {
+        return view('finance.periods', ['periods' => FiscalPeriod::where('company_id', $current->id())->latest('starts_at')->paginate(30)]);
+    }
+
+    public function journals(CurrentCompany $current)
+    {
+        return view('finance.journals', ['accounts' => Account::where('company_id', $current->id())->where('is_active', true)->orderBy('code')->get(), 'journals' => Journal::where('company_id', $current->id())->with('entries')->latest('journal_date')->paginate(50)]);
+    }
+
     public function account(Request $r, CurrentCompany $current)
     {
         $d = $r->validate(['code' => ['required', 'max:30', 'unique:accounts,code,NULL,id,company_id,'.$current->id()], 'name' => ['required', 'max:200'], 'type' => ['required', 'in:asset,liability,equity,revenue,expense'], 'normal_balance' => ['required', 'in:debit,credit']]);
@@ -40,7 +55,7 @@ class FinanceController extends Controller
 
     public function mapping(Request $request, CurrentCompany $current)
     {
-        $data = $request->validate(['event_type' => ['required', 'in:goods_receipt,vendor_invoice,material_issue_project,production_completion,progress_billing,customer_receipt,vendor_payment,retention_release'], 'entry_side' => ['required', 'in:debit,credit,ar_debit,retention_debit,advance_debit,revenue_credit,ar_credit,ap_debit,retention_credit'], 'account_id' => ['required', 'exists:accounts,id'], 'effective_from' => ['nullable', 'date'], 'effective_until' => ['nullable', 'date', 'after_or_equal:effective_from']]);
+        $data = $request->validate(['event_type' => ['required', 'in:goods_receipt,vendor_invoice,material_issue_project,material_issue_manufacturing,production_completion,progress_billing,customer_receipt,vendor_payment,retention_release,asset_depreciation'], 'entry_side' => ['required', 'in:debit,credit,ar_debit,retention_debit,advance_debit,revenue_credit,ar_credit,ap_debit,retention_credit,expense_debit,accumulated_credit,wip_debit,raw_credit,finished_goods_debit,wip_credit'], 'account_id' => ['required', 'exists:accounts,id'], 'effective_from' => ['nullable', 'date'], 'effective_until' => ['nullable', 'date', 'after_or_equal:effective_from']]);
         abort_unless(Account::where('company_id', $current->id())->whereKey($data['account_id'])->exists(), 422);
         AccountingMapping::updateOrCreate(['company_id' => $current->id(), 'event_type' => $data['event_type'], 'entry_side' => $data['entry_side']], $data);
 

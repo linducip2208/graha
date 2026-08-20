@@ -23,6 +23,9 @@ class InventoryService
             $keys = ['company_id' => $dimension['company_id'], 'item_id' => $item->id, 'warehouse_id' => $dimension['warehouse_id'], 'warehouse_bin_id' => $dimension['warehouse_bin_id'], 'lot_number' => $dimension['lot_number'] ?? ''];
             StockBalance::firstOrCreate($keys, ['quantity' => '0', 'reserved_quantity' => '0']);
             $balance = StockBalance::where($keys)->lockForUpdate()->firstOrFail();
+            if (! in_array($type, ['receipt', 'return_in', 'adjustment_in'], true) && bccomp($unitCost, '0', 4) === 0) {
+                $unitCost = (string) (StockMovement::where($keys)->whereIn('movement_type', ['receipt', 'return_in', 'adjustment_in'])->where('unit_cost', '>', 0)->latest('id')->value('unit_cost') ?? '0');
+            }
             $signed = in_array($type, ['receipt', 'return_in', 'adjustment_in'], true) ? $quantity : bcsub('0', $quantity, 4);
             $after = bcadd((string) $balance->quantity, $signed, 4);
             throw_if(bccomp($after, '0', 4) < 0 && ! $item->allow_negative, ValidationException::withMessages(['stock' => 'Stok tidak mencukupi dan negative stock dilarang.']));

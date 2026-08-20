@@ -29,4 +29,9 @@ class PurchaseOrder extends Model
     {
         return $this->hasMany(PurchaseOrderRevision::class);
     }
+
+    public function purchaseRequest(): BelongsTo
+    {
+        return $this->belongsTo(PurchaseRequest::class);
+    }
 }

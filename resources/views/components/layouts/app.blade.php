@@ -5,7 +5,7 @@
 <div class="min-h-screen lg:grid lg:grid-cols-[270px_1fr]">
 <aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-40 w-[280px] -translate-x-full overflow-y-auto bg-slate-950 text-slate-200 shadow-2xl transition-transform lg:sticky lg:top-0 lg:h-screen lg:w-auto lg:translate-x-0">
  <div class="flex items-center justify-between border-b border-white/10 px-5 py-5"><a href="/dashboard" class="font-black text-white">Graha Pondasi ERP</a><button data-sidebar-close class="rounded-lg p-2 lg:hidden" aria-label="Tutup menu">✕</button></div>
- <nav class="space-y-6 p-4 text-sm">
+ <nav id="admin-navigation" data-visible-modules="{{ implode(',', config('modules.visible', [])) }}" class="space-y-6 p-4 text-sm">
   <div><p class="px-3 text-[11px] font-bold uppercase tracking-widest text-slate-500">Dashboard</p><a href="/dashboard" class="admin-link {{ request()->is('dashboard')?'active':'' }}"><span>▦</span> Executive Dashboard</a></div>
   @php($cid=session('company_id'))
   @if(auth()->user()->hasPermission('organization.view',$cid))<div><p class="px-3 text-[11px] font-bold uppercase tracking-widest text-slate-500">Organisasi</p><a href="/admin/organization" class="admin-link {{ request()->is('admin/organization')?'active':'' }}"><span>⌂</span> Perusahaan & Cabang</a></div>@endif
@@ -18,6 +18,8 @@
   @if(auth()->user()->hasPermission('finance.manage',$cid))<a href="/admin/finance/accounting-mappings" class="admin-link {{ request()->is('admin/finance/accounting-mappings')?'active':'' }}"><span>⇄</span> Accounting Mapping</a>@endif
   @if(auth()->user()->hasPermission('finance.view',$cid))<a href="/admin/billing" class="admin-link {{ request()->is('admin/billing*')?'active':'' }}"><span>▧</span> Progress Billing & Retensi</a>@endif
   @if(auth()->user()->hasPermission('finance.view',$cid))<a href="/admin/cash-bank" class="admin-link {{ request()->is('admin/cash-bank*')?'active':'' }}"><span>⌘</span> Kas, Bank & Rekonsiliasi</a>@endif
+  @if(auth()->user()->hasPermission('finance.view',$cid))<a href="/admin/project-costing" class="admin-link {{ request()->is('admin/project-costing*')?'active':'' }}"><span>◩</span> Project Costing & EAC</a>@endif
+  @if(auth()->user()->hasPermission('finance.view',$cid))<a href="/admin/fixed-assets" class="admin-link {{ request()->is('admin/fixed-assets*')?'active':'' }}"><span>▣</span> Fixed Asset & Depresiasi</a>@endif
   @if(auth()->user()->hasPermission('accounting.post',$cid))<a href="/admin/procurement-accounting" class="admin-link {{ request()->is('admin/procurement-accounting')?'active':'' }}"><span>₿</span> Procurement Posting</a>@endif
   @if(auth()->user()->hasPermission('document.view',$cid))<div><p class="px-3 text-[11px] font-bold uppercase tracking-widest text-slate-500">Governance</p><a href="/admin/documents" class="admin-link {{ request()->is('admin/documents*')?'active':'' }}"><span>▤</span> Document Control</a></div>@endif
   @if(auth()->user()->hasPermission('approval.view',$cid))<div><p class="px-3 text-[11px] font-bold uppercase tracking-widest text-slate-500">Approval & Signing</p><a href="/admin/approvals" class="admin-link {{ request()->is('admin/approvals*')?'active':'' }}"><span>✓</span> Inbox & Workflow</a></div>@endif

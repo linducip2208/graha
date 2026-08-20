@@ -5,12 +5,15 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CashBankController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FinanceController;
+use App\Http\Controllers\FixedAssetController;
 use App\Http\Controllers\HseController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\ManufacturingController;
 use App\Http\Controllers\OperationsController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\ProcurementController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectCostingController;
 use App\Http\Controllers\QmsController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SignatureController;
@@ -66,6 +69,9 @@ Route::middleware(['auth', 'company', 'permission:organization.view'])->prefix('
 });
 Route::middleware(['auth', 'company', 'permission:finance.view'])->prefix('admin')->group(function () {
     Route::get('/finance', [FinanceController::class, 'index'])->name('finance.index');
+    Route::get('/finance/accounts', [FinanceController::class, 'accounts'])->name('finance.accounts');
+    Route::get('/finance/periods', [FinanceController::class, 'periods'])->name('finance.periods');
+    Route::get('/finance/journals', [FinanceController::class, 'journals'])->name('finance.journals');
     Route::get('/finance/accounting-mappings', [FinanceController::class, 'mappingIndex'])->name('finance.mappings');
     Route::post('/finance/accounts', [FinanceController::class, 'account'])->middleware('permission:finance.manage');
     Route::post('/finance/periods', [FinanceController::class, 'period'])->middleware('permission:finance.manage');
@@ -111,6 +117,9 @@ Route::middleware(['auth', 'company', 'permission:report.view'])->prefix('admin/
     Route::get('/{type}/export', [ReportController::class, 'export'])->middleware('permission:report.export')->name('reports.export');
 });
 Route::middleware(['auth', 'company', 'permission:manufacturing.view'])->prefix('admin')->group(function () {
+    Route::get('/manufacturing', [ManufacturingController::class, 'index'])->name('manufacturing.index');
+    Route::post('/manufacturing/boms/{bom}/items', [ManufacturingController::class, 'addBomItem'])->middleware('permission:manufacturing.manage');
+    Route::post('/manufacturing/orders/{order}/issue', [ManufacturingController::class, 'issue'])->middleware('permission:manufacturing.manage');
     Route::get('/operations', [OperationsController::class, 'index'])->name('operations.index');
     Route::post('/manufacturing/boms', [OperationsController::class, 'bom'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/orders', [OperationsController::class, 'productionOrder'])->middleware('permission:manufacturing.manage');
@@ -165,6 +174,16 @@ Route::middleware(['auth', 'company', 'permission:finance.view'])->prefix('admin
     Route::post('/statements', [CashBankController::class, 'statement'])->middleware('permission:finance.manage');
     Route::post('/statements/{line}/reconcile', [CashBankController::class, 'reconcile'])->middleware('permission:finance.manage');
     Route::post('/periods/{period}/close', [CashBankController::class, 'close'])->middleware('permission:accounting.post');
+});
+Route::middleware(['auth', 'company', 'permission:finance.view'])->prefix('admin/project-costing')->group(function () {
+    Route::get('/', [ProjectCostingController::class, 'index'])->name('project-costing.index');
+    Route::post('/forecasts', [ProjectCostingController::class, 'forecast'])->middleware('permission:finance.manage');
+});
+Route::middleware(['auth', 'company', 'permission:finance.view'])->prefix('admin/fixed-assets')->group(function () {
+    Route::get('/', [FixedAssetController::class, 'index'])->name('fixed-assets.index');
+    Route::post('/categories', [FixedAssetController::class, 'category'])->middleware('permission:finance.manage');
+    Route::post('/', [FixedAssetController::class, 'asset'])->middleware('permission:finance.manage');
+    Route::post('/{asset}/depreciate', [FixedAssetController::class, 'depreciate'])->middleware('permission:accounting.post');
 });
 Route::middleware(['auth', 'company', 'permission:hse.view'])->prefix('admin/hse')->group(function () {
     Route::get('/', [HseController::class, 'index'])->name('hse.index');

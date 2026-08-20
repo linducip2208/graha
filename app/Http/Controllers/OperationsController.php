@@ -36,7 +36,7 @@ class OperationsController extends Controller
     public function productionOrder(Request $request, CurrentCompany $current)
     {
         $data = $request->validate(['number' => ['required', 'max:80'], 'bill_of_material_id' => ['required', 'exists:bills_of_material,id'], 'warehouse_id' => ['required', 'exists:warehouses,id'], 'output_bin_id' => ['required', 'exists:warehouse_bins,id'], 'planned_quantity' => ['required', 'decimal:0,4', 'gt:0']]);
-        abort_unless(BillOfMaterial::where('company_id', $current->id())->whereKey($data['bill_of_material_id'])->exists(), 422);
+        abort_unless(BillOfMaterial::where('company_id', $current->id())->where('status', 'active')->whereKey($data['bill_of_material_id'])->whereHas('items')->exists(), 422, 'BOM harus aktif dan memiliki komponen.');
         abort_unless(Warehouse::where('company_id', $current->id())->whereKey($data['warehouse_id'])->exists(), 422);
         abort_unless(WarehouseBin::where('warehouse_id', $data['warehouse_id'])->whereKey($data['output_bin_id'])->exists(), 422);
         ProductionOrder::create([...$data, 'company_id' => $current->id(), 'created_by' => $request->user()->id]);
