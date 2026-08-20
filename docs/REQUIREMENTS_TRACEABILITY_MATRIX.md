@@ -46,3 +46,9 @@
 | DASH-001 | Widget dan quick action berbasis backend permission | dashboard route/view | DashboardPermissionTest | Implemented core |
 | MFG-002 | UI BOM dan production completion ke inventory | OperationsController/operations.index | ManufacturingTraceabilityTest | Implemented core |
 | EQP-002 | UI equipment, meter, fuel dan maintenance | OperationsController/operations.index | EquipmentFuelTest | Implemented core |
+| PRC-002 | PO version snapshot dan approval invalidation | PurchaseOrderService::revise | PurchaseOrderMatchingTest | Implemented core |
+| PRC-003 | Goods receipt idempotent dan capped terhadap PO | PurchaseOrderService::receive | PurchaseOrderMatchingTest | Implemented |
+| PRC-004 | Three-way match kuantitas dan nilai | PurchaseOrderService::match | PurchaseOrderMatchingTest | Implemented core |
+| PRC-005 | PO activation gate wajib approval selesai | PurchaseOrderService::activateApproved | PurchaseOrderMatchingTest | Implemented |
+| APR-006 | Approval inbox/configuration/delegation UI | ApprovalController/approvals.index | AdvancedApprovalTest | Implemented core |
+| ACC-004 | GR Inventory/GRNI dan invoice GRNI/AP dari mapping | ProcurementAccountingService | ProcurementPostingTest | Implemented core |

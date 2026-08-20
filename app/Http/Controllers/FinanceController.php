@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Models\AccountingMapping;
 use App\Models\FiscalPeriod;
 use App\Models\Journal;
 use App\Services\AccountingService;
@@ -13,7 +14,7 @@ class FinanceController extends Controller
 {
     public function index(CurrentCompany $current)
     {
-        return view('finance.index', ['accounts' => Account::where('company_id', $current->id())->orderBy('code')->get(), 'periods' => FiscalPeriod::where('company_id', $current->id())->latest('starts_at')->get(), 'journals' => Journal::where('company_id', $current->id())->with('entries')->latest('journal_date')->paginate(25)]);
+        return view('finance.index', ['accounts' => Account::where('company_id', $current->id())->orderBy('code')->get(), 'mappings' => AccountingMapping::where('company_id', $current->id())->with('account')->orderBy('event_type')->get(), 'periods' => FiscalPeriod::where('company_id', $current->id())->latest('starts_at')->get(), 'journals' => Journal::where('company_id', $current->id())->with('entries')->latest('journal_date')->paginate(25)]);
     }
 
     public function account(Request $r, CurrentCompany $current)
@@ -24,12 +25,26 @@ class FinanceController extends Controller
         return back()->with('status', 'Akun ditambahkan.');
     }
 
+    public function mappingIndex(CurrentCompany $current)
+    {
+        return view('finance.mappings', ['accounts' => Account::where('company_id', $current->id())->where('is_active', true)->orderBy('code')->get(), 'mappings' => AccountingMapping::where('company_id', $current->id())->with('account')->orderBy('event_type')->get()]);
+    }
+
     public function period(Request $r, CurrentCompany $current)
     {
         $d = $r->validate(['name' => ['required', 'max:100'], 'starts_at' => ['required', 'date'], 'ends_at' => ['required', 'date', 'after_or_equal:starts_at']]);
         FiscalPeriod::create([...$d, 'company_id' => $current->id()]);
 
         return back()->with('status', 'Periode fiskal ditambahkan.');
+    }
+
+    public function mapping(Request $request, CurrentCompany $current)
+    {
+        $data = $request->validate(['event_type' => ['required', 'in:goods_receipt,vendor_invoice,material_issue_project,production_completion'], 'entry_side' => ['required', 'in:debit,credit'], 'account_id' => ['required', 'exists:accounts,id'], 'effective_from' => ['nullable', 'date'], 'effective_until' => ['nullable', 'date', 'after_or_equal:effective_from']]);
+        abort_unless(Account::where('company_id', $current->id())->whereKey($data['account_id'])->exists(), 422);
+        AccountingMapping::updateOrCreate(['company_id' => $current->id(), 'event_type' => $data['event_type'], 'entry_side' => $data['entry_side']], $data);
+
+        return back()->with('status', 'Accounting mapping diperbarui.');
     }
 
     public function journal(Request $r, CurrentCompany $current, AccountingService $service)
@@ -39,6 +54,6 @@ class FinanceController extends Controller
             abort_unless(Account::where('company_id', $current->id())->whereKey($id)->exists(), 422);
         }$service->post($current->id(), $d['journal_date'], 'manual', $d['reference'], $d['description'], [['account_id' => $d['debit_account_id'], 'debit' => $d['amount'], 'credit' => '0'], ['account_id' => $d['credit_account_id'], 'debit' => '0', 'credit' => $d['amount']]], 'manual:'.$d['reference'], $r->user());
 
-        return back()->with('status','Jurnal diposting dan seimbang.');
+        return back()->with('status', 'Jurnal diposting dan seimbang.');
     }
 }

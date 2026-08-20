@@ -10,3 +10,5 @@
 - ADR-008 Accepted: accounting posting terpusat, idempotent, period-controlled, memakai decimal/BCMath dan menolak jurnal tidak seimbang.
 - ADR-009 Accepted: stock movement adalah ledger immutable; mutasi saldo memakai transaksi serta row lock dan stok negatif ditolak tanpa override berwenang.
 - ADR-010 Accepted: pemilik corrective action tidak boleh menjadi verifier efektivitas, dan auditor tidak boleh sama dengan auditee.
+- ADR-011 Accepted: revisi PO menyimpan snapshot versi lama dan men-supersede approval aktif; receipt dibatasi kuantitas PO dan invoice memakai three-way matching.
+- ADR-012 Accepted: posting procurement memakai event accounting mapping configurable; invoice exception tidak boleh masuk AP.

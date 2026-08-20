@@ -11,7 +11,7 @@ class ApprovalWorkflow extends Model
 
     protected function casts(): array
     {
-        return ['is_active' => 'boolean'];
+        return ['is_active' => 'boolean', 'min_amount' => 'decimal:2', 'max_amount' => 'decimal:2'];
     }
 
     public function steps(): HasMany

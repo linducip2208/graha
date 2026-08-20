@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\OperationsController;
 use App\Http\Controllers\OrganizationController;
+use App\Http\Controllers\ProcurementController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\QmsController;
 use App\Http\Controllers\ReportController;
@@ -60,8 +62,10 @@ Route::middleware(['auth', 'company', 'permission:organization.view'])->prefix('
 });
 Route::middleware(['auth', 'company', 'permission:finance.view'])->prefix('admin')->group(function () {
     Route::get('/finance', [FinanceController::class, 'index'])->name('finance.index');
+    Route::get('/finance/accounting-mappings', [FinanceController::class, 'mappingIndex'])->name('finance.mappings');
     Route::post('/finance/accounts', [FinanceController::class, 'account'])->middleware('permission:finance.manage');
     Route::post('/finance/periods', [FinanceController::class, 'period'])->middleware('permission:finance.manage');
+    Route::post('/finance/mappings', [FinanceController::class, 'mapping'])->middleware('permission:finance.manage');
     Route::post('/finance/journals', [FinanceController::class, 'journal'])->middleware('permission:accounting.post');
 });
 Route::middleware(['auth', 'company', 'permission:inventory.view'])->prefix('admin')->group(function () {
@@ -111,4 +115,23 @@ Route::middleware(['auth', 'company', 'permission:manufacturing.view'])->prefix(
     Route::post('/equipment/{equipment}/meter', [OperationsController::class, 'meter'])->middleware('permission:equipment.manage');
     Route::post('/equipment/{equipment}/fuel', [OperationsController::class, 'fuel'])->middleware('permission:equipment.manage');
     Route::post('/equipment/{equipment}/maintenance', [OperationsController::class, 'maintenance'])->middleware('permission:equipment.manage');
+});
+Route::middleware(['auth', 'company', 'permission:procurement.view'])->prefix('admin/procurement')->group(function () {
+    Route::get('/', [ProcurementController::class, 'index'])->name('procurement.index');
+    Route::post('/vendors', [ProcurementController::class, 'vendor'])->middleware('permission:procurement.manage');
+    Route::post('/orders', [ProcurementController::class, 'order'])->middleware('permission:procurement.manage');
+    Route::post('/orders/{order}/submit', [ProcurementController::class, 'submit'])->middleware('permission:procurement.manage');
+    Route::post('/orders/{order}/activate', [ProcurementController::class, 'activate'])->middleware('permission:procurement.manage');
+    Route::post('/orders/{order}/receive', [ProcurementController::class, 'receive'])->middleware('permission:inventory.manage');
+    Route::post('/orders/{order}/invoice', [ProcurementController::class, 'invoice'])->middleware('permission:finance.manage');
+});
+Route::get('/admin/procurement-accounting', [ProcurementController::class, 'accountingIndex'])->middleware(['auth', 'company', 'permission:accounting.post'])->name('procurement.accounting');
+Route::post('/admin/procurement/receipts/{receipt}/post-accounting', [ProcurementController::class, 'postReceipt'])->middleware(['auth', 'company', 'permission:accounting.post']);
+Route::post('/admin/procurement/invoices/{invoice}/post-accounting', [ProcurementController::class, 'postInvoice'])->middleware(['auth', 'company', 'permission:accounting.post']);
+Route::middleware(['auth', 'company', 'permission:approval.view'])->prefix('admin/approvals')->group(function () {
+    Route::get('/', [ApprovalController::class, 'index'])->name('approvals.index');
+    Route::post('/workflows', [ApprovalController::class, 'workflow'])->middleware('permission:approval.manage');
+    Route::post('/workflows/{workflow}/steps', [ApprovalController::class, 'step'])->middleware('permission:approval.manage');
+    Route::post('/{approval}/decide', [ApprovalController::class, 'decide'])->middleware('permission:approval.decide');
+    Route::post('/delegations', [ApprovalController::class, 'delegation'])->middleware('permission:approval.manage');
 });
