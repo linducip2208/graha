@@ -21,4 +21,9 @@ class BillOfMaterial extends Model
     {
         return $this->belongsTo(Item::class, 'output_item_id');
     }
+
+    public function routingOperations(): HasMany
+    {
+        return $this->hasMany(RoutingOperation::class)->orderBy('sequence');
+    }
 }

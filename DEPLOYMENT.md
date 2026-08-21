@@ -11,6 +11,9 @@ Gunakan PHP 8.3+, MySQL 8.4, Composer, Node 24+, Nginx, worker dan scheduler. Sa
 5. Pastikan document root Nginx menunjuk hanya ke `public/`, HTTPS/HSTS aktif, dan upload sensitif tidak disajikan langsung.
 6. Backup MySQL dan file dokumen setiap hari ke lokasi terenkripsi berbeda; lakukan restore drill minimal tiap kuartal.
 7. Sebelum rilis jalankan `php artisan test`, `vendor/bin/pint --test`, `npm run build`, dan `php artisan about --only=environment`.
+8. Jalankan `php artisan production:check`. Deployment tidak boleh dilanjutkan bila command mengembalikan exit code selain `0`.
+
+`production:check` hanya memvalidasi konfigurasi dan dependency minimum. Status production-ready tetap membutuhkan bukti UAT bisnis, security review, load/concurrency test, serta restore drill backup yang berhasil.
 
 Scheduler menjalankan monitoring SLA approval per jam dan pembaruan status evidence QMS kedaluwarsa setiap hari pukul 01:30. Gunakan timezone `Asia/Jakarta` atau timezone perusahaan yang telah disepakati.
 Backup database dijalankan pukul 02:15 melalui `backup:database`. Salin hasil private backup ke off-site encrypted storage dan monitor exit code scheduler. Password MySQL diberikan lewat environment proses, bukan command-line argument.

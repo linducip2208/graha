@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProgressBilling extends Model
 {
@@ -22,5 +23,10 @@ class ProgressBilling extends Model
     public function journal(): BelongsTo
     {
         return $this->belongsTo(Journal::class);
+    }
+
+    public function customerReceipts(): HasMany
+    {
+        return $this->hasMany(CustomerReceipt::class);
     }
 }

@@ -9,6 +9,11 @@ class ProductionMaterialIssue extends Model
 {
     protected $guarded = [];
 
+    protected function casts(): array
+    {
+        return ['quantity' => 'decimal:4'];
+    }
+
     public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class);

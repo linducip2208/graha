@@ -114,12 +114,23 @@ Route::middleware(['auth', 'company', 'permission:report.view'])->prefix('admin/
     Route::get('/executive', [ReportController::class, 'executive'])->name('reports.executive');
     Route::get('/finance', [ReportController::class, 'finance'])->name('reports.finance');
     Route::get('/operations', [ReportController::class, 'operations'])->name('reports.operations');
+    Route::get('/manufacturing', [ReportController::class, 'manufacturing'])->name('reports.manufacturing');
+    Route::get('/financial-statements', [ReportController::class, 'financialStatements'])->name('reports.financial-statements');
+    Route::get('/aging', [ReportController::class, 'aging'])->name('reports.aging');
     Route::get('/{type}/export', [ReportController::class, 'export'])->middleware('permission:report.export')->name('reports.export');
 });
 Route::middleware(['auth', 'company', 'permission:manufacturing.view'])->prefix('admin')->group(function () {
     Route::get('/manufacturing', [ManufacturingController::class, 'index'])->name('manufacturing.index');
+    Route::get('/manufacturing/quality', [ManufacturingController::class, 'quality'])->name('manufacturing.quality');
+    Route::get('/manufacturing/nonconforming', [ManufacturingController::class, 'nonconforming'])->name('manufacturing.nonconforming');
+    Route::get('/manufacturing/costing', [ManufacturingController::class, 'costing'])->name('manufacturing.costing');
+    Route::post('/manufacturing/work-centers', [ManufacturingController::class, 'workCenter'])->middleware('permission:manufacturing.manage');
+    Route::post('/manufacturing/boms/{bom}/routing-operations', [ManufacturingController::class, 'routingOperation'])->middleware('permission:manufacturing.manage');
+    Route::post('/manufacturing/orders/{order}/operations/{operation}', [ManufacturingController::class, 'recordOperation'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/boms/{bom}/items', [ManufacturingController::class, 'addBomItem'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/orders/{order}/issue', [ManufacturingController::class, 'issue'])->middleware('permission:manufacturing.manage');
+    Route::post('/manufacturing/orders/{order}/inspect', [ManufacturingController::class, 'inspect'])->middleware('permission:manufacturing.manage');
+    Route::post('/manufacturing/inspections/{inspection}/dispose', [ManufacturingController::class, 'dispose'])->middleware('permission:manufacturing.manage');
     Route::get('/operations', [OperationsController::class, 'index'])->name('operations.index');
     Route::post('/manufacturing/boms', [OperationsController::class, 'bom'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/orders', [OperationsController::class, 'productionOrder'])->middleware('permission:manufacturing.manage');

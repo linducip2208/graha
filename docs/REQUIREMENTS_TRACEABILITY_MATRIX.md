@@ -71,3 +71,12 @@
 | ASSET-001 | Fixed asset straight-line depreciation period-controlled | FixedAssetService | FixedAssetTest | Implemented core |
 | MFG-004 | Material issue otomatis Raw Material ke Manufacturing WIP | ManufacturingService | ManufacturingTraceabilityTest | Implemented |
 | MFG-005 | Production completion otomatis WIP ke Finished Goods | ManufacturingService | ManufacturingTraceabilityTest | Implemented |
+| MFG-006 | QC release gate sebelum output menjadi finished goods | ProductionInspection/ManufacturingService | ManufacturingTraceabilityTest | Implemented |
+| MFG-007 | Disposition output ditolak sebagai rework atau scrap dengan jurnal configurable | ProductionDisposition/ManufacturingService | ManufacturingTraceabilityTest | Implemented core |
+| MFG-008 | Work center, routing, jam aktual, labor/overhead absorption dan variance | WorkCenter/RoutingOperation/ProductionOperationLog | ManufacturingTraceabilityTest | Implemented core |
+| MFG-009 | Rekonsiliasi material/labor/overhead ke finished goods, scrap, dan residual WIP | ManufacturingWipService/reports.manufacturing | ManufacturingTraceabilityTest | Implemented core |
+| MFG-010 | Material issue cap berdasarkan BOM/output quantity/scrap allowance | ManufacturingService::issueMaterial | ManufacturingTraceabilityTest | Implemented |
+| ACC-005 | Period closing gate untuk anomali residual WIP manufaktur | FiscalPeriodClosingService | ManufacturingTraceabilityTest/CashBankClosingTest | Implemented core |
+| OPS-002 | Automated production configuration readiness gate | ProductionReadinessCheck/GitHub Actions | command execution/CI | Implemented core |
+| ACC-006 | Trial balance, laba rugi, dan neraca dari posted journals | FinancialStatementService/reports.financial-statements | FinancialStatementTest | Implemented core |
+| ACC-007 | Aging piutang/utang dengan paid offset dan bucket cut-off | ReceivablePayableAgingService/reports.aging | ReceivablePayableAgingTest | Implemented core |

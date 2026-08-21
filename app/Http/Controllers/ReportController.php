@@ -11,6 +11,9 @@ use App\Models\RiskOpportunity;
 use App\Models\StockBalance;
 use App\Models\StockMovement;
 use App\Models\Tender;
+use App\Services\FinancialStatementService;
+use App\Services\ManufacturingWipService;
+use App\Services\ReceivablePayableAgingService;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -65,9 +68,37 @@ class ReportController extends Controller
         ]);
     }
 
+    public function manufacturing(Request $request, CurrentCompany $current, ManufacturingWipService $service)
+    {
+        [$from, $to] = $this->range($request);
+        $rows = $service->reconcile($current->id());
+
+        return view('reports.manufacturing', [
+            'from' => $from, 'to' => $to, 'rows' => $rows,
+            'totalActual' => $rows->reduce(fn (string $carry, array $row) => bcadd($carry, $row['actual_cost'], 2), '0'),
+            'totalWip' => $rows->reduce(fn (string $carry, array $row) => bcadd($carry, $row['residual_wip'], 2), '0'),
+            'anomalies' => $rows->where('anomaly', true)->count(),
+        ]);
+    }
+
+    public function financialStatements(Request $request, CurrentCompany $current, FinancialStatementService $service)
+    {
+        [$from, $to] = $this->range($request);
+
+        return view('reports.financial-statements', [...$service->generate($current->id(), $from->toDateString(), $to->toDateString()), 'from' => $from, 'to' => $to]);
+    }
+
+    public function aging(Request $request, CurrentCompany $current, ReceivablePayableAgingService $service)
+    {
+        $data = $request->validate(['as_of' => ['nullable', 'date']]);
+        $asOf = Carbon::parse($data['as_of'] ?? now()->toDateString())->endOfDay();
+
+        return view('reports.aging', [...$service->generate($current->id(), $asOf), 'asOf' => $asOf]);
+    }
+
     public function export(Request $request, CurrentCompany $current, string $type): StreamedResponse
     {
-        abort_unless(in_array($type, ['executive', 'operations'], true), 404);
+        abort_unless(in_array($type, ['executive', 'operations', 'manufacturing'], true), 404);
         [$from, $to] = $this->range($request);
         $companyId = $current->id();
 
@@ -81,13 +112,19 @@ class ReportController extends Controller
                         fputcsv($output, [$item->number, $item->name, $item->status, $item->bid_value, $item->created_at]);
                     }
                 });
-            } else {
+            } elseif ($type === 'operations') {
                 fputcsv($output, ['Waktu', 'Tipe', 'Item', 'Qty', 'Saldo', 'Referensi']);
                 StockMovement::where('company_id', $companyId)->whereBetween('posted_at', [$from, $to])->with('item')->orderBy('id')->chunk(500, function ($items) use ($output): void {
                     foreach ($items as $item) {
                         fputcsv($output, [$item->posted_at, $item->movement_type, $item->item?->sku, $item->quantity, $item->balance_after, $item->reference_type.':'.$item->reference_id]);
                     }
                 });
+            } else {
+                fputcsv($output, ['Production Order', 'Produk', 'Rencana', 'Selesai', 'Biaya Aktual', 'Ke Barang Jadi', 'Ke Scrap', 'Residual WIP', 'Status Rekonsiliasi']);
+                foreach (app(ManufacturingWipService::class)->reconcile($companyId) as $row) {
+                    $order = $row['order'];
+                    fputcsv($output, [$order->number, $order->bom?->outputItem?->name, $order->planned_quantity, $order->completed_quantity, $row['actual_cost'], $row['completed_cost'], $row['scrapped_cost'], $row['residual_wip'], $row['anomaly'] ? 'ANOMALI' : 'OK']);
+                }
             }
             fclose($output);
         }, "laporan-$type-{$from->toDateString()}-{$to->toDateString()}.csv", ['Content-Type' => 'text/csv; charset=UTF-8']);

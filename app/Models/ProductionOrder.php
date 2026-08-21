@@ -12,7 +12,7 @@ class ProductionOrder extends Model
 
     protected function casts(): array
     {
-        return ['planned_quantity' => 'decimal:4', 'completed_quantity' => 'decimal:4', 'actual_material_cost' => 'decimal:2'];
+        return ['planned_quantity' => 'decimal:4', 'completed_quantity' => 'decimal:4', 'actual_material_cost' => 'decimal:2', 'actual_labor_cost' => 'decimal:2', 'actual_overhead_cost' => 'decimal:2', 'completed_cost' => 'decimal:2'];
     }
 
     public function bom(): BelongsTo
@@ -23,5 +23,15 @@ class ProductionOrder extends Model
     public function materialIssues(): HasMany
     {
         return $this->hasMany(ProductionMaterialIssue::class);
+    }
+
+    public function inspections(): HasMany
+    {
+        return $this->hasMany(ProductionInspection::class);
+    }
+
+    public function operationLogs(): HasMany
+    {
+        return $this->hasMany(ProductionOperationLog::class);
     }
 }

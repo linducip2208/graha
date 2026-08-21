@@ -89,3 +89,39 @@ Roadmap mengikuti delapan fase master command. Migration additive dan backward-c
 - Selesai: BOM tanpa komponen ditolak saat pembuatan production order.
 - Selesai: material issue dan completion otomatis membentuk jurnal Raw Material → WIP → Finished Goods.
 - UI menjelaskan tujuan, prasyarat, hasil stok, dan dampak jurnal setiap tindakan.
+
+# Pembaruan 2026-08-21 — Production Quality Disposition
+
+- Selesai: release gate QC memastikan hanya output diterima yang dapat menjadi finished goods.
+- Selesai: output ditolak ditahan dan wajib diputuskan sebagai rework atau scrap dengan alasan, instruksi, PIC, waktu, serta audit trail.
+- Selesai: disposition scrap membentuk jurnal seimbang Biaya Scrap / Manufacturing WIP memakai accounting mapping configurable dan idempotency key.
+- Verifikasi: `ManufacturingTraceabilityTest` mencakup material issue, QC accepted/rejected, completion, scrap disposition, stock ledger, dan tiga jurnal seimbang.
+
+# Pembaruan 2026-08-21 — Routing dan Biaya Konversi
+
+- Selesai: master work center dengan tarif tenaga kerja dan overhead per jam.
+- Selesai: routing berurutan per BOM dengan waktu standar per unit dan instruksi kerja.
+- Selesai: realisasi operasi idempotent membentuk jurnal Manufacturing WIP / penyerapan labor dan overhead.
+- Selesai: biaya barang jadi dan scrap memakai total material, tenaga kerja, serta overhead; variance waktu tampil terhadap routing standar.
+- Selesai: routing completion gate dan final cost true-up mencegah output melewati tahap kerja atau meninggalkan residual WIP akibat partial completion.
+
+# Pembaruan 2026-08-21 — Rekonsiliasi WIP Manufaktur
+
+- Selesai: laporan rekonsiliasi biaya aktual ke finished goods, scrap, dan residual WIP per production order.
+- Selesai: status WIP aktif dibedakan dari anomali order terminal sehingga saldo sah tidak ditandai keliru.
+- Selesai: period closing menolak order terminal yang masih mempunyai residual WIP.
+- Selesai: export CSV rekonsiliasi tersedia melalui permission laporan.
+- Selesai: over-issue material ditolak berdasarkan kebutuhan BOM dan allowance scrap; order terminal dengan scrap ditutup otomatis.
+
+# Pembaruan 2026-08-21 — Laporan Keuangan Formal
+
+- Selesai: trial balance dengan saldo awal, mutasi periode, dan saldo akhir debit/kredit.
+- Selesai: laba rugi berdasarkan akun revenue dan expense serta neraca berdasarkan asset, liability, equity, dan laba berjalan.
+- Selesai: laporan hanya mengambil jurnal posted dan terisolasi pada perusahaan aktif.
+
+# Pembaruan 2026-08-21 — AR/AP Aging
+
+- Selesai: aging piutang berdasarkan progress billing posted dikurangi customer receipt posted.
+- Selesai: aging utang berdasarkan vendor invoice matched dikurangi vendor payment posted.
+- Selesai: bucket 0–30, 31–60, 61–90, dan >90 hari per tanggal cut-off.
+- Decision required: default due date vendor invoice saat ini 30 hari; jadikan payment term configurable sebelum implementasi multi-term penuh.

@@ -19,3 +19,11 @@
 - ADR-017 Accepted: actual cost bersumber dari immutable project cost ledger; forecast ETC adalah snapshot terpisah dan EAC dihitung saat baca untuk mencegah angka turunan basi.
 - ADR-018 Accepted: depresiasi aset memakai straight-line berbasis decimal, satu posting per aset/periode, dan mapping akun configurable.
 - ADR-019 Accepted: Manufacturing Control menjadi workspace fokus; setiap perpindahan Raw Material/WIP/Finished Goods wajib mempunyai stock movement dan jurnal idempotent yang saling terkait.
+- ADR-020 Accepted: production completion tidak boleh melebihi kuantitas yang diterima Quality Control; rejected output tidak menambah finished goods.
+- ADR-021 Accepted: output produksi ditolak wajib diputuskan sebagai rework atau scrap; scrap mereklasifikasi biaya proporsional dari Manufacturing WIP ke akun biaya scrap configurable dan tidak menambah stok barang jadi.
+- ADR-022 Accepted: biaya konversi produksi dihitung dari jam aktual dikali tarif work center; tenaga kerja dan overhead diserap ke WIP melalui mapping akun configurable, sementara waktu standar routing menjadi baseline variance.
+- ADR-023 Accepted: production completion menyimpan biaya yang telah ditransfer dan melakukan final true-up atas saldo WIP; biaya scrap disimpan per disposition untuk mencegah biaya ganda atau residual WIP tersembunyi.
+- ADR-024 Accepted: period closing ditolak bila production order terminal masih memiliki residual WIP; order aktif boleh membawa WIP dengan rekonsiliasi eksplisit.
+- ADR-025 Accepted: material issue dibatasi kebutuhan BOM yang diskalakan terhadap planned output dan allowance scrap; output yang seluruhnya selesai/scrap ditutup sebagai `completed_with_scrap`.
+- ADR-026 Accepted: trial balance, laba rugi, dan neraca dihitung hanya dari jurnal posted; laba periode ditampilkan sebagai komponen rekonsiliasi liabilitas dan ekuitas tanpa membuat jurnal otomatis terselubung.
+- ADR-027 Accepted: aging AR/AP menghitung saldo dari dokumen posted/matched dikurangi receipt/payment posted sampai cut-off; invoice vendor tanpa due date memakai default operasional 30 hari yang harus dikonfigurasi pada kebijakan Finance berikutnya.
