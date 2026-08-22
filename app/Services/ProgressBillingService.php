@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\AccountingMapping;
 use App\Models\ApprovalRequest;
 use App\Models\CompanySetting;
+use App\Models\Document;
 use App\Models\ProgressBilling;
 use App\Models\Project;
 use App\Models\User;
@@ -75,8 +76,12 @@ class ProgressBillingService
             }if (bccomp((string) $billing->tax_amount, '0', 2) === 1) {
                 throw_unless($maps->has('tax_credit'), ValidationException::withMessages(['mapping' => 'Mapping tax_credit (PPN Keluaran) belum tersedia.']));
                 $lines[] = ['account_id' => $maps['tax_credit']->account_id, 'debit' => '0', 'credit' => $billing->tax_amount, 'project_id' => $billing->project_id];
-            }$journal = $this->accounting->post($billing->company_id, $billing->billing_date->toDateString(), 'progress_billing', (string) $billing->id, 'Progress billing '.$billing->number, $lines, 'progress-billing:'.$billing->id, $actor);
+            }            $journal = $this->accounting->post($billing->company_id, $billing->billing_date->toDateString(), 'progress_billing', (string) $billing->id, 'Progress billing '.$billing->number, $lines, 'progress-billing:'.$billing->id, $actor);
             $billing->update(['status' => 'posted', 'journal_id' => $journal->id]);
+            Document::firstOrCreate(
+                ['company_id' => $billing->company_id, 'document_type' => 'progress_billing', 'number' => $billing->number],
+                ['title' => 'Faktur tagihan '.$billing->number.' — '.$billing->project?->name, 'owner_id' => $actor->id, 'workflow_status' => 'approved', 'signature_status' => 'unsigned']
+            );
 
             return $billing->refresh();
         }, 3);

@@ -9,6 +9,7 @@ use App\Models\ApprovalWorkflow;
 use App\Models\BankAccount;
 use App\Models\Company;
 use App\Models\Customer;
+use App\Models\Document;
 use App\Models\FiscalPeriod;
 use App\Models\Item;
 use App\Models\NumberSequence;
@@ -48,6 +49,12 @@ class TaxIntegrationTest extends TestCase
         $service->activateApproved($billing, $user);
         $posted = $service->post($billing->refresh(), $user);
         $journal = $posted->journal()->with('entries')->first();
+
+        $doc = Document::where('document_type', 'progress_billing')->where('number', 'PB-TAX')->first();
+        $this->assertNotNull($doc);
+
+        $service->post($posted->refresh(), $user);
+        $this->assertSame(1, Document::where('document_type', 'progress_billing')->where('number', 'PB-TAX')->count());
 
         $debit = $journal->entries->reduce(fn ($sum, $line) => bcadd($sum, $line->debit, 2), '0');
         $credit = $journal->entries->reduce(fn ($sum, $line) => bcadd($sum, $line->credit, 2), '0');

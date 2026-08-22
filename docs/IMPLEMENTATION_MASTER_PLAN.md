@@ -245,3 +245,8 @@ Sisa Pending terakhir: foto evidence upload, auto-link dokumen registry, posting
 |---|---|---|---|---|---|
 | FO-EV-001 | Bored Pile | Upload foto evidence untuk drilling/delivery/test (JPG/PNG/WebP max 5MB) | Tested | smoke HTTP | Whitelist MIME + size di service |
 | FO-EV-002 | Bored Pile | Storage privat + download ber-authorization per company | Tested | smoke HTTP | Disk local, bukan public
+# Pembaruan 2026-08-23 (13) - Auto-link Dokumen Registry
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| DOC-LINK-001 | Governance | Progress billing posted otomatis terdaftar di document registry (idempotent) | Tested | TaxIntegrationTest | Pola sama bisa diterapkan ke PO/MWO berikutnya
