@@ -34,6 +34,7 @@ return [
                 ['label' => 'Output Ditolak & Disposition', 'href' => '/admin/manufacturing/nonconforming'],
             ]],
             ['label' => 'Produksi & Equipment', 'href' => '/admin/operations', 'icon' => 'wrench'],
+            ['label' => 'Tangki BBM & Rekonsiliasi', 'href' => '/admin/fuel-tanks', 'icon' => 'banknote'],
         ]],
         ['label' => 'Finance & Accounting', 'permission' => 'finance.view', 'items' => [
             ['label' => 'COA & General Ledger', 'href' => '/admin/finance', 'icon' => 'banknote', 'children' => [

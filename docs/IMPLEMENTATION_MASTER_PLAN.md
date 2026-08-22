@@ -187,3 +187,11 @@ Berikutnya (Pending): material request/goods issue/return ke project-pile; tools
 
 Endpoint tersedia: /api/v1/auth/token, /projects, /bored-piles, /daily-reports, /material-requests. Rate limit global 60/mnt, login token 10/mnt. Error envelope {message, errors}.
 Berikutnya (Pending): cage/casing domain penuh, tools check-out, fuel tank reconciliation, dashboard role QMS/HSE, OpenAPI spec.
+# Pembaruan 2026-08-23 (6) - Fuel Tank Inventory & Reconciliation
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| FUEL-001 | Equipment | Master tangki BBM + saldo awal | Tested | FuelTankTest | Kapasitas & code unik per company |
+| FUEL-002 | Equipment | Transaksi signed (receipt/issue/adjustment) idempotent per key | Tested | FuelTankTest | Duplikat mengembalikan transaksi lama |
+| FUEL-003 | Equipment | Rekonsiliasi fisik: selisih buku vs stik dicatat sebagai reading_adjustment ter-audit | Tested | FuelTankTest | Seimbang = tanpa penyesuaian |
+| UI-003 | UI | Kartu stok tangki + form + konfirmasi rekonsiliasi di /admin/fuel-tanks | Tested | smoke HTTP | Nav group Engineering & Workshop
