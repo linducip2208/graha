@@ -36,3 +36,4 @@
 - ADR-035 Accepted: reinforcement cage memakai QC independen (pembuat != pemeriksa) dengan gate berat: selisih aktual vs teoretis melebihi toleransi perusahaan menolak kelulusan; pengiriman hanya untuk cage passed ke titik berstatus cleaning/inspection/cage_installation, satu cage terkirim per titik.
 - ADR-036 Accepted: transisi bored pile inspection -> cage_installation dapat diwajibkan menunggu cage lolos QC terkirim melalui company setting require_cage_passed (default off agar migrasi data lama aman).
 - ADR-037 Accepted: pengalaman compiler Blade - hindari match()/ternary kompleks dan @if inline di dalam atribut komponen pada satu elemen; kondisi dipindah ke @php variabel sebelum HTML.
+- ADR-038 Accepted: fondasi multi-currency hanya menyediakan lookup kurs efektif-terakhir dan konversi ke IDR untuk agregasi laporan; jurnal tetap dicatat dalam mata uang transaksi, dan posting selisih kurs ditunda sampai kebijakan realized/unrealized disepakati.

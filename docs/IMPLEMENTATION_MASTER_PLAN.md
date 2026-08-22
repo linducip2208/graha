@@ -231,3 +231,11 @@ Sisa Pending: tools check-out/in, foto evidence upload, auto-link dokumen regist
 |---|---|---|---|---|---|
 | INV-TL-001 | Inventory | Register alat bantu + kartu kendali keluar/masuk | Tested | smoke HTTP | Holder, expected return, riwayat |
 | INV-TL-002 | Inventory | Aturan status: available -> checked_out -> available; lost final | Tested | smoke HTTP | Guard company di service
+# Pembaruan 2026-08-23 (11) - Multi-currency Foundation
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| ACC-FX-001 | Accounting | Tabel fx_rates per company/currency/effective_date + FxService | Tested | MultiCurrencyFoundationTest | IDR selalu rate 1 |
+| ACC-FX-002 | Accounting | Kolom currency pada billing/invoice/receipt/release + exchange_rate di billing | Implemented Core | - | Posting selisih kurs (realized/unrealized) masih Pending; UI input kurs menyusul |
+
+Sisa Pending terakhir: foto evidence upload, auto-link dokumen registry, posting selisih kurs, tools foto.
