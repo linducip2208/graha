@@ -6,11 +6,13 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CashBankController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\FieldOpsController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\FixedAssetController;
 use App\Http\Controllers\HseController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ManufacturingController;
+use App\Http\Controllers\MaterialRequestController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OperationsController;
 use App\Http\Controllers\OrganizationController;
@@ -19,8 +21,10 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectCostingController;
 use App\Http\Controllers\QmsController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\RfqController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SignatureController;
+use App\Http\Controllers\StockOpnameController;
 use App\Http\Controllers\TaxController;
 use App\Http\Controllers\TenderController;
 use Illuminate\Http\Request;
@@ -64,11 +68,28 @@ Route::middleware(['auth', 'company', 'permission:finance.view'])->prefix('admin
 });
 Route::middleware(['auth', 'company', 'permission:inventory.view'])->prefix('admin')->group(function () {
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
+    Route::get('/inventory/opname', [StockOpnameController::class, 'index'])->name('opname.index');
+    Route::post('/inventory/opname', [StockOpnameController::class, 'store'])->middleware('permission:inventory.manage');
+    Route::post('/inventory/opname/{count}/approve', [StockOpnameController::class, 'approve'])->middleware('permission:inventory.manage');
+    Route::get('/inventory/material-requests', [MaterialRequestController::class, 'index'])->name('material-requests.index');
+    Route::post('/inventory/material-requests', [MaterialRequestController::class, 'store'])->middleware('permission:inventory.manage');
+    Route::post('/inventory/material-requests/{material_request}/approve', [MaterialRequestController::class, 'approve'])->middleware('permission:inventory.manage');
+    Route::post('/inventory/material-requests/{material_request}/issue', [MaterialRequestController::class, 'issue'])->middleware('permission:inventory.manage');
+    Route::post('/inventory/material-requests/{material_request}/lines/{line}/return', [MaterialRequestController::class, 'returnLine'])->middleware('permission:inventory.manage');
     Route::post('/inventory/setup', [InventoryController::class, 'setup'])->middleware('permission:inventory.manage');
     Route::post('/inventory/movements', [InventoryController::class, 'movement'])->middleware('permission:inventory.manage');
 });
 Route::middleware(['auth', 'company', 'permission:project.view'])->prefix('admin')->group(function () {
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
+    Route::get('/projects/field-ops', [FieldOpsController::class, 'index'])->name('field-ops.index');
+    Route::post('/projects/field-ops/drillings', [FieldOpsController::class, 'storeDrilling'])->middleware('permission:project.manage');
+    Route::post('/projects/field-ops/drillings/{drilling}/verify', [FieldOpsController::class, 'verifyDrilling'])->middleware('permission:project.manage');
+    Route::post('/projects/field-ops/deliveries', [FieldOpsController::class, 'storeDelivery'])->middleware('permission:project.manage');
+    Route::post('/projects/field-ops/deliveries/{delivery}/approve', [FieldOpsController::class, 'approveDelivery'])->middleware('permission:project.manage');
+    Route::post('/projects/field-ops/deliveries/{delivery}/reject', [FieldOpsController::class, 'rejectDelivery'])->middleware('permission:project.manage');
+    Route::post('/projects/field-ops/tests', [FieldOpsController::class, 'storeTest'])->middleware('permission:project.manage');
+    Route::post('/projects/field-ops/tests/{test}/result', [FieldOpsController::class, 'recordTestResult'])->middleware('permission:project.manage');
+    Route::post('/projects/field-ops/tests/{test}/approve', [FieldOpsController::class, 'approveTest'])->middleware('permission:project.manage');
     Route::post('/project-zones', [ProjectController::class, 'zone'])->middleware('permission:project.manage');
     Route::post('/bored-piles', [ProjectController::class, 'pile'])->middleware('permission:project.manage');
     Route::post('/bored-piles/{pile}/transition', [ProjectController::class, 'transition'])->middleware('permission:project.manage');
@@ -77,6 +98,8 @@ Route::middleware(['auth', 'company', 'permission:project.view'])->prefix('admin
 Route::middleware(['auth', 'company', 'permission:tender.view'])->prefix('admin')->group(function () {
     Route::get('/tenders', [TenderController::class, 'index'])->name('tenders.index');
     Route::post('/customers', [TenderController::class, 'storeCustomer'])->middleware('permission:tender.manage');
+    Route::post('/competitors', [TenderController::class, 'storeCompetitor'])->middleware('permission:tender.manage');
+    Route::post('/participants', [TenderController::class, 'storeParticipant'])->middleware('permission:tender.manage');
     Route::post('/tenders', [TenderController::class, 'store'])->middleware('permission:tender.manage');
     Route::post('/tenders/{tender}/outcome', [TenderController::class, 'outcome'])->middleware('permission:tender.manage');
     Route::post('/tenders/{tender}/convert', [TenderController::class, 'convert'])->middleware('permission:tender.manage');
@@ -126,6 +149,11 @@ Route::middleware(['auth', 'company', 'permission:manufacturing.view'])->prefix(
 });
 Route::middleware(['auth', 'company', 'permission:procurement.view'])->prefix('admin/procurement')->group(function () {
     Route::get('/', [ProcurementController::class, 'index'])->name('procurement.index');
+    Route::get('/rfq', [RfqController::class, 'index'])->name('rfq.index');
+    Route::post('/rfq', [RfqController::class, 'store'])->middleware('permission:procurement.manage');
+    Route::post('/rfq/{rfq}/invite', [RfqController::class, 'invite'])->middleware('permission:procurement.manage');
+    Route::post('/rfq/{rfq}/quotations', [RfqController::class, 'submitQuotation'])->middleware('permission:procurement.manage');
+    Route::post('/rfq/quotations/{quotation}/select', [RfqController::class, 'select'])->middleware('permission:procurement.manage');
     Route::post('/vendors', [ProcurementController::class, 'vendor'])->middleware('permission:procurement.manage');
     Route::post('/orders', [ProcurementController::class, 'order'])->middleware('permission:procurement.manage');
     Route::post('/orders/{order}/submit', [ProcurementController::class, 'submit'])->middleware('permission:procurement.manage');

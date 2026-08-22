@@ -22,6 +22,9 @@ class BoredPileService
             $pile = BoredPile::lockForUpdate()->findOrFail($pile->id);
             $from = $pile->status;
             throw_unless(in_array($to, self::TRANSITIONS[$from] ?? [], true), ValidationException::withMessages(['status' => "Transisi {$from} ke {$to} tidak diizinkan."]));
+            if ($to === 'completed') {
+                app(FieldOpsService::class)->completionGate($pile);
+            }
             $pile->activities()->whereNull('finished_at')->latest()->first()?->update(['finished_at' => now()]);
             $pile->activities()->create(['from_status' => $from, 'to_status' => $to, 'started_at' => now(), 'notes' => $notes, 'recorded_by' => $actor->id]);
             $pile->update(['status' => $to]);

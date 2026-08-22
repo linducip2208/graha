@@ -34,14 +34,20 @@ class SettingsController extends Controller
     public function save(Request $request, CurrentCompany $current)
     {
         $data = $request->validate([
+            'company_address' => ['nullable', 'max:300'],
+            'company_phone' => ['nullable', 'max:40'],
+            'company_email' => ['nullable', 'email', 'max:120'],
+            'company_npwp' => ['nullable', 'max:40'],
             'default_payment_term_days' => ['required', 'integer', 'between:0,365'],
             'default_retention_percent' => ['required', 'decimal:0,4', 'between:0,100'],
             'default_ppn_percent' => ['required', 'decimal:0,4', 'between:0,100'],
             'default_overbreak_tolerance_percent' => ['required', 'decimal:0,3', 'between:0,100'],
+            'require_pile_test_pass' => ['nullable', 'boolean'],
             'invoice_footer_note' => ['nullable', 'max:500'],
         ]);
         abort_unless($request->user()->hasPermission('finance.manage', $current->id()), 403);
-        CompanySetting::put($current->id(), $data);
+        $data['require_pile_test_pass'] = $request->boolean('require_pile_test_pass') ? '1' : '0';
+        CompanySetting::put($current->id(), array_map(fn ($v) => (string) $v, $data));
 
         return back()->with('status', 'Pengaturan perusahaan tersimpan.');
     }

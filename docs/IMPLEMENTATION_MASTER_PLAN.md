@@ -125,3 +125,65 @@ Roadmap mengikuti delapan fase master command. Migration additive dan backward-c
 - Selesai: aging utang berdasarkan vendor invoice matched dikurangi vendor payment posted.
 - Selesai: bucket 0–30, 31–60, 61–90, dan >90 hari per tanggal cut-off.
 - Decision required: default due date vendor invoice saat ini 30 hari; jadikan payment term configurable sebelum implementasi multi-term penuh.
+
+# Pembaruan 2026-08-23 — Field Operations & Hardening
+
+## Status Master (ringkas)
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| BPM-001 | Proses | Rekonsiliasi Business Process Mapping Level 0 | Blocked | - | File `docs/PM 04` belum tersedia di repo; baseline alur bisnis internal dipakai |
+| FO-001 | Bored Pile | Master pile diperluas (koordinat, elevasi, toe/cut-off, grade, rig, PIC) | Tested | FieldOperationsTest | Kolom additive backward-compatible |
+| FO-002 | Bored Pile | Drilling record + bore log lapisan ternormalisasi + verifikasi independen | Tested | FieldOperationsTest | Perekam != verifikator; kedalaman terdalam memperbarui actual_depth |
+| FO-003 | Bored Pile | Concrete delivery truck: slump, accept/reject, approve = single source aktual pile | Tested | FieldOperationsTest | Recalculate overbreak vs toleransi proyek/setting |
+| FO-004 | Bored Pile | Pile testing PIT/PDA/CSL/SLT/DLT + gate completed | Tested | FieldOperationsTest | Gate: scheduled harus tuntas; setting require_pile_test_pass=1 wajib ada passed |
+| TAX-001 | Accounting | PPN keluaran/masukan, PPh 23/final, bukti potong dua arah | Tested | TaxIntegrationTest | Selesai sesi sebelumnya |
+| SET-001 | Sistem | Company defaults editable (/admin/settings) | Tested | CompanySettingsTest | Fallback chain customer → perusahaan |
+| TI-001 | Tender | Tender intelligence (peserta, kompetitor, win-rate) | Pending | - | Belum dimulai |
+| PR-001 | Procurement | RFQ, bid comparison, vendor evaluation | Pending | - | Belum dimulai |
+| INV-001 | Inventory | Reservation, opname, return, tools/fuel tank | Partial | - | Stok kritis alert sudah Tested; sisanya Pending |
+| API-001 | API | /api/v1 field-ready foundation | Pending | - | Belum dimulai |
+
+Log: Field Operations end-to-end (drilling/bore log ternormalisasi ADR-028, concrete delivery approval-driven ADR-029, testing gate ADR-030); README produk menggantikan README Laravel; CI quality-gate terverifikasi lengkap (composer+migrate+pint+test+build).
+
+# Pembaruan 2026-08-23 (2) — Tender Intelligence
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| TI-001 | Tender | Competitor master + peserta per tender (rank/bid/winner eksklusif) | Tested | TenderIntelligenceTest | Winner tunggal di-enforce service |
+| TI-002 | Tender | Win/loss rate, lost opportunity, avg vs HPS, top competitor | Tested | TenderIntelligenceTest | Formula sesuai spec; draft/cancelled/no-bid/bidding di-exclude |
+| TI-003 | Tender | Kartu intel + form peserta/kompetitor di halaman tender | Tested | smoke HTTP | Label UI Bahasa Indonesia |
+
+Catatan: loss-analysis (primary_reason, elimination_stage, lesson_learned, improvement) ternyata sudah tersedia di `tender_outcomes` sejak baseline; tidak dibuat ulang — cukup diexpose lebih lanjut pada dashboard Fase F.
+
+# Pembaruan 2026-08-23 (3) — RFQ & Stock Opname (Fase C)
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| PR-RFQ-001 | Procurement | RFQ + item, nomor unik per company | Tested | RfqTest | SKU-based line input |
+| PR-RFQ-002 | Procurement | Undang vendor (guard company) | Tested | RfqTest | Idempotent per pasangan rfq-vendor |
+| PR-RFQ-003 | Procurement | Quotation wajib vendor terundang + item set persis | Tested | RfqTest | Upsert per vendor |
+| PR-RFQ-004 | Procurement | Bid comparison (total/lead/skor) + seleksi pemenang eksklusif, RFQ auto-close | Tested | RfqTest | Loser otomatis rejected |
+| INV-OPN-001 | Inventory | Stock opname draft -> approval user lain -> adjustment idempotent hanya baris bervarian | Tested | StockOpnameTest | Negative count ditolak di create |
+| UI-002 | UI | Halaman /admin/procurement/rfq & /admin/inventory/opname mobile-friendly + nav | Tested | smoke HTTP | Konfirmasi irreversible pakai confirm() |
+
+Berikutnya (Pending): material request/goods issue/return ke project-pile; tools check-out; fuel tank reconciliation; cage & casing domain penuh; API v1.
+# Pembaruan 2026-08-23 (4) — Material Request -> Issue -> Project Cost
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| INV-MR-001 | Inventory | Permintaan material per proyek/pile + approval pemisah | Tested | MaterialRequestTest | Pemohon != approver |
+| INV-MR-002 | Inventory | Issue parsial/penuh dari gudang (ledger immutable, FIFO cost terakhir) | Tested | MaterialRequestTest | Key idempotency per baris |
+| ACC-MAT-001 | Accounting | Jurnal Biaya Material (D) / Gudang (K) berdimensi proyek via mapping material_issue | Tested | MaterialRequestTest | Otomatis masuk ProjectCostLedger |
+# Pembaruan 2026-08-23 (5) — Material Return & API v1 Foundation
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| INV-RET-001 | Inventory | Pengembalian material: stok masuk dgn unit cost issue terakhir, jurnal dibalik, cost ledger dikoreksi negatif | Tested | MaterialRequestTest | Siklus material lengkap |
+| API-001 | API | POST /api/v1/auth/token (Sanctum, throttle 10/mnt) | Tested | ApiV1Test | |
+| API-002 | API | GET projects & bored-piles terisolasi company via header X-Company-Id | Tested | ApiV1Test | 403 lintas company |
+| API-003 | API | POST daily-reports (permission project.manage) + validasi 422 konsisten | Tested | ApiV1Test | |
+| API-004 | API | GET/POST material-requests (permission inventory.manage) | Tested | ApiV1Test | |
+
+Endpoint tersedia: /api/v1/auth/token, /projects, /bored-piles, /daily-reports, /material-requests. Rate limit global 60/mnt, login token 10/mnt. Error envelope {message, errors}.
+Berikutnya (Pending): cage/casing domain penuh, tools check-out, fuel tank reconciliation, dashboard role QMS/HSE, OpenAPI spec.

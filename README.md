@@ -1,58 +1,105 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Graha Pondasi ERP
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistem ERP terintegrasi untuk kontraktor pondasi (bored pile): dari tender, kontrak, pelaksanaan lapangan, manufacturing cage, procurement & inventory, sampai accounting Indonesia, QMS ISO 9001, HSE, document control, approval berjenjang, dan digital signing — dalam satu jejak data yang dapat diaudit.
 
-## About Laravel
+## Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Laravel 13 · PHP 8.3 · MySQL 8.4
+- Blade + Tailwind CSS v4 (Vite)
+- PHPUnit · Laravel Pint
+- Modular monolith, multi-company (company isolation ketat)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Module Map
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| Grup Menu | Modul | Keterangan |
+|---|---|---|
+| Dashboard | Executive Dashboard | Kartu per-permission, chart pendapatan/PPN, aging AR/AP |
+| Organisasi | Company, Branch, Department, RBAC per membership | `organization.*` |
+| Marketing & Tender | Pelanggan (term pembayaran), Tender, Outcome, Konversi Proyek | `tender.*` |
+| Project & Bored Pile | Proyek, Zona, Titik Pile (9-status lifecycle), Gantt & Kurva-S, **Field Operations** (drilling record + bore log ternormalisasi, concrete delivery dengan slump/accept-reject, pile testing PIT/PDA/CSL/SLT/DLT dengan gate kelulusan) | `project.*` |
+| Supply Chain | Item/UoM/Warehouse/Bin, ledger immutable, stok kritis alert harian | `inventory.*` |
+| Procurement | Vendor, PO versi + revision snapshot, three-way matching, GRNI posting | `procurement.*` |
+| Engineering & Workshop | BOM, routing work center, WIP reconciliation, QC disposition, equipment hour meter/fuel/MWO | `manufacturing.*`, `equipment.*` |
+| Finance & Accounting | COA, jurnal balanced idempotent, mapping configurable, periode fiskal + closing gate, Progress Billing (retensi/uang muka/**PPN keluaran**/faktur PDF terbilang), release retensi, kas-bank + rekonsiliasi, **Pajak & Bukti Potong** (PPN masukan, PPh 23, PPh final 4(2)), project costing EAC, fixed asset depresiasi | `finance.*`, `accounting.post` |
+| Governance | Document control versi + hash SHA-256, download isolation | `document.*` |
+| Approval & Signing | Approval engine sequential/any/all/quorum + SLA + delegasi; digital signing provider-agnostic terikat version+hash | `approval.*`, `signature.*` |
+| Quality, HSE & ISO | Risiko/peluang, NCR/CAPA (independence guard), audit mutu internal, evidence expiry; JSA, izin kerja, incident | `qms.*`, `hse.*` |
+| Pengaturan | Default perusahaan (termin, retensi %, PPN %, toleransi overbreak, catatan faktur) | `finance.manage` |
+| Administrasi | Notifikasi (in-app bell + email), Audit Trail hash-chain viewer | `audit.view` |
 
-## Learning Laravel
+## Alur Bisnis Utama
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+```
+Tender → Estimasi → Won → Award → Signing → Handover → Proyek aktif
+  ├─ RFQ/PO → Goods Receipt → Inventory
+  ├─ Manufacturing cage → Delivery ke titik
+  ├─ Drilling record → Cage installation → Concrete delivery (approve = volume aktual) → Testing (gate completed)
+  └─ Progress Billing (PPN keluaran) → Customer Receipt (PPh final dipotong) → Jurnal → Costing → Closing
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+## Installation
 
-## Contributing
+```bash
+git clone https://github.com/linducip2208/graha.git && cd graha
+composer install --no-interaction
+cp .env.example .env && php artisan key:generate
+# konfigurasi DB MySQL di .env, lalu:
+php artisan migrate --seed     # --seed memuat data demo lengkap
+npm ci && npm run build
+php artisan serve
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Akun Demo (password semua: `password`)
 
-## Code of Conduct
+| Role | Email | Cakupan |
+|---|---|---|
+| Super Admin | admin@grahapondasi.test | Semua modul + audit trail |
+| Finance Manager | finance@grahapondasi.test | Billing, pajak, jurnal, laporan |
+| Project Manager | pm@grahapondasi.test | Proyek, field ops, equipment, HSE |
+| Procurement Officer | procurement@grahapondasi.test | Vendor, PO, gudang |
+| Direktur Operasi | direktur@grahapondasi.test | Approval center, tender |
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Queue & Scheduler (production)
 
-## Security Vulnerabilities
+```
+php artisan queue:work --tries=3          # supervisor
+php artisan schedule:work                 # atau cron: * * * * * php artisan schedule:run
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Job terjadwal: backup DB harian 02:15, expiry evidence QMS 01:30, SLA approval per jam, notifikasi stok kritis 07:00, tenggat CAPA/NCR 08:00.
 
-## License
+## Storage & Signature Provider
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+File dokumen disimpan di `storage/app/private` (download lewat route ber-authorization, bukan public disk). Digital signing memakai pola **format-based generic adapter**: nama provider, endpoint, credential diinput user (terenkripsi), webhook HMAC + idempotency + replay protection di `/webhooks/signatures/{provider}`.
+
+## Accounting Mapping
+
+Tidak ada nomor akun yang di-hardcode. Setiap event transaksi (`progress_billing`, `customer_receipt`, `vendor_invoice`, `vendor_payment`, `goods_receipt`, dll.) dipetakan ke akun debit/kredit/tax via UI Accounting Mapping, dengan effective date. Jurnal wajib seimbang, idempotent, dan dikontrol periode fiskal.
+
+## Testing
+
+```bash
+composer test        # config:clear + artisan test (SQLite :memory:)
+vendor/bin/pint      # code style
+npm run build        # frontend build
+node scripts/screenshot.cjs   # screenshot marketing (butuh server di :8899)
+```
+
+## Deployment
+
+Lihat `DEPLOYMENT.md` + template `deploy/nginx.conf` dan `deploy/supervisor.conf`. Ringkas: PHP 8.3 + ekstensi bcmath/pdo_mysql, MySQL 8.4, `php artisan migrate --force`, storage link private, queue worker + scheduler via supervisor, HTTPS wajib (security headers sudah aktif).
+
+## Backup & Restore
+
+Backup harian otomatis via command `backup:database` (retensi 14 hari) ke storage. Restore manual: import dump terakhir ke database kosong lalu jalankan `migrate --force` (migration additive).
+
+## Security
+
+Company isolation di controller + invariant service; RBAC per membership; CSRF + security headers; upload dokumen privat; audit log append-only hash-chain; rate limit login & webhook; secret signature provider terenkripsi.
+
+## Known Limitations
+
+- Business Process Mapping Level 0 (`docs/PM 04`) belum tersedia → baseline alur bisnis internal (lihat docs).
+- Multi-currency baru fondasi kolom; kurs & selisih kurs belum.
+- HR/payroll sengaja di luar scope.
+- Dark mode: override permukaan umum; chart per-halaman masih default terang saat toggle runtime (refresh menyinkronkan).

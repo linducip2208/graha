@@ -151,6 +151,8 @@ class DemoDataSeeder extends Seeder
             ['customer_receipt', 'withholding_debit', '1-1300'],
             ['goods_receipt', 'debit', '1-2000'],
             ['goods_receipt', 'credit', '2-2000'],
+            ['material_issue', 'debit', '5-2000'],
+            ['material_issue', 'credit', '1-2000'],
             ['vendor_invoice', 'debit', '5-2000'],
             ['vendor_invoice', 'credit', '2-2100'],
             ['vendor_invoice', 'tax_debit', '1-1200'],

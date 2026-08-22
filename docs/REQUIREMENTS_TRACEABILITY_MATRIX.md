@@ -80,3 +80,15 @@
 | OPS-002 | Automated production configuration readiness gate | ProductionReadinessCheck/GitHub Actions | command execution/CI | Implemented core |
 | ACC-006 | Trial balance, laba rugi, dan neraca dari posted journals | FinancialStatementService/reports.financial-statements | FinancialStatementTest | Implemented core |
 | ACC-007 | Aging piutang/utang dengan paid offset dan bucket cut-off | ReceivablePayableAgingService/reports.aging | ReceivablePayableAgingTest | Implemented core |
+| BP-FO-001 | Master pile diperluas (grid, lat/long, elevasi, toe/cut-off, grade, rig, PIC) | migration 230000 + BoredPile casts | FieldOperationsTest | Implemented |
+| BP-FO-002 | Drilling record + bore log ternormalisasi + verifikasi independen | BoredPileDrilling(+Layer), FieldOpsService | FieldOperationsTest | Tested |
+| BP-FO-003 | Concrete direct delivery (slump, accept/reject, approve) | ConcreteDelivery, FieldOpsService | FieldOperationsTest | Tested |
+| BP-FO-004 | Pile testing + gate completed | PileTest, completionGate di BoredPileService | FieldOperationsTest | Tested |
+| BP-FO-005 | UI field ops mobile-friendly | projects/field-ops.blade.php + nav | smoke test | Implemented Core |
+| SET-002 | Company defaults editable + fallback chain | CompanySetting, SettingsController@save | CompanySettingsTest | Tested |
+| TI-COMP-001 | Competitor master per company | Competitor model + form di tenders.index | TenderIntelligenceTest | Tested |
+| TI-PART-001 | Peserta tender rank/bid/winner eksklusif | TenderParticipant + TenderIntelligenceService | TenderIntelligenceTest | Tested |
+| TI-STAT-001 | Win rate, lost opportunity, avg vs HPS, top competitor | stats() formula spec-compliant | TenderIntelligenceTest | Tested |
+| ADR-031 | Winner flag peserta harus tunggal per tender | update reset winner lain dalam transaksi | TenderIntelligenceTest | Implemented |
+| INV-MR-001 | Material request dengan approval pemisah | MaterialRequestService | MaterialRequestTest | Tested |
+| ACC-MAT-001 | Jurnal issue material berdimensi proyek | event mapping material_issue | MaterialRequestTest | Tested |

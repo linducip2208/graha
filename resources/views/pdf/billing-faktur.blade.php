@@ -18,7 +18,12 @@ table.detail th{background:#f1f5f9;text-align:left;font-size:10px;text-transform
 .footer{margin-top:36px;border-top:1px solid #e2e8f0;padding-top:8px;font-size:9px;color:#94a3b8;text-align:center}
 </style></head><body>
 <div class="kop">
-<div><div class="brand">{{ $company->name }}</div><div style="font-size:11px;color:#475569">Jasa Konstruksi Pondasi — Bored Pile & Pile Cap</div></div>
+<div>
+@php($meta = collect([\App\Models\CompanySetting::val($company->id, 'company_address'), 'Telp: '.\App\Models\CompanySetting::val($company->id, 'company_phone'), \App\Models\CompanySetting::val($company->id, 'company_email'), 'NPWP: '.\App\Models\CompanySetting::val($company->id, 'company_npwp')])->filter(fn ($v) => $v !== '' && $v !== 'Telp: ' && $v !== 'NPWP: '))
+<div class="brand">{{ $company->name }}</div>
+@foreach($meta as $line)<div style="font-size:10px;color:#475569">{{ $line }}</div>@endforeach
+@if($meta->isEmpty())<div style="font-size:11px;color:#475569">Jasa Konstruksi Pondasi — Bored Pile & Pile Cap</div>@endif
+</div>
 <div class="meta">No. Faktur: <strong>{{ $billing->number }}</strong><br>Tanggal: {{ $billing->billing_date->format('d/m/Y') }}<br>Jatuh Tempo: {{ $billing->due_date?->format('d/m/Y') ?? '-' }}</div>
 </div>
 <div class="title"><h1>Faktur Tagihan Progres</h1><p style="margin:4px 0 0;color:#475569">Proyek: {{ $project->name }} ({{ $project->code }}) · Pelanggan: {{ $customerName }}</p></div>

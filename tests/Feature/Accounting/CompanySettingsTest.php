@@ -40,4 +40,17 @@ class CompanySettingsTest extends TestCase
         $this->assertSame('11', CompanySetting::val($company->id, 'default_ppn_percent'));
         $this->assertSame('', CompanySetting::val($company->id, 'unknown_key'));
     }
+
+    public function test_identity_and_quality_flags_persist(): void
+    {
+        $company = Company::create(['code' => 'GY', 'name' => 'GY']);
+        CompanySetting::put($company->id, [
+            'company_address' => 'Jl. Raya Cikarang No. 10',
+            'company_npwp' => '01.234.567.8-999.000',
+            'require_pile_test_pass' => '1',
+        ]);
+        $this->assertSame('Jl. Raya Cikarang No. 10', CompanySetting::val($company->id, 'company_address'));
+        $this->assertSame('01.234.567.8-999.000', CompanySetting::val($company->id, 'company_npwp'));
+        $this->assertSame('1', CompanySetting::val($company->id, 'require_pile_test_pass'));
+    }
 }

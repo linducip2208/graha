@@ -9,11 +9,23 @@ use Illuminate\Support\Facades\DB;
 class CompanySetting extends Model
 {
     public const DEFAULTS = [
+        'company_address' => '',
+        'company_phone' => '',
+        'company_email' => '',
+        'company_npwp' => '',
         'default_payment_term_days' => '30',
         'default_retention_percent' => '5',
         'default_ppn_percent' => '11',
         'default_overbreak_tolerance_percent' => '8',
+        'require_pile_test_pass' => '0',
         'invoice_footer_note' => 'Terima kasih atas kerja sama Anda.',
+    ];
+
+    public const LABELS = [
+        'company_address' => 'Alamat kantor',
+        'company_phone' => 'Telepon',
+        'company_email' => 'Email',
+        'company_npwp' => 'NPWP',
     ];
 
     protected $guarded = [];

@@ -15,13 +15,17 @@ return [
         ]],
         ['label' => 'Project & Bored Pile', 'permission' => 'project.view', 'items' => [
             ['label' => 'Proyek & Titik Bored Pile', 'href' => '/admin/projects', 'icon' => 'cube'],
+            ['label' => 'Field Operations', 'href' => '/admin/projects/field-ops', 'icon' => 'wrench'],
         ]],
         ['label' => 'Supply Chain', 'permission' => 'inventory.view', 'items' => [
             ['label' => 'Inventory & Gudang', 'href' => '/admin/inventory', 'icon' => 'archive'],
             ['label' => 'Stok Kritis', 'href' => '/admin/inventory#stok-kritis', 'icon' => 'alert'],
+            ['label' => 'Stock Opname', 'href' => '/admin/inventory/opname', 'icon' => 'calculator'],
+            ['label' => 'Permintaan Material', 'href' => '/admin/inventory/material-requests', 'icon' => 'cart'],
         ]],
         ['label' => 'Procurement', 'permission' => 'procurement.view', 'items' => [
             ['label' => 'Vendor, PO & Receipt', 'href' => '/admin/procurement', 'icon' => 'cart'],
+            ['label' => 'RFQ & Perbandingan Harga', 'href' => '/admin/procurement/rfq', 'icon' => 'swap'],
         ]],
         ['label' => 'Engineering & Workshop', 'permission' => 'manufacturing.view', 'items' => [
             ['label' => 'Manufacturing Control', 'href' => '/admin/manufacturing', 'icon' => 'cog', 'children' => [
