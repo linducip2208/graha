@@ -239,3 +239,9 @@ Sisa Pending: tools check-out/in, foto evidence upload, auto-link dokumen regist
 | ACC-FX-002 | Accounting | Kolom currency pada billing/invoice/receipt/release + exchange_rate di billing | Implemented Core | - | Posting selisih kurs (realized/unrealized) masih Pending; UI input kurs menyusul |
 
 Sisa Pending terakhir: foto evidence upload, auto-link dokumen registry, posting selisih kurs, tools foto.
+# Pembaruan 2026-08-23 (12) - Foto Evidence Field Ops
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| FO-EV-001 | Bored Pile | Upload foto evidence untuk drilling/delivery/test (JPG/PNG/WebP max 5MB) | Tested | smoke HTTP | Whitelist MIME + size di service |
+| FO-EV-002 | Bored Pile | Storage privat + download ber-authorization per company | Tested | smoke HTTP | Disk local, bukan public

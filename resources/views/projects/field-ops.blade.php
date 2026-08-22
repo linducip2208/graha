@@ -31,6 +31,7 @@
 <details class="mt-2"><summary class="cursor-pointer text-xs font-bold text-sky-700">Bore log</summary>
 <table class="mt-2 w-full text-xs"><thead><tr><th>#</th><th>Dari (m)</th><th>Ke (m)</th><th>Deskripsi</th></tr></thead><tbody>@foreach($d->layers as $layer)<tr><td>{{ $layer->sequence }}</td><td>{{ $layer->depth_from_m }}</td><td>{{ $layer->depth_to_m }}</td><td>{{ $layer->soil_description }}</td></tr>@endforeach</tbody></table></details>
 @if($canManage && $d->status === 'draft' && $d->recorded_by !== auth()->id())<form method="post" action="/admin/projects/field-ops/drillings/{{ $d->id }}/verify" class="mt-2">@csrf<button class="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white">Verifikasi</button></form>@endif
+<form method="post" action="/admin/projects/field-ops/evidence/drilling" enctype="multipart/form-data" class="mt-2 flex flex-wrap items-center gap-2 no-print">@csrf<input type="hidden" name="id" value="{{ $d->id }}"><input type="file" name="file" accept=".jpg,.jpeg,.png,.webp" required class="text-xs"><button class="rounded-lg border px-2 py-1 text-xs font-bold">Lampirkan foto</button></form>
 </article>
 @empty<x-ui.empty icon="document" title="Belum ada drilling record" description="Pilih proyek aktif dan rekam drilling pertama beserta bore log lapisan tanahnya." />@endforelse</div>
 

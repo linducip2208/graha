@@ -93,6 +93,8 @@ Route::middleware(['auth', 'company', 'permission:project.view'])->prefix('admin
     Route::post('/projects/field-ops/tests', [FieldOpsController::class, 'storeTest'])->middleware('permission:project.manage');
     Route::post('/projects/field-ops/tests/{test}/result', [FieldOpsController::class, 'recordTestResult'])->middleware('permission:project.manage');
     Route::post('/projects/field-ops/tests/{test}/approve', [FieldOpsController::class, 'approveTest'])->middleware('permission:project.manage');
+    Route::post('/projects/field-ops/evidence/{type}', [FieldOpsController::class, 'uploadEvidence'])->middleware('permission:project.manage');
+    Route::get('/field-evidence/{evidence}/download', [FieldOpsController::class, 'downloadEvidence'])->name('evidence.download');
     Route::post('/project-zones', [ProjectController::class, 'zone'])->middleware('permission:project.manage');
     Route::post('/bored-piles', [ProjectController::class, 'pile'])->middleware('permission:project.manage');
     Route::post('/bored-piles/{pile}/transition', [ProjectController::class, 'transition'])->middleware('permission:project.manage');

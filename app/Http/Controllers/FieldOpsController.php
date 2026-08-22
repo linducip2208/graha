@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\BoredPile;
 use App\Models\BoredPileDrilling;
 use App\Models\ConcreteDelivery;
+use App\Models\FieldEvidence;
 use App\Models\PileTest;
 use App\Models\Project;
 use App\Models\Vendor;
 use App\Services\FieldOpsService;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -166,6 +168,26 @@ class FieldOpsController extends Controller
         $service->approvePileTestResult($test, $request->user());
 
         return back()->with('status', 'Hasil uji disetujui konsultan.');
+    }
+
+    public function uploadEvidence(Request $request, string $type, CurrentCompany $current, FieldOpsService $service)
+    {
+        $data = $request->validate([
+            'id' => ['required', 'integer'],
+            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ]);
+        abort_unless(in_array($type, array_keys(FieldEvidence::TYPES), true), 404);
+        $evidence = $service->storeEvidence($type, (int) $data['id'], $request->file('file'), $request->user());
+
+        return back()->with('status', "Foto terlampir (#{$evidence->id}).");
+    }
+
+    public function downloadEvidence(Request $request, FieldEvidence $evidence)
+    {
+        abort_unless($evidence->company_id === app(CurrentCompany::class)->id(), 404);
+        abort_unless(Storage::disk('local')->exists($evidence->disk_path), 404);
+
+        return Storage::disk('local')->download($evidence->disk_path, $evidence->original_name);
     }
 
     private function parseLayers(string $raw): array

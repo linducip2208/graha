@@ -9,6 +9,7 @@ use App\Models\CompanySetting;
 use App\Models\ConcreteDelivery;
 use App\Models\PileTest;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -155,6 +156,31 @@ class FieldOpsService
 
             return $test->refresh();
         }, 3);
+    }
+
+    /** Simpan foto evidence ke storage privat dengan whitelist MIME dan batas 5 MB. */
+    public function storeEvidence(string $type, int $id, UploadedFile $file, User $actor): FieldEvidence
+    {
+        $class = FieldEvidence::TYPES[$type] ?? throw ValidationException::withMessages(['evidence' => 'Jenis evidence tidak dikenal.']);
+        $subject = $class::query()->findOrFail($id);
+        $companyId = $subject->company_id ?? $subject->project?->company_id;
+        throw_unless($actor->companies()->whereKey($companyId)->where('company_user.is_active', true)->exists(), ValidationException::withMessages(['company' => 'Anda bukan anggota aktif perusahaan ini.']));
+        throw_unless($file->isValid(), ValidationException::withMessages(['file' => 'Berkas tidak valid.']));
+        throw_unless(in_array($file->getMimeType(), ['image/jpeg', 'image/png', 'image/webp'], true), ValidationException::withMessages(['file' => 'Hanya JPG/PNG/WebP yang diizinkan.']));
+        throw_if($file->getSize() > 5 * 1024 * 1024, ValidationException::withMessages(['file' => 'Ukuran maksimal 5 MB.']));
+
+        $path = $file->store("evidence/{$companyId}/{$type}/{$id}", 'local');
+
+        return FieldEvidence::create([
+            'company_id' => $companyId,
+            'evidence_type' => $type,
+            'evidence_id' => $id,
+            'disk_path' => $path,
+            'original_name' => $file->getClientOriginalName(),
+            'mime' => $file->getMimeType(),
+            'size_kb' => (int) ceil($file->getSize() / 1024),
+            'uploaded_by' => $actor->id,
+        ]);
     }
 
     public function completionGate(BoredPile $pile): void
