@@ -3,17 +3,88 @@
 namespace App\Http\Controllers;
 
 use App\Models\BoredPile;
+use App\Models\ProgressBilling;
 use App\Models\Project;
 use App\Models\ProjectZone;
 use App\Services\BoredPileService;
 use App\Support\Tenancy\CurrentCompany;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {
-    public function index(CurrentCompany $current)
+    public function index(Request $request, CurrentCompany $current)
     {
-        return view('projects.index', ['projects' => Project::where('company_id', $current->id())->withCount('boredPiles')->latest()->get(), 'zones' => ProjectZone::whereHas('project', fn ($q) => $q->where('company_id', $current->id()))->with('project')->get(), 'piles' => BoredPile::whereHas('project', fn ($q) => $q->where('company_id', $current->id()))->with(['project', 'zone'])->latest()->paginate(30)]);
+        $companyId = $current->id();
+        $projects = Project::where('company_id', $companyId)->withCount('boredPiles')->latest()->get();
+        $selected = $projects->firstWhere('id', (int) $request->query('project')) ?? $projects->first();
+
+        return view('projects.index', [
+            'projects' => $projects,
+            'zones' => ProjectZone::whereHas('project', fn ($q) => $q->where('company_id', $companyId))->with('project')->get(),
+            'piles' => BoredPile::whereHas('project', fn ($q) => $q->where('company_id', $companyId))->with(['project', 'zone'])->latest()->paginate(30),
+            'schedule' => $selected ? $this->buildSchedule($selected) : null,
+        ]);
+    }
+
+    private function buildSchedule(Project $project): array
+    {
+        $piles = $project->boredPiles()->with('activities')->orderBy('pile_number')->get()->map(function ($pile) {
+            $starts = $pile->activities->min('started_at');
+            $ends = $pile->activities->max('finished_at');
+
+            return ['pile' => $pile, 'start' => $starts?->copy(), 'end' => $ends ? Carbon::instance($ends) : null];
+        })->values();
+
+        $windowStart = $project->planned_start ?? $piles->map(fn ($row) => $row['start'])->filter()->min() ?? now()->subMonth();
+        $windowEnd = $project->planned_end ?? now()->addMonth();
+        $windowStart = Carbon::parse($windowStart);
+        $windowEnd = Carbon::parse($windowEnd);
+        $totalDays = max(1, (int) $windowStart->diffInDays($windowEnd));
+
+        $bars = $piles->filter(fn ($row) => $row['start'])->map(function ($row) use ($windowStart, $totalDays) {
+            $end = $row['end'] ?? now();
+            $offset = max(0, (int) $windowStart->diffInDays($row['start']));
+            $length = max(2, min($totalDays - $offset, (int) ceil($windowStart->copy()->addDays($offset)->diffInDays($end))));
+
+            return ['pile' => $row['pile'], 'left' => round($offset / $totalDays * 100, 2), 'width' => round($length / $totalDays * 100, 2), 'running' => $row['end'] === null];
+        })->values();
+
+        $posted = ProgressBilling::where('project_id', $project->id)->where('status', 'posted')->orderBy('billing_date')->get();
+        $contractValue = (float) ($project->contract_value ?: 0);
+        $curve = collect();
+        if ($contractValue > 0 && $project->planned_start && $project->planned_end) {
+            $months = [];
+            $cursor = Carbon::parse($project->planned_start)->startOfMonth();
+            while ($cursor <= $windowEnd && count($months) < 24) {
+                $months[] = $cursor->copy();
+                $cursor->addMonth();
+            }
+            $totalPlannedDays = max(1, Carbon::parse($project->planned_start)->diffInDays(Carbon::parse($project->planned_end)));
+            $cumulativeActual = '0';
+            foreach ($months as $month) {
+                $monthEnd = $month->copy()->endOfMonth();
+                $plannedFraction = min(1, max(0, Carbon::parse($project->planned_start)->diffInDays($monthEnd) / $totalPlannedDays));
+                $cumulativeActual = bcadd($cumulativeActual, (string) $posted->whereBetween('billing_date', [$month->copy(), $monthEnd])->sum('gross_amount'), 2);
+                $curve[] = ['label' => $month->translatedFormat('M y'), 'planned' => round($plannedFraction * 100, 2), 'actual' => round((float) bcdiv(bcmul($cumulativeActual, '100', 4), (string) $contractValue, 4), 2)];
+            }
+        }
+
+        return ['project' => $project, 'bars' => $bars, 'months' => $this->monthTicks($windowStart, $windowEnd), 'curve' => $curve];
+    }
+
+    private function monthTicks(Carbon $start, Carbon $end): array
+    {
+        $ticks = [];
+        $cursor = $start->copy()->startOfMonth();
+        $count = 0;
+        while ($cursor <= $end && $count < 24) {
+            $ticks[] = ['label' => $cursor->translatedFormat('M'), 'position' => $count === 0 ? 0.0 : round($start->diffInDays($cursor) / max(1, $start->diffInDays($end)) * 100, 2)];
+            $cursor->addMonth();
+            $count++;
+        }
+
+        return $ticks;
     }
 
     public function zone(Request $r, CurrentCompany $current)
@@ -50,6 +121,6 @@ class ProjectController extends Controller
         $d = $r->validate(['actual_depth_m' => ['required', 'decimal:0,3', 'gt:0'], 'actual_concrete_m3' => ['required', 'decimal:0,4', 'gte:0']]);
         $service->recordConcrete($pile, $d['actual_depth_m'], $d['actual_concrete_m3'], $r->user());
 
-        return back()->with('status','Data beton diperbarui.');
+        return back()->with('status', 'Data beton diperbarui.');
     }
 }

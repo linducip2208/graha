@@ -13,11 +13,11 @@ use Illuminate\Validation\ValidationException;
 
 class ApprovalEngine
 {
-    public function __construct(private AuditTrail $audit) {}
+    public function __construct(private AuditTrail $audit, private NotificationDispatcher $notifications) {}
 
     public function submit(ApprovalWorkflow $w, Model $subject, User $user, string $key): ApprovalRequest
     {
-        return DB::transaction(function () use ($w, $subject, $user, $key) {
+        $request = DB::transaction(function () use ($w, $subject, $user, $key) {
             if ($old = ApprovalRequest::where('company_id', $w->company_id)->where('idempotency_key', $key)->first()) {
                 return $old;
             }
@@ -28,6 +28,11 @@ class ApprovalEngine
 
             return $r;
         }, 3);
+        if ($request->wasRecentlyCreated) {
+            $this->notifications->approvalRequested($request);
+        }
+
+        return $request;
     }
 
     public function approve(ApprovalRequest $r, User $actor, ?string $comment = null): ApprovalRequest
@@ -47,7 +52,7 @@ class ApprovalEngine
 
     private function decide(ApprovalRequest $r, User $actor, string $decision, ?string $comment): ApprovalRequest
     {
-        return DB::transaction(function () use ($r, $actor, $decision, $comment) {
+        $request = DB::transaction(function () use ($r, $actor, $decision, $comment) {
             $r = ApprovalRequest::lockForUpdate()->findOrFail($r->id);
             throw_if($r->submitted_by === $actor->id, ValidationException::withMessages(['actor' => 'Dilarang self-approval.']));
             throw_if($r->status !== 'pending', ValidationException::withMessages(['status' => 'Approval tidak lagi aktif.']));
@@ -64,6 +69,9 @@ class ApprovalEngine
 
             return $r->refresh();
         }, 3);
+        $this->notifications->approvalDecided($request, $decision, $comment);
+
+        return $request;
     }
 
     private function stepIsComplete(ApprovalRequest $request, $step): bool

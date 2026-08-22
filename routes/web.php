@@ -1,14 +1,17 @@
 <?php
 
 use App\Http\Controllers\ApprovalController;
+use App\Http\Controllers\AuditController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CashBankController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\FixedAssetController;
 use App\Http\Controllers\HseController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ManufacturingController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OperationsController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\ProcurementController;
@@ -16,13 +19,10 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectCostingController;
 use App\Http\Controllers\QmsController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SignatureController;
+use App\Http\Controllers\TaxController;
 use App\Http\Controllers\TenderController;
-use App\Models\BoredPile;
-use App\Models\Project;
-use App\Models\StockBalance;
-use App\Models\Tender;
-use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -45,23 +45,7 @@ Route::post('/logout', function (Request $r) {
 
     return redirect('/');
 })->middleware('auth');
-Route::get('/dashboard', function (Request $request, CurrentCompany $current) {
-    $companyId = $current->id();
-    $user = $request->user();
-    $stats = [];
-    if ($user->hasPermission('tender.view', $companyId)) {
-        $stats['Tender Aktif'] = Tender::where('company_id', $companyId)->whereNotIn('status', ['won', 'lost', 'cancelled'])->count();
-    }
-    if ($user->hasPermission('project.view', $companyId)) {
-        $stats['Proyek'] = Project::where('company_id', $companyId)->count();
-        $stats['Titik Bored Pile'] = BoredPile::whereHas('project', fn ($query) => $query->where('company_id', $companyId))->count();
-    }
-    if ($user->hasPermission('inventory.view', $companyId)) {
-        $stats['Item Stok'] = StockBalance::where('company_id', $companyId)->where('quantity', '>', 0)->count();
-    }
-
-    return view('dashboard', ['company' => $current->get(), 'stats' => $stats]);
-})->middleware(['auth', 'company']);
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'company'])->name('dashboard');
 Route::middleware(['auth', 'company', 'permission:organization.view'])->prefix('admin')->group(function () {
     Route::get('/organization', [OrganizationController::class, 'index'])->name('organization.index');
     Route::post('/branches', [OrganizationController::class, 'storeBranch'])->middleware('permission:organization.manage')->name('branches.store');
@@ -172,6 +156,7 @@ Route::middleware(['auth', 'company', 'permission:finance.view'])->prefix('admin
     Route::post('/{billing}/submit', [BillingController::class, 'submit'])->middleware('permission:finance.manage');
     Route::post('/{billing}/activate', [BillingController::class, 'activate'])->middleware('permission:finance.manage');
     Route::post('/{billing}/post', [BillingController::class, 'post'])->middleware('permission:accounting.post');
+    Route::get('/{billing}/pdf', [BillingController::class, 'pdf'])->name('billing.pdf');
     Route::post('/retention-releases', [BillingController::class, 'storeRelease'])->middleware('permission:finance.manage');
     Route::post('/retention-releases/{release}/submit', [BillingController::class, 'submitRelease'])->middleware('permission:finance.manage');
     Route::post('/retention-releases/{release}/activate', [BillingController::class, 'activateRelease'])->middleware('permission:finance.manage');
@@ -185,6 +170,11 @@ Route::middleware(['auth', 'company', 'permission:finance.view'])->prefix('admin
     Route::post('/statements', [CashBankController::class, 'statement'])->middleware('permission:finance.manage');
     Route::post('/statements/{line}/reconcile', [CashBankController::class, 'reconcile'])->middleware('permission:finance.manage');
     Route::post('/periods/{period}/close', [CashBankController::class, 'close'])->middleware('permission:accounting.post');
+});
+Route::middleware(['auth', 'company', 'permission:finance.view'])->prefix('admin/taxes')->group(function () {
+    Route::get('/', [TaxController::class, 'index'])->name('taxes.index');
+    Route::post('/rates', [TaxController::class, 'storeRate'])->middleware('permission:finance.manage')->name('taxes.rates.store');
+    Route::post('/rates/{rate}/toggle', [TaxController::class, 'toggleRate'])->middleware('permission:finance.manage')->name('taxes.rates.toggle');
 });
 Route::middleware(['auth', 'company', 'permission:finance.view'])->prefix('admin/project-costing')->group(function () {
     Route::get('/', [ProjectCostingController::class, 'index'])->name('project-costing.index');
@@ -208,3 +198,10 @@ Route::middleware(['auth', 'company', 'permission:hse.view'])->prefix('admin/hse
     Route::post('/incidents/{incident}/close', [HseController::class, 'close'])->middleware('permission:hse.verify');
     Route::post('/management-reviews', [HseController::class, 'review'])->middleware('permission:hse.manage');
 });
+Route::middleware(['auth', 'company'])->prefix('admin/notifications')->group(function () {
+    Route::get('/', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/{notification}/read', [NotificationController::class, 'read'])->name('notifications.read');
+    Route::post('/read-all', [NotificationController::class, 'readAll'])->name('notifications.readAll');
+});
+Route::get('/admin/audit', [AuditController::class, 'index'])->middleware(['auth', 'company', 'permission:audit.view'])->name('audit.index');
+Route::get('/admin/settings', [SettingsController::class, 'index'])->middleware(['auth', 'company'])->name('settings.index');

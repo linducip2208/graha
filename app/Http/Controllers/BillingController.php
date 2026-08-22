@@ -5,25 +5,33 @@ namespace App\Http\Controllers;
 use App\Models\Account;
 use App\Models\AccountingMapping;
 use App\Models\ApprovalWorkflow;
+use App\Models\Company;
 use App\Models\ProgressBilling;
 use App\Models\Project;
 use App\Models\RetentionRelease;
+use App\Models\TaxRate;
 use App\Services\ApprovalEngine;
 use App\Services\ProgressBillingService;
 use App\Services\RetentionReleaseService;
 use App\Support\Tenancy\CurrentCompany;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 class BillingController extends Controller
 {
     public function index(CurrentCompany $current)
     {
-        return view('billing.index', ['projects' => Project::where('company_id', $current->id())->whereIn('status', ['active', 'in_progress'])->orderBy('name')->get(), 'billings' => ProgressBilling::where('company_id', $current->id())->with(['project', 'journal'])->latest('billing_date')->get(), 'releases' => RetentionRelease::where('company_id', $current->id())->with(['project', 'journal'])->latest('release_date')->get(), 'workflows' => ApprovalWorkflow::where('company_id', $current->id())->whereIn('document_type', ['progress_billing', 'retention_release'])->where('is_active', true)->get()->groupBy('document_type'), 'accounts' => Account::where('company_id', $current->id())->where('is_active', true)->orderBy('code')->get(), 'mappings' => AccountingMapping::where('company_id', $current->id())->whereIn('event_type', ['progress_billing', 'retention_release'])->with('account')->get()]);
+        return view('billing.index', ['projects' => Project::where('company_id', $current->id())->whereIn('status', ['active', 'in_progress'])->orderBy('name')->get(), 'billings' => ProgressBilling::where('company_id', $current->id())->with(['project', 'journal'])->latest('billing_date')->get(), 'releases' => RetentionRelease::where('company_id', $current->id())->with(['project', 'journal'])->latest('release_date')->get(), 'workflows' => ApprovalWorkflow::where('company_id', $current->id())->whereIn('document_type', ['progress_billing', 'retention_release'])->where('is_active', true)->get()->groupBy('document_type'), 'accounts' => Account::where('company_id', $current->id())->where('is_active', true)->orderBy('code')->get(), 'mappings' => AccountingMapping::where('company_id', $current->id())->whereIn('event_type', ['progress_billing', 'retention_release'])->with('account')->get(), 'taxRates' => TaxRate::where('company_id', $current->id())->where('kind', 'ppn_output')->where('is_active', true)->orderBy('code')->get()]);
     }
 
     public function store(Request $request, CurrentCompany $current, ProgressBillingService $service)
     {
-        $data = $request->validate(['project_id' => ['required', 'exists:projects,id'], 'number' => ['required', 'max:80'], 'billing_date' => ['required', 'date'], 'due_date' => ['nullable', 'date', 'after_or_equal:billing_date'], 'progress_percent' => ['required', 'decimal:0,4', 'between:0.0001,100'], 'gross_amount' => ['required', 'decimal:0,2', 'gt:0'], 'retention_percent' => ['required', 'decimal:0,4', 'between:0,100'], 'advance_recovery' => ['required', 'decimal:0,2', 'min:0'], 'idempotency_key' => ['required', 'max:120']]);
+        $data = $request->validate(['project_id' => ['required', 'exists:projects,id'], 'number' => ['required', 'max:80'], 'billing_date' => ['required', 'date'], 'due_date' => ['nullable', 'date', 'after_or_equal:billing_date'], 'progress_percent' => ['required', 'decimal:0,4', 'between:0.0001,100'], 'gross_amount' => ['required', 'decimal:0,2', 'gt:0'], 'retention_percent' => ['required', 'decimal:0,4', 'between:0,100'], 'advance_recovery' => ['required', 'decimal:0,2', 'min:0'], 'tax_rate_id' => ['nullable', 'integer'], 'idempotency_key' => ['required', 'max:120']]);
+        if (! empty($data['tax_rate_id'])) {
+            abort_unless(TaxRate::where('company_id', $current->id())->where('kind', 'ppn_output')->where('is_active', true)->whereKey($data['tax_rate_id'])->exists(), 422);
+        } else {
+            unset($data['tax_rate_id']);
+        }
         $project = Project::where('company_id', $current->id())->findOrFail($data['project_id']);
         $service->create($project, $data, $request->user());
 
@@ -56,6 +64,22 @@ class BillingController extends Controller
         $service->post($billing, $request->user());
 
         return back()->with('status', 'Billing diposting ke AR dan revenue.');
+    }
+
+    public function pdf(Request $request, ProgressBilling $billing, CurrentCompany $current)
+    {
+        abort_unless($billing->company_id === $current->id(), 404);
+        $billing->load(['project.customer', 'taxRate']);
+        $company = Company::find($billing->company_id);
+        $pdf = Pdf::loadView('pdf.billing-faktur', [
+            'billing' => $billing,
+            'project' => $billing->project,
+            'company' => $company,
+            'customerName' => $billing->project?->customer?->name ?? 'Pelanggan',
+            'signer' => $request->user()->name,
+        ]);
+
+        return $pdf->stream('Faktur-'.$billing->number.'.pdf');
     }
 
     public function storeRelease(Request $request, CurrentCompany $current, RetentionReleaseService $service)

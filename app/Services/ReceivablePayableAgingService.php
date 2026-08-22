@@ -11,13 +11,15 @@ class ReceivablePayableAgingService
     public function generate(int $companyId, Carbon $asOf): array
     {
         $receivables = ProgressBilling::where('company_id', $companyId)->where('status', 'posted')->whereDate('billing_date', '<=', $asOf)->with(['project.customer'])->get()->map(function (ProgressBilling $billing) use ($asOf): array {
-            $paid = (string) $billing->customerReceipts()->where('status', 'posted')->whereDate('receipt_date', '<=', $asOf)->sum('amount');
+            $receipts = $billing->customerReceipts()->where('status', 'posted')->whereDate('receipt_date', '<=', $asOf);
+            $paid = bcadd((string) $receipts->sum('amount'), (string) $receipts->sum('withholding_amount'), 2);
             $outstanding = bcsub((string) $billing->net_receivable, $paid, 2);
 
-            return ['type' => 'AR', 'number' => $billing->number, 'party' => $billing->project?->customer?->name ?? 'Customer', 'date' => $billing->billing_date, 'due_date' => $billing->due_date ?? $billing->billing_date->copy()->addDays(30), 'amount' => (string) $billing->net_receivable, 'paid' => $paid, 'outstanding' => $outstanding];
+            return ['type' => 'AR', 'number' => $billing->number, 'party' => $billing->project?->customer?->name ?? 'Customer', 'date' => $billing->billing_date, 'due_date' => $billing->due_date ?? $billing->billing_date->copy()->addDays($billing->project?->customer?->payment_term_days ?? 30), 'amount' => (string) $billing->net_receivable, 'paid' => $paid, 'outstanding' => $outstanding];
         })->filter(fn (array $row) => bccomp($row['outstanding'], '0', 2) === 1)->values();
         $payables = VendorInvoice::where('company_id', $companyId)->where('match_status', 'matched')->whereDate('invoice_date', '<=', $asOf)->with('vendor')->get()->map(function (VendorInvoice $invoice) use ($asOf): array {
-            $paid = (string) $invoice->vendorPayments()->where('status', 'posted')->whereDate('payment_date', '<=', $asOf)->sum('amount');
+            $payments = $invoice->vendorPayments()->where('status', 'posted')->whereDate('payment_date', '<=', $asOf);
+            $paid = bcadd((string) $payments->sum('amount'), (string) $payments->sum('withholding_amount'), 2);
             $outstanding = bcsub((string) $invoice->total, $paid, 2);
 
             return ['type' => 'AP', 'number' => $invoice->number, 'party' => $invoice->vendor?->name ?? 'Vendor', 'date' => $invoice->invoice_date, 'due_date' => $invoice->invoice_date->copy()->addDays(30), 'amount' => (string) $invoice->total, 'paid' => $paid, 'outstanding' => $outstanding];

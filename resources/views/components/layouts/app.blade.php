@@ -1,38 +1,52 @@
+@php($errors = $errors ?? new \Illuminate\Support\ViewErrorBag)
 <!doctype html>
-<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{{ $title??config('app.name') }}</title>@vite(['resources/css/app.css','resources/js/app.js'])</head>
-<body class="min-h-screen bg-slate-50 text-slate-900">
-@auth
-<div class="min-h-screen lg:grid lg:grid-cols-[270px_1fr]">
-<aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-40 w-[280px] -translate-x-full overflow-y-auto bg-slate-950 text-slate-200 shadow-2xl transition-transform lg:sticky lg:top-0 lg:h-screen lg:w-auto lg:translate-x-0">
- <div class="flex items-center justify-between border-b border-white/10 px-5 py-5"><a href="/dashboard" class="font-black text-white">Graha Pondasi ERP</a><button data-sidebar-close class="rounded-lg p-2 lg:hidden" aria-label="Tutup menu">✕</button></div>
- <nav id="admin-navigation" data-visible-modules="{{ implode(',', config('modules.visible', [])) }}" class="space-y-6 p-4 text-sm">
-  <div><p class="px-3 text-[11px] font-bold uppercase tracking-widest text-slate-500">Dashboard</p><a href="/dashboard" class="admin-link {{ request()->is('dashboard')?'active':'' }}"><span>▦</span> Executive Dashboard</a></div>
-  @php($cid=session('company_id'))
-  @if(auth()->user()->hasPermission('organization.view',$cid))<div><p class="px-3 text-[11px] font-bold uppercase tracking-widest text-slate-500">Organisasi</p><a href="/admin/organization" class="admin-link {{ request()->is('admin/organization')?'active':'' }}"><span>⌂</span> Perusahaan & Cabang</a></div>@endif
-  @if(auth()->user()->hasPermission('tender.view',$cid))<div><p class="px-3 text-[11px] font-bold uppercase tracking-widest text-slate-500">Marketing & Tender</p><a href="/admin/tenders" class="admin-link {{ request()->is('admin/tenders*')?'active':'' }}"><span>◎</span> Pelanggan & Tender</a></div>@endif
-  @if(auth()->user()->hasPermission('project.view',$cid))<div><p class="px-3 text-[11px] font-bold uppercase tracking-widest text-slate-500">Project & Bored Pile</p><a href="/admin/projects" class="admin-link {{ request()->is('admin/projects*')?'active':'' }}"><span>⌖</span> Proyek & Titik Bored Pile</a></div>@endif
-  @if(auth()->user()->hasPermission('inventory.view',$cid))<div><p class="px-3 text-[11px] font-bold uppercase tracking-widest text-slate-500">Supply Chain</p><a href="/admin/inventory" class="admin-link {{ request()->is('admin/inventory*')?'active':'' }}"><span>▣</span> Inventory & Gudang</a></div>@endif
-  @if(auth()->user()->hasPermission('procurement.view',$cid))<div><p class="px-3 text-[11px] font-bold uppercase tracking-widest text-slate-500">Procurement</p><a href="/admin/procurement" class="admin-link {{ request()->is('admin/procurement*')?'active':'' }}"><span>⌑</span> Vendor, PO & Receipt</a></div>@endif
-  @if(auth()->user()->hasPermission('manufacturing.view',$cid))<div><p class="px-3 text-[11px] font-bold uppercase tracking-widest text-slate-500">Engineering & Workshop</p><a href="/admin/operations" class="admin-link {{ request()->is('admin/operations*')?'active':'' }}"><span>⚙</span> Produksi & Equipment</a></div>@endif
-  @if(auth()->user()->hasPermission('finance.view',$cid))<div><p class="px-3 text-[11px] font-bold uppercase tracking-widest text-slate-500">Finance & Accounting</p><a href="/admin/finance" class="admin-link {{ request()->is('admin/finance*')?'active':'' }}"><span>◫</span> COA & General Ledger</a></div>@endif
-  @if(auth()->user()->hasPermission('finance.manage',$cid))<a href="/admin/finance/accounting-mappings" class="admin-link {{ request()->is('admin/finance/accounting-mappings')?'active':'' }}"><span>⇄</span> Accounting Mapping</a>@endif
-  @if(auth()->user()->hasPermission('finance.view',$cid))<a href="/admin/billing" class="admin-link {{ request()->is('admin/billing*')?'active':'' }}"><span>▧</span> Progress Billing & Retensi</a>@endif
-  @if(auth()->user()->hasPermission('finance.view',$cid))<a href="/admin/cash-bank" class="admin-link {{ request()->is('admin/cash-bank*')?'active':'' }}"><span>⌘</span> Kas, Bank & Rekonsiliasi</a>@endif
-  @if(auth()->user()->hasPermission('finance.view',$cid))<a href="/admin/project-costing" class="admin-link {{ request()->is('admin/project-costing*')?'active':'' }}"><span>◩</span> Project Costing & EAC</a>@endif
-  @if(auth()->user()->hasPermission('finance.view',$cid))<a href="/admin/fixed-assets" class="admin-link {{ request()->is('admin/fixed-assets*')?'active':'' }}"><span>▣</span> Fixed Asset & Depresiasi</a>@endif
-  @if(auth()->user()->hasPermission('accounting.post',$cid))<a href="/admin/procurement-accounting" class="admin-link {{ request()->is('admin/procurement-accounting')?'active':'' }}"><span>₿</span> Procurement Posting</a>@endif
-  @if(auth()->user()->hasPermission('document.view',$cid))<div><p class="px-3 text-[11px] font-bold uppercase tracking-widest text-slate-500">Governance</p><a href="/admin/documents" class="admin-link {{ request()->is('admin/documents*')?'active':'' }}"><span>▤</span> Document Control</a></div>@endif
-  @if(auth()->user()->hasPermission('approval.view',$cid))<div><p class="px-3 text-[11px] font-bold uppercase tracking-widest text-slate-500">Approval & Signing</p><a href="/admin/approvals" class="admin-link {{ request()->is('admin/approvals*')?'active':'' }}"><span>✓</span> Inbox & Workflow</a></div>@endif
-  @if(auth()->user()->hasPermission('signature.view',$cid))<a href="/admin/signatures" class="admin-link {{ request()->is('admin/signatures*')?'active':'' }}"><span>✎</span> Digital Signing</a>@endif
-  @if(auth()->user()->hasPermission('qms.view',$cid))<div><p class="px-3 text-[11px] font-bold uppercase tracking-widest text-slate-500">Quality, HSE & ISO</p><a href="/admin/qms" class="admin-link {{ request()->is('admin/qms*')?'active':'' }}"><span>✓</span> Risiko, NCR & Audit</a></div>@endif
-  @if(auth()->user()->hasPermission('hse.view',$cid))<a href="/admin/hse" class="admin-link {{ request()->is('admin/hse*')?'active':'' }}"><span>⚠</span> HSE, JSA & Incident</a>@endif
-  @if(auth()->user()->hasPermission('report.view',$cid))<div><p class="px-3 text-[11px] font-bold uppercase tracking-widest text-slate-500">Laporan</p><a href="/admin/reports/executive" class="admin-link {{ request()->is('admin/reports/executive*')?'active':'' }}"><span>▥</span> Bisnis & Tender</a><a href="/admin/reports/finance" class="admin-link {{ request()->is('admin/reports/finance*')?'active':'' }}"><span>◩</span> Keuangan</a><a href="/admin/reports/operations" class="admin-link {{ request()->is('admin/reports/operations*')?'active':'' }}"><span>▦</span> Operasional</a></div>@endif
+<html lang="id"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="ERP konstruksi pondasi: tender sampai bored pile dalam satu jejak data ter-audit.">
+<meta property="og:title" content="{{ $title ?? config('app.name') }}">
+<meta property="og:description" content="ERP multi-company untuk kontraktor pondasi: approval berjenjang, jurnal otomatis, audit hash-chain.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏗️</text></svg>">
+<title>{{ $title ?? config('app.name') }}</title>
+<script>(function(){var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}})();</script>
+@vite(['resources/css/app.css','resources/js/app.js'])
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-900" data-flash="{{ session('status') }}" data-flash-error="{{ $errors->any() ? $errors->first() : '' }}">
+@if(auth()->check())
+@php($cid = session('company_id'))
+@php($navGroups = \App\Support\Navigation::groups(auth()->user(), $cid))
+<div class="min-h-screen lg:grid lg:grid-cols-[272px_1fr] print:block">
+<aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-40 w-[280px] -translate-x-full overflow-y-auto bg-slate-950 text-slate-200 shadow-2xl transition-transform lg:sticky lg:top-0 lg:h-screen lg:w-auto lg:translate-x-0 print:hidden">
+ <div class="flex items-center justify-between border-b border-white/10 px-5 py-5"><a href="/dashboard" class="flex items-center gap-2 font-black text-white"><span class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-sky-500 to-cyan-600 text-sm">🏗️</span>Graha Pondasi ERP</a><button data-sidebar-close class="rounded-lg p-2 lg:hidden" aria-label="Tutup menu">✕</button></div>
+ <nav id="admin-navigation" class="space-y-6 p-4 text-sm">
+  @foreach($navGroups as $group)
+  <div>
+   <p class="px-3 pb-1 text-[11px] font-bold uppercase tracking-widest text-slate-500">{{ $group['label'] }}</p>
+   @foreach($group['items'] as $item)
+    @if(! empty($item['children']))
+    <details class="nav-details">
+     <summary class="admin-link cursor-pointer list-none"><x-ui.icon :name="$item['icon'] ?? 'dashboard'" class="h-[18px] w-[18px]" /><span>{{ $item['label'] }}</span><span class="nav-chevron ml-auto text-[10px] opacity-60">▼</span></summary>
+     <div class="ml-6 mt-1 space-y-1 border-l border-white/10 pl-3">
+      @foreach($item['children'] as $child)
+      <a href="{{ $child['href'] }}" class="admin-link !py-2 text-[13px]">{{ $child['label'] }}</a>
+      @endforeach
+     </div>
+    </details>
+    @endif
+    @if(empty($item['children']))
+    <a href="{{ $item['href'] }}" class="admin-link"><x-ui.icon :name="$item['icon'] ?? 'dashboard'" class="h-[18px] w-[18px]" /><span>{{ $item['label'] }}</span></a>
+    @endif
+   @endforeach
+  </div>
+  @endforeach
  </nav>
 </aside>
 <div id="sidebar-overlay" data-sidebar-close class="fixed inset-0 z-30 hidden bg-slate-950/60 lg:hidden"></div>
-<div class="min-w-0"><header class="sticky top-0 z-20 flex items-center justify-between border-b bg-white/90 px-4 py-3 backdrop-blur lg:px-8"><div class="flex items-center gap-3"><button data-sidebar-open class="rounded-xl border p-2 lg:hidden" aria-label="Buka menu">☰</button><div><p class="text-xs text-slate-500">{{ session('company_id') ? \App\Models\Company::find(session('company_id'))?->name : '' }}</p><strong>{{ $title??'Dashboard' }}</strong></div></div><div class="flex items-center gap-4"><a href="/docs" class="text-sm">Dokumentasi</a><form method="post" action="/logout">@csrf<button class="rounded-xl border px-4 py-2 text-sm font-semibold">Keluar</button></form></div></header><main>{{ $slot }}</main></div>
+<div class="min-w-0"><header class="sticky top-0 z-20 flex items-center justify-between border-b bg-white/90 px-4 py-3 backdrop-blur lg:px-8 print:hidden"><div class="flex items-center gap-3"><button data-sidebar-open class="rounded-xl border p-2 lg:hidden" aria-label="Buka menu">☰</button><div><p class="text-xs text-slate-500">{{ $cid ? \App\Models\Company::find($cid)?->name : '' }}</p><strong>{{ $title ?? 'Dashboard' }}</strong></div></div><div class="flex items-center gap-3 sm:gap-4"><button id="theme-toggle" class="rounded-xl border px-3 py-2 text-sm no-print" title="Ganti tema terang/gelap" aria-label="Ganti tema">🌙</button><a href="/admin/notifications" class="relative rounded-xl border px-3 py-2 text-sm no-print" title="Notifikasi" aria-label="Notifikasi">🔔@php($unread = auth()->user()->unreadNotifications->count())@if($unread > 0)<span class="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">{{ $unread > 99 ? '99+' : $unread }}</span>@endif</a><a href="/docs" class="hidden text-sm no-print sm:inline">Dokumentasi</a><form method="post" action="/logout">@csrf<button class="rounded-xl border px-4 py-2 text-sm font-semibold">Keluar</button></form></div></header><main>{{ $slot }}</main></div>
 </div>
 @else
-<header class="sticky top-0 z-20 border-b bg-white/90 backdrop-blur"><nav class="mx-auto flex max-w-7xl justify-between px-5 py-4"><a href="/" class="font-black text-sky-800">Graha Pondasi ERP</a><div class="flex gap-4"><a href="/docs">Dokumentasi</a><a href="/login">Masuk</a></div></nav></header><main>{{ $slot }}</main>
-@endauth
+<header class="sticky top-0 z-20 border-b bg-white/90 backdrop-blur"><nav class="mx-auto flex max-w-7xl justify-between px-5 py-4"><a href="/" class="flex items-center gap-2 font-black text-sky-800"><span class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-sky-500 to-cyan-600 text-sm">🏗️</span>Graha Pondasi ERP</a><div class="flex gap-4"><a href="/docs">Dokumentasi</a><a href="/login">Masuk</a></div></nav></header><main>{{ $slot }}</main>
+@endif
+<x-ui.toast />
 </body></html>

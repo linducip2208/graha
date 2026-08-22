@@ -1,11 +1,8 @@
 <?php
 
-use App\Models\ApprovalRequest;
-use App\Models\Company;
 use App\Services\QmsService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
@@ -16,10 +13,8 @@ Schedule::call(function (QmsService $service): void {
     Company::query()->select('id')->chunkById(100, fn ($companies) => $companies->each(fn ($company) => $service->refreshEvidenceStatus($company->id)));
 })->name('qms-evidence-expiry')->dailyAt('01:30')->withoutOverlapping();
 
-Schedule::call(function (): void {
-    ApprovalRequest::whereIn('status', ['submitted', 'in_progress'])->whereNotNull('due_at')->where('due_at', '<', now())
-        ->selectRaw('company_id, count(*) as total')->groupBy('company_id')->get()
-        ->each(fn ($row) => Log::warning('Approval melewati SLA.', ['company_id' => $row->company_id, 'total' => $row->total]));
-})->name('approval-sla-monitor')->hourly()->withoutOverlapping();
+Schedule::command('approvals:monitor-sla')->name('approval-sla-monitor')->hourly()->withoutOverlapping();
+Schedule::command('inventory:notify-low-stock')->name('low-stock-notify')->dailyAt('07:00')->withoutOverlapping();
+Schedule::command('qms:notify-due')->name('qms-due-notify')->dailyAt('08:00')->withoutOverlapping();
 
 Schedule::command('backup:database --retention-days=14')->name('database-backup')->dailyAt('02:15')->withoutOverlapping()->onOneServer();

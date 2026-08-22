@@ -18,8 +18,8 @@ class TenderController extends Controller
 
     public function storeCustomer(Request $r, CurrentCompany $current)
     {
-        $data = $r->validate(['code' => ['required', 'max:30', 'unique:customers,code,NULL,id,company_id,'.$current->id()], 'name' => ['required', 'max:200']]);
-        Customer::create([...$data, 'company_id' => $current->id()]);
+        $data = $r->validate(['code' => ['required', 'max:30', 'unique:customers,code,NULL,id,company_id,'.$current->id()], 'name' => ['required', 'max:200'], 'payment_term_days' => ['nullable', 'integer', 'between:0,365']]);
+        Customer::create([...$data, 'payment_term_days' => $data['payment_term_days'] ?? 30, 'company_id' => $current->id()]);
 
         return back()->with('status', 'Pelanggan ditambahkan.');
     }
@@ -49,6 +49,6 @@ class TenderController extends Controller
         abort_unless($tender->company_id === $current->id(), 404);
         $service->convertWonToProject($tender, $r->user());
 
-        return back()->with('status','Tender dikonversi menjadi proyek.');
+        return back()->with('status', 'Tender dikonversi menjadi proyek.');
     }
 }

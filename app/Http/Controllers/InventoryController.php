@@ -16,7 +16,9 @@ class InventoryController extends Controller
 {
     public function index(CurrentCompany $current)
     {
-        return view('inventory.index', ['items' => Item::where('company_id', $current->id())->orderBy('name')->get(), 'warehouses' => Warehouse::where('company_id', $current->id())->with('bins')->get(), 'balances' => StockBalance::where('company_id', $current->id())->with(['item', 'warehouse', 'bin'])->paginate(30), 'movements' => StockMovement::where('company_id', $current->id())->with('item')->latest('posted_at')->limit(20)->get()]);
+        $lowStock = StockBalance::where('stock_balances.company_id', $current->id())->join('items', 'items.id', '=', 'stock_balances.item_id')->whereColumn('stock_balances.quantity', '<=', 'items.minimum_stock')->select('stock_balances.*')->with(['item', 'warehouse', 'bin'])->get();
+
+        return view('inventory.index', ['items' => Item::where('company_id', $current->id())->orderBy('name')->get(), 'warehouses' => Warehouse::where('company_id', $current->id())->with('bins')->get(), 'balances' => StockBalance::where('company_id', $current->id())->with(['item', 'warehouse', 'bin'])->paginate(30), 'movements' => StockMovement::where('company_id', $current->id())->with('item')->latest('posted_at')->limit(20)->get(), 'lowStock' => $lowStock]);
     }
 
     public function setup(Request $r, CurrentCompany $current)
@@ -38,6 +40,6 @@ class InventoryController extends Controller
         abort_unless($bin->warehouse->company_id === $current->id(), 422);
         $service->post(['company_id' => $current->id(), 'item_id' => $item->id, 'warehouse_id' => $bin->warehouse_id, 'warehouse_bin_id' => $bin->id], $d['movement_type'], $d['quantity'], 'ui:'.$d['movement_type'].':'.$d['reference_id'], $r->user(), ['type' => 'manual_inventory', 'id' => $d['reference_id'], 'reason' => $d['reason'] ?? null], $d['unit_cost'] ?? '0');
 
-        return back()->with('status','Movement berhasil diposting.');
+        return back()->with('status', 'Movement berhasil diposting.');
     }
 }

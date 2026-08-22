@@ -1,0 +1,21 @@
+@php($tones = [
+    'draft' => 'bg-slate-100 text-slate-700',
+    'pending_approval' => 'bg-amber-100 text-amber-800',
+    'pending' => 'bg-amber-100 text-amber-800',
+    'approved' => 'bg-emerald-100 text-emerald-800',
+    'posted' => 'bg-emerald-100 text-emerald-800',
+    'matched' => 'bg-emerald-100 text-emerald-800',
+    'active' => 'bg-emerald-100 text-emerald-800',
+    'operational' => 'bg-emerald-100 text-emerald-800',
+    'open' => 'bg-sky-100 text-sky-800',
+    'in_progress' => 'bg-sky-100 text-sky-800',
+    'investigating' => 'bg-sky-100 text-sky-800',
+    'revision_requested' => 'bg-violet-100 text-violet-800',
+    'rejected' => 'bg-red-100 text-red-700',
+    'exception' => 'bg-red-100 text-red-700',
+    'maintenance' => 'bg-amber-100 text-amber-800',
+    'closed' => 'bg-slate-200 text-slate-600',
+    'cancelled' => 'bg-red-100 text-red-700',
+])
+@php($tone = $tones[strtolower((string) $status)] ?? 'bg-slate-100 text-slate-700')
+<span {{ $attributes->merge(['class' => "inline-block whitespace-nowrap rounded-md px-2 py-1 text-[11px] font-bold uppercase tracking-wide $tone"]) }}>{{ str($label ?? $status)->replace('_', ' ') }}</span>

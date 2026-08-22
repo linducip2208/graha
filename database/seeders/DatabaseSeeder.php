@@ -33,6 +33,8 @@ class DatabaseSeeder extends Seeder
         NumberSequence::firstOrCreate(['company_id' => $company->id, 'document_type' => 'generic'], ['prefix' => 'GP', 'last_reset_year' => now()->year]);
         NumberSequence::firstOrCreate(['company_id' => $company->id, 'document_type' => 'tender'], ['prefix' => 'TND', 'last_reset_year' => now()->year]);
         NumberSequence::firstOrCreate(['company_id' => $company->id, 'document_type' => 'project'], ['prefix' => 'PRJ', 'last_reset_year' => now()->year]);
-        NumberSequence::firstOrCreate(['company_id' => $company->id, 'document_type' => 'journal'], ['prefix' => 'JV', 'last_reset_year' => now()->year]);
+        NumberSequence::firstOrCreate(['company_id' => $company->id, 'document_type' => 'journal'], ['prefix' => 'JV', 'padding' => 5, 'last_reset_year' => now()->year]);
+
+        $this->call(DemoDataSeeder::class);
     }
 }

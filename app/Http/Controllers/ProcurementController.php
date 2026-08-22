@@ -6,12 +6,14 @@ use App\Models\ApprovalWorkflow;
 use App\Models\GoodsReceipt;
 use App\Models\Item;
 use App\Models\PurchaseOrder;
+use App\Models\TaxRate;
 use App\Models\Vendor;
 use App\Models\VendorInvoice;
 use App\Models\Warehouse;
 use App\Services\ApprovalEngine;
 use App\Services\ProcurementAccountingService;
 use App\Services\PurchaseOrderService;
+use App\Services\TaxService;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -30,6 +32,7 @@ class ProcurementController extends Controller
             'receipts' => GoodsReceipt::where('company_id', $id)->latest()->limit(50)->get(),
             'invoices' => VendorInvoice::where('company_id', $id)->latest()->limit(50)->get(),
             'workflows' => ApprovalWorkflow::where('company_id', $id)->where('document_type', 'purchase_order')->where('is_active', true)->get(),
+            'taxRates' => TaxRate::where('company_id', $id)->where('kind', 'ppn_input')->where('is_active', true)->orderBy('code')->get(),
         ]);
     }
 
@@ -97,11 +100,20 @@ class ProcurementController extends Controller
         return back()->with('status', 'Goods receipt diposting ke inventory.');
     }
 
-    public function invoice(Request $request, PurchaseOrder $order, CurrentCompany $current, PurchaseOrderService $service)
+    public function invoice(Request $request, PurchaseOrder $order, CurrentCompany $current, PurchaseOrderService $service, TaxService $taxService)
     {
         $this->owned($order, $current);
-        $data = $request->validate(['number' => ['required', 'max:80'], 'invoice_date' => ['required', 'date'], 'total' => ['required', 'decimal:0,2', 'gt:0']]);
-        $invoice = VendorInvoice::create([...$data, 'company_id' => $current->id(), 'vendor_id' => $order->vendor_id, 'purchase_order_id' => $order->id]);
+        $data = $request->validate(['number' => ['required', 'max:80'], 'invoice_date' => ['required', 'date'], 'total' => ['required', 'decimal:0,2', 'gt:0'], 'tax_rate_id' => ['nullable', 'integer']]);
+        if (! empty($data['tax_rate_id'])) {
+            abort_unless(TaxRate::where('company_id', $current->id())->where('kind', 'ppn_input')->where('is_active', true)->whereKey($data['tax_rate_id'])->exists(), 422);
+            $rate = TaxRate::findOrFail($data['tax_rate_id']);
+        } else {
+            unset($data['tax_rate_id']);
+            $rate = null;
+        }
+        $subtotal = (string) $data['total'];
+        $taxAmount = $taxService->compute($subtotal, $rate);
+        $invoice = VendorInvoice::create([...$data, 'total' => bcadd($subtotal, $taxAmount, 2), 'subtotal' => $subtotal, 'tax_rate_id' => $rate?->id, 'tax_amount' => $taxAmount, 'company_id' => $current->id(), 'vendor_id' => $order->vendor_id, 'purchase_order_id' => $order->id]);
         $service->match($invoice);
 
         return back()->with('status', 'Invoice dicatat dan three-way matching dijalankan.');

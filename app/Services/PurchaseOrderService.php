@@ -73,9 +73,10 @@ class PurchaseOrderService
             $invoice = VendorInvoice::lockForUpdate()->findOrFail($invoice->id);
             $order = PurchaseOrder::with('items')->findOrFail($invoice->purchase_order_id);
             $qtyMatched = $order->items->every(fn ($item) => bccomp((string) $item->received_quantity, (string) $item->quantity, 4) >= 0);
-            $amountMatched = bccomp((string) $invoice->total, (string) $order->total, 2) === 0;
+            $subtotal = $invoice->effectiveSubtotal();
+            $amountMatched = bccomp($subtotal, (string) $order->total, 2) === 0;
             $status = $qtyMatched && $amountMatched ? 'matched' : 'exception';
-            $invoice->update(['match_status' => $status, 'match_details' => ['po_total' => $order->total, 'invoice_total' => $invoice->total, 'quantity_received' => $qtyMatched]]);
+            $invoice->update(['match_status' => $status, 'match_details' => ['po_total' => $order->total, 'invoice_subtotal' => $subtotal, 'invoice_total' => $invoice->total, 'tax_amount' => $invoice->tax_amount, 'quantity_received' => $qtyMatched]]);
 
             return $invoice->refresh();
         }, 3);

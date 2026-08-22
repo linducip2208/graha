@@ -7,6 +7,7 @@ use App\Models\BankAccount;
 use App\Models\BankStatementLine;
 use App\Models\FiscalPeriod;
 use App\Models\ProgressBilling;
+use App\Models\TaxRate;
 use App\Models\VendorInvoice;
 use App\Services\CashBankService;
 use App\Services\FiscalPeriodClosingService;
@@ -26,6 +27,7 @@ class CashBankController extends Controller
             'invoices' => VendorInvoice::where('company_id', $companyId)->where('match_status', 'matched')->latest('invoice_date')->get(),
             'lines' => BankStatementLine::whereHas('bankAccount', fn ($q) => $q->where('company_id', $companyId))->latest('transaction_date')->limit(100)->get(),
             'periods' => FiscalPeriod::where('company_id', $companyId)->latest('starts_at')->get(),
+            'taxRates' => TaxRate::where('company_id', $companyId)->where('kind', 'withholding')->where('is_active', true)->orderBy('code')->get(),
         ]);
     }
 
@@ -40,16 +42,22 @@ class CashBankController extends Controller
 
     public function receipt(Request $request, CurrentCompany $current, CashBankService $service)
     {
-        $data = $request->validate(['progress_billing_id' => ['required', 'integer'], 'bank_account_id' => ['required', 'integer'], 'amount' => ['required', 'decimal:0,2', 'gt:0'], 'date' => ['required', 'date'], 'number' => ['required', 'max:80'], 'reference' => ['required', 'max:120'], 'idempotency_key' => ['required', 'max:120']]);
-        $service->receiveCustomer(ProgressBilling::where('company_id', $current->id())->findOrFail($data['progress_billing_id']), BankAccount::where('company_id', $current->id())->findOrFail($data['bank_account_id']), $data['amount'], $data['date'], $data['number'], $data['reference'], $data['idempotency_key'], $request->user());
+        $data = $request->validate(['progress_billing_id' => ['required', 'integer'], 'bank_account_id' => ['required', 'integer'], 'amount' => ['required', 'decimal:0,2', 'gt:0'], 'date' => ['required', 'date'], 'number' => ['required', 'max:80'], 'reference' => ['required', 'max:120'], 'withholding_tax_rate_id' => ['nullable', 'integer'], 'bukti_potong_number' => ['nullable', 'max:80'], 'bukti_potong_date' => ['nullable', 'date'], 'idempotency_key' => ['required', 'max:120']]);
+        if (! empty($data['withholding_tax_rate_id'])) {
+            abort_unless(TaxRate::where('company_id', $current->id())->where('kind', 'withholding')->where('is_active', true)->whereKey($data['withholding_tax_rate_id'])->exists(), 422);
+        }
+        $service->receiveCustomer(ProgressBilling::where('company_id', $current->id())->findOrFail($data['progress_billing_id']), BankAccount::where('company_id', $current->id())->findOrFail($data['bank_account_id']), $data['amount'], $data['date'], $data['number'], $data['reference'], $data['idempotency_key'], $request->user(), $data);
 
         return back()->with('status', 'Penerimaan pelanggan diposting.');
     }
 
     public function payment(Request $request, CurrentCompany $current, CashBankService $service)
     {
-        $data = $request->validate(['vendor_invoice_id' => ['required', 'integer'], 'bank_account_id' => ['required', 'integer'], 'amount' => ['required', 'decimal:0,2', 'gt:0'], 'date' => ['required', 'date'], 'number' => ['required', 'max:80'], 'reference' => ['required', 'max:120'], 'idempotency_key' => ['required', 'max:120']]);
-        $service->payVendor(VendorInvoice::where('company_id', $current->id())->findOrFail($data['vendor_invoice_id']), BankAccount::where('company_id', $current->id())->findOrFail($data['bank_account_id']), $data['amount'], $data['date'], $data['number'], $data['reference'], $data['idempotency_key'], $request->user());
+        $data = $request->validate(['vendor_invoice_id' => ['required', 'integer'], 'bank_account_id' => ['required', 'integer'], 'amount' => ['required', 'decimal:0,2', 'gt:0'], 'date' => ['required', 'date'], 'number' => ['required', 'max:80'], 'reference' => ['required', 'max:120'], 'withholding_tax_rate_id' => ['nullable', 'integer'], 'bukti_potong_number' => ['nullable', 'max:80'], 'bukti_potong_date' => ['nullable', 'date'], 'idempotency_key' => ['required', 'max:120']]);
+        if (! empty($data['withholding_tax_rate_id'])) {
+            abort_unless(TaxRate::where('company_id', $current->id())->where('kind', 'withholding')->where('is_active', true)->whereKey($data['withholding_tax_rate_id'])->exists(), 422);
+        }
+        $service->payVendor(VendorInvoice::where('company_id', $current->id())->findOrFail($data['vendor_invoice_id']), BankAccount::where('company_id', $current->id())->findOrFail($data['bank_account_id']), $data['amount'], $data['date'], $data['number'], $data['reference'], $data['idempotency_key'], $request->user(), $data);
 
         return back()->with('status', 'Pembayaran vendor diposting.');
     }
