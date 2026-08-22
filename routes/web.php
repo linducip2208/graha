@@ -29,6 +29,7 @@ use App\Http\Controllers\SignatureController;
 use App\Http\Controllers\StockOpnameController;
 use App\Http\Controllers\TaxController;
 use App\Http\Controllers\TenderController;
+use App\Http\Controllers\ToolController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -248,5 +249,10 @@ Route::post('/admin/fuel-tanks/{tank}/reconcile', [FuelTankController::class, 'r
 Route::get('/admin/casings', [CasingController::class, 'index'])->middleware(['auth', 'company', 'permission:equipment.view'])->name('casings.index');
 Route::post('/admin/casings', [CasingController::class, 'store'])->middleware(['auth', 'company', 'permission:equipment.manage']);
 Route::post('/admin/casings/{casing}/move', [CasingController::class, 'move'])->middleware(['auth', 'company', 'permission:equipment.manage']);
+Route::get('/admin/tools', [ToolController::class, 'index'])->middleware(['auth', 'company', 'permission:inventory.view'])->name('tools.index');
+Route::post('/admin/tools', [ToolController::class, 'store'])->middleware(['auth', 'company', 'permission:inventory.manage']);
+Route::post('/admin/tools/{tool}/checkout', [ToolController::class, 'checkOut'])->middleware(['auth', 'company', 'permission:inventory.manage']);
+Route::post('/admin/tools/{tool}/checkin', [ToolController::class, 'checkIn'])->middleware(['auth', 'company', 'permission:inventory.manage']);
+Route::post('/admin/tools/{tool}/lost', [ToolController::class, 'markLost'])->middleware(['auth', 'company', 'permission:inventory.manage']);
 Route::get('/admin/settings', [SettingsController::class, 'index'])->middleware(['auth', 'company'])->name('settings.index');
 Route::post('/admin/settings', [SettingsController::class, 'save'])->middleware(['auth', 'company', 'permission:finance.manage'])->name('settings.save');

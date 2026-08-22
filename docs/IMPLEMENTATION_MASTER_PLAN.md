@@ -225,3 +225,9 @@ Berikutnya (Pending): cage/casing domain penuh, tools check-out, fuel tank recon
 | DASH-MFG | Dashboard | Widget order produksi aktif + cage menunggu QC (manufacturing.view) | Tested | smoke HTTP | |
 
 Sisa Pending: tools check-out/in, foto evidence upload, auto-link dokumen registry, multi-currency.
+# Pembaruan 2026-08-23 (10) - Tools Check-out/Check-in
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| INV-TL-001 | Inventory | Register alat bantu + kartu kendali keluar/masuk | Tested | smoke HTTP | Holder, expected return, riwayat |
+| INV-TL-002 | Inventory | Aturan status: available -> checked_out -> available; lost final | Tested | smoke HTTP | Guard company di service

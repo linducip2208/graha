@@ -26,6 +26,7 @@ return [
                 ['label' => 'Stok Kritis', 'href' => '/admin/inventory#stok-kritis'],
                 ['label' => 'Stock Opname', 'href' => '/admin/inventory/opname'],
                 ['label' => 'Permintaan Material Proyek', 'href' => '/admin/inventory/material-requests'],
+                ['label' => 'Tools Check-out', 'href' => '/admin/tools'],
             ]],
         ]],
         ['label' => 'Procurement', 'items' => [
