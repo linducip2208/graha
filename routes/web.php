@@ -55,6 +55,11 @@ Route::post('/logout', function (Request $r) {
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'company'])->name('dashboard');
 Route::middleware(['auth', 'company', 'permission:organization.view'])->prefix('admin')->group(function () {
     Route::get('/organization', [OrganizationController::class, 'index'])->name('organization.index');
+    Route::get('/organization/roles', [OrganizationController::class, 'roles'])->name('organization.roles');
+    Route::post('/organization/roles', [OrganizationController::class, 'storeRole'])->middleware('permission:organization.manage')->name('organization.roles.store');
+    Route::post('/organization/roles/{role}/permissions', [OrganizationController::class, 'updatePermissions'])->middleware('permission:organization.manage')->name('organization.roles.permissions');
+    Route::post('/organization/roles/{role}/members', [OrganizationController::class, 'attachMember'])->middleware('permission:organization.manage')->name('organization.roles.members.attach');
+    Route::post('/organization/roles/{role}/members/{user}/detach', [OrganizationController::class, 'detachMember'])->middleware('permission:organization.manage')->name('organization.roles.members.detach');
     Route::post('/branches', [OrganizationController::class, 'storeBranch'])->middleware('permission:organization.manage')->name('branches.store');
     Route::post('/departments', [OrganizationController::class, 'storeDepartment'])->middleware('permission:organization.manage')->name('departments.store');
 });

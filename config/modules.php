@@ -8,7 +8,10 @@ return [
             ['label' => 'Executive Dashboard', 'href' => '/dashboard', 'icon' => 'dashboard'],
         ]],
         ['label' => 'Organisasi', 'items' => [
-            ['label' => 'Perusahaan & Cabang', 'href' => '/admin/organization', 'icon' => 'building', 'permission' => 'organization.view'],
+            ['label' => 'Perusahaan & Role', 'href' => '/admin/organization', 'icon' => 'building', 'permission' => 'organization.view', 'children' => [
+                ['label' => 'Perusahaan & Cabang', 'href' => '/admin/organization'],
+                ['label' => 'Role & Permission', 'href' => '/admin/organization/roles'],
+            ]],
         ]],
         ['label' => 'Marketing & Tender', 'items' => [
             ['label' => 'Pelanggan, Tender & Kompetitor', 'href' => '/admin/tenders', 'icon' => 'flag', 'permission' => 'tender.view'],
