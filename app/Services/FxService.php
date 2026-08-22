@@ -55,4 +55,18 @@ class FxService
     {
         return DB::table('fx_rates')->where('company_id', $company->id)->exists();
     }
+
+    /**
+     * Kebijakan proposed (ADR-039): hanya REALIZED difference — selisih kurs
+     * saat penyelesaian pembayaran vs kurs saat dokumen diposting.
+     * Positif = gain (kredit), negatif = loss (debit). Belum di-wire ke
+     * alur kas sampai mapping akun & persetujuan kebijakan tersedia.
+     */
+    public function realizedDifference(string $settledAmountForeign, string $rateAtDocument, string $rateAtSettlement): string
+    {
+        $atDocument = bcmul($settledAmountForeign, $rateAtDocument, 2);
+        $atSettlement = bcmul($settledAmountForeign, $rateAtSettlement, 2);
+
+        return bcsub($atSettlement, $atDocument, 2);
+    }
 }

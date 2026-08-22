@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Account;
 use App\Models\AccountingMapping;
 use App\Models\ApprovalWorkflow;
+use App\Models\Company;
 use App\Models\CompanySetting;
 use App\Models\ProgressBilling;
 use App\Models\Project;
@@ -72,13 +73,17 @@ class BillingController extends Controller
         abort_unless($billing->company_id === $current->id(), 404);
         $billing->load(['project.customer', 'taxRate']);
         $company = Company::find($billing->company_id);
-        $pdf = Pdf::loadView('pdf.billing-faktur', [
+        $payload = [
             'billing' => $billing,
             'project' => $billing->project,
             'company' => $company,
             'customerName' => $billing->project?->customer?->name ?? 'Pelanggan',
             'signer' => $request->user()->name,
-        ]);
+        ];
+        if ($request->query('format') === 'thermal') {
+            return view('pdf.billing-thermal', $payload);
+        }
+        $pdf = Pdf::loadView('pdf.billing-faktur', $payload);
 
         return $pdf->stream('Faktur-'.$billing->number.'.pdf');
     }
