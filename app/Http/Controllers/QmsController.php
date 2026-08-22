@@ -3,9 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\CorrectiveAction;
+use App\Models\Customer;
+use App\Models\CustomerSatisfactionSurvey;
 use App\Models\Department;
 use App\Models\InternalAudit;
 use App\Models\Nonconformity;
+use App\Models\Project;
+use App\Models\QualityObjective;
 use App\Models\RiskOpportunity;
 use App\Models\User;
 use App\Services\QmsService;
@@ -19,6 +23,11 @@ class QmsController extends Controller
         $companyId = $current->id();
 
         return view('qms.index', [
+            'objectives' => QualityObjective::where('company_id', $companyId)->orderBy('due_date')->limit(20)->get(),
+            'surveys' => CustomerSatisfactionSurvey::where('company_id', $companyId)->with(['project', 'customer'])->latest('survey_date')->limit(15)->get(),
+            'surveyAvg' => (string) CustomerSatisfactionSurvey::where('company_id', $companyId)->selectRaw('AVG((quality_score + schedule_score + communication_score) / 3.0) as avg')->value('avg'),
+            'projects' => Project::where('company_id', $companyId)->orderBy('code')->get(),
+            'customers' => Customer::where('company_id', $companyId)->orderBy('name')->get(),
             'risks' => RiskOpportunity::where('company_id', $companyId)->latest()->limit(50)->get(),
             'ncrs' => Nonconformity::where('company_id', $companyId)->with('actions')->latest()->limit(50)->get(),
             'audits' => InternalAudit::where('company_id', $companyId)->latest('scheduled_at')->limit(50)->get(),
@@ -91,6 +100,51 @@ class QmsController extends Controller
         $service->scheduleAudit([...$data, 'company_id' => $current->id()], $request->user());
 
         return back()->with('status', 'Audit internal dijadwalkan dengan pemeriksaan independensi.');
+    }
+
+    public function storeObjective(Request $request, CurrentCompany $current)
+    {
+        $data = $request->validate([
+            'title' => ['required', 'max:200'], 'kpi_metric' => ['nullable', 'max:150'],
+            'target_value' => ['nullable', 'decimal:0,2'], 'actual_value' => ['nullable', 'decimal:0,2'],
+            'owner_id' => ['nullable', 'exists:users,id'], 'due_date' => ['nullable', 'date'],
+        ]);
+        if (! empty($data['owner_id'])) {
+            $this->ensureCompanyUser((int) $data['owner_id'], $current->id());
+        }
+        QualityObjective::create([...$data, 'company_id' => $current->id()]);
+
+        return back()->with('status', 'Sasaran mutu ditambahkan.');
+    }
+
+    public function updateObjectiveActual(Request $request, QualityObjective $objective, CurrentCompany $current)
+    {
+        abort_unless($objective->company_id === $current->id(), 404);
+        $data = $request->validate(['actual_value' => ['required', 'decimal:0,2']]);
+        $objective->update(['actual_value' => $data['actual_value']]);
+
+        return back()->with('status', 'Realisasi sasaran mutu diperbarui.');
+    }
+
+    public function storeSurvey(Request $request, CurrentCompany $current)
+    {
+        $data = $request->validate([
+            'customer_id' => ['required', 'integer'], 'project_id' => ['nullable', 'integer'],
+            'respondent_name' => ['nullable', 'max:150'], 'survey_date' => ['required', 'date'],
+            'quality_score' => ['required', 'integer', 'between:1,5'],
+            'schedule_score' => ['required', 'integer', 'between:1,5'],
+            'communication_score' => ['required', 'integer', 'between:1,5'],
+            'comments' => ['nullable', 'max:1000'], 'follow_up_action' => ['nullable', 'max:300'],
+        ]);
+        abort_unless(Customer::where('company_id', $current->id())->whereKey($data['customer_id'])->exists(), 422);
+        if (! empty($data['project_id'])) {
+            abort_unless(Project::where('company_id', $current->id())->whereKey($data['project_id'])->exists(), 422);
+        } else {
+            unset($data['project_id']);
+        }
+        CustomerSatisfactionSurvey::create([...$data, 'company_id' => $current->id(), 'recorded_by' => $request->user()->id]);
+
+        return back()->with('status', 'Survei kepuasan pelanggan tercatat.');
     }
 
     private function ensureCompanyUser(int $userId, int $companyId): void

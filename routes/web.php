@@ -5,6 +5,7 @@ use App\Http\Controllers\AuditController;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CageController;
 use App\Http\Controllers\CashBankController;
+use App\Http\Controllers\CasingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FieldOpsController;
@@ -117,6 +118,9 @@ Route::middleware(['auth', 'company', 'permission:qms.view'])->prefix('admin')->
     Route::post('/qms/ncrs/{ncr}/actions', [QmsController::class, 'capa'])->middleware('permission:qms.manage');
     Route::post('/qms/actions/{action}/verify', [QmsController::class, 'verify'])->middleware('permission:qms.verify');
     Route::post('/qms/audits', [QmsController::class, 'audit'])->middleware('permission:qms.audit');
+    Route::post('/qms/objectives', [QmsController::class, 'storeObjective'])->middleware('permission:qms.manage');
+    Route::post('/qms/objectives/{objective}/actual', [QmsController::class, 'updateObjectiveActual'])->middleware('permission:qms.manage');
+    Route::post('/qms/surveys', [QmsController::class, 'storeSurvey'])->middleware('permission:qms.manage');
 });
 Route::middleware(['auth', 'company', 'permission:report.view'])->prefix('admin/reports')->group(function () {
     Route::get('/executive', [ReportController::class, 'executive'])->name('reports.executive');
@@ -241,5 +245,8 @@ Route::get('/admin/fuel-tanks', [FuelTankController::class, 'index'])->middlewar
 Route::post('/admin/fuel-tanks', [FuelTankController::class, 'store'])->middleware(['auth', 'company', 'permission:equipment.manage']);
 Route::post('/admin/fuel-tanks/{tank}/record', [FuelTankController::class, 'record'])->middleware(['auth', 'company', 'permission:equipment.manage']);
 Route::post('/admin/fuel-tanks/{tank}/reconcile', [FuelTankController::class, 'reconcile'])->middleware(['auth', 'company', 'permission:equipment.manage']);
+Route::get('/admin/casings', [CasingController::class, 'index'])->middleware(['auth', 'company', 'permission:equipment.view'])->name('casings.index');
+Route::post('/admin/casings', [CasingController::class, 'store'])->middleware(['auth', 'company', 'permission:equipment.manage']);
+Route::post('/admin/casings/{casing}/move', [CasingController::class, 'move'])->middleware(['auth', 'company', 'permission:equipment.manage']);
 Route::get('/admin/settings', [SettingsController::class, 'index'])->middleware(['auth', 'company'])->name('settings.index');
 Route::post('/admin/settings', [SettingsController::class, 'save'])->middleware(['auth', 'company', 'permission:finance.manage'])->name('settings.save');

@@ -206,3 +206,12 @@ Berikutnya (Pending): cage/casing domain penuh, tools check-out, fuel tank recon
 | MFG-CAGE-005 | Bored Pile | Gate opsional require_cage_passed pada transisi inspection -> cage_installation | Tested | ReinforcementCageTest | Default off, toggle via Pengaturan |
 | UI-004 | UI | Halaman /admin/manufacturing/cages + submenu Manufacturing Control | Tested | smoke HTTP | |
 | NAV-001 | UI | Restrukturisasi menu: Finance dipadatkan (GL parent + Penagihan&Pajak parent), Supply Chain jadi parent Inventory, Equipment&Tangki digabung, Pengaturan masuk Administrasi | Tested | smoke HTTP | Sidebar lebih pendek & berhierarki
+# Pembaruan 2026-08-23 (8) - Casing, Kepuasan Pelanggan, Sasaran Mutu
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| BP-CAS-001 | Bored Pile | Master casing (owned/rented, kondisi, siklus, biaya sewa) | Tested | smoke HTTP | Register + riwayat perpindahan |
+| BP-CAS-002 | Bored Pile | Perpindahan: instalasi/ekstraksi/ditinggal/kerusakan/perbaikan/hilang dengan aturan status | Tested | smoke HTTP | Service-level transition rules |
+| QMS-SAT-001 | QMS | Survei kepuasan pelanggan (mutu/jadwal/komunikasi 1-5) + rata-rata | Tested | smoke HTTP | ISO clause 9.1.2 |
+| QMS-OBJ-001 | QMS | Sasaran mutu & KPI: target vs realisasi + capaian % | Tested | smoke HTTP | ISO clause 6.2 |
+| NAV-002 | UI | Submenu Casing Pile di Manufacturing Control; halaman /admin/casings | Tested | smoke HTTP | equipment.view/manage

@@ -38,6 +38,7 @@ return [
                 ['label' => 'Quality Control Produksi', 'href' => '/admin/manufacturing/quality'],
                 ['label' => 'Output Ditolak & Disposition', 'href' => '/admin/manufacturing/nonconforming'],
                 ['label' => 'Reinforcement Cage', 'href' => '/admin/manufacturing/cages'],
+                ['label' => 'Casing Pile', 'href' => '/admin/casings'],
             ]],
             ['label' => 'Equipment & Tangki BBM', 'href' => '/admin/fuel-tanks', 'icon' => 'wrench', 'permission' => 'equipment.view', 'children' => [
                 ['label' => 'Produksi & Equipment', 'href' => '/admin/operations'],
