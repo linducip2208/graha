@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Account;
 use App\Models\AccountingMapping;
 use App\Models\ApprovalWorkflow;
-use App\Models\Company;
+use App\Models\CompanySetting;
 use App\Models\ProgressBilling;
 use App\Models\Project;
 use App\Models\RetentionRelease;
@@ -26,7 +26,8 @@ class BillingController extends Controller
 
     public function store(Request $request, CurrentCompany $current, ProgressBillingService $service)
     {
-        $data = $request->validate(['project_id' => ['required', 'exists:projects,id'], 'number' => ['required', 'max:80'], 'billing_date' => ['required', 'date'], 'due_date' => ['nullable', 'date', 'after_or_equal:billing_date'], 'progress_percent' => ['required', 'decimal:0,4', 'between:0.0001,100'], 'gross_amount' => ['required', 'decimal:0,2', 'gt:0'], 'retention_percent' => ['required', 'decimal:0,4', 'between:0,100'], 'advance_recovery' => ['required', 'decimal:0,2', 'min:0'], 'tax_rate_id' => ['nullable', 'integer'], 'idempotency_key' => ['required', 'max:120']]);
+        $data = $request->validate(['project_id' => ['required', 'exists:projects,id'], 'number' => ['required', 'max:80'], 'billing_date' => ['required', 'date'], 'due_date' => ['nullable', 'date', 'after_or_equal:billing_date'], 'progress_percent' => ['required', 'decimal:0,4', 'between:0.0001,100'], 'gross_amount' => ['required', 'decimal:0,2', 'gt:0'], 'retention_percent' => ['nullable', 'decimal:0,4', 'between:0,100'], 'advance_recovery' => ['required', 'decimal:0,2', 'min:0'], 'tax_rate_id' => ['nullable', 'integer'], 'idempotency_key' => ['required', 'max:120']]);
+        $data['retention_percent'] ??= CompanySetting::val($current->id(), 'default_retention_percent');
         if (! empty($data['tax_rate_id'])) {
             abort_unless(TaxRate::where('company_id', $current->id())->where('kind', 'ppn_output')->where('is_active', true)->whereKey($data['tax_rate_id'])->exists(), 422);
         } else {

@@ -205,3 +205,4 @@ Route::middleware(['auth', 'company'])->prefix('admin/notifications')->group(fun
 });
 Route::get('/admin/audit', [AuditController::class, 'index'])->middleware(['auth', 'company', 'permission:audit.view'])->name('audit.index');
 Route::get('/admin/settings', [SettingsController::class, 'index'])->middleware(['auth', 'company'])->name('settings.index');
+Route::post('/admin/settings', [SettingsController::class, 'save'])->middleware(['auth', 'company', 'permission:finance.manage'])->name('settings.save');

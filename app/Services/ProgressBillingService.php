@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\AccountingMapping;
 use App\Models\ApprovalRequest;
+use App\Models\CompanySetting;
 use App\Models\ProgressBilling;
 use App\Models\Project;
 use App\Models\User;
@@ -21,8 +22,10 @@ class ProgressBillingService
             $project = Project::lockForUpdate()->findOrFail($project->id);
             throw_unless(in_array($project->status, ['active', 'in_progress'], true), ValidationException::withMessages(['project' => 'Proyek belum aktif.']));
             $gross = (string) $data['gross_amount'];
+            $data['retention_percent'] ??= CompanySetting::val($project->company_id, 'default_retention_percent');
             if (empty($data['due_date'])) {
-                $data['due_date'] = Carbon::parse($data['billing_date'])->addDays($project->customer->payment_term_days ?? 30)->toDateString();
+                $termDays = $project->customer->payment_term_days ?? (int) CompanySetting::val($project->company_id, 'default_payment_term_days');
+                $data['due_date'] = Carbon::parse($data['billing_date'])->addDays($termDays)->toDateString();
             }
             $retention = bcdiv(bcmul($gross, (string) $data['retention_percent'], 4), '100', 2);
             $advance = (string) ($data['advance_recovery'] ?? '0');

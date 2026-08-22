@@ -1,6 +1,24 @@
 <x-layouts.app title="Pengaturan"><section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 <h1 class="text-3xl font-black">Pengaturan</h1>
-<p class="mt-2 text-slate-500">Pusat konfigurasi ERP: organisasi, akuntansi, pajak, approval, dan penandatanganan digital. Semua nilai di sini mengubah perilaku transaksi tanpa perlu ubah kode.</p>
+<p class="mt-2 text-slate-500">Nilai default perusahaan yang dipakai seluruh modul, plus pintasan ke konfigurasi lanjutan. Semua perubahan berlaku untuk dokumen baru tanpa menyentuh kode.</p>
+@if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4">{{ session('status') }}</div>@endif
+@if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{{ $errors->first() }}</div>@endif
+
+@if($canFinance)
+<form method="post" action="/admin/settings" class="mt-8 rounded-2xl border bg-white p-6">
+@csrf
+<h2 class="font-black">Default Perusahaan</h2>
+<p class="mt-1 text-sm text-slate-500">Dipakai sebagai nilai awal form billing, jatuh tempo tagihan, dan toleransi mutu.</p>
+<div class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+<label class="block text-sm font-semibold">Termin Pembayaran (hari)<input type="number" min="0" max="365" name="default_payment_term_days" value="{{ $values['default_payment_term_days'] }}" required class="mt-1 w-full rounded-xl border p-3"></label>
+<label class="block text-sm font-semibold">Retensi Default (%)<input type="number" step=".0001" min="0" max="100" name="default_retention_percent" value="{{ $values['default_retention_percent'] }}" required class="mt-1 w-full rounded-xl border p-3"></label>
+<label class="block text-sm font-semibold">PPN Default (%)<input type="number" step=".0001" min="0" max="100" name="default_ppn_percent" value="{{ $values['default_ppn_percent'] }}" required class="mt-1 w-full rounded-xl border p-3"></label>
+<label class="block text-sm font-semibold">Toleransi Overbreak (%)<input type="number" step=".001" min="0" max="100" name="default_overbreak_tolerance_percent" value="{{ $values['default_overbreak_tolerance_percent'] }}" required class="mt-1 w-full rounded-xl border p-3"></label>
+</div>
+<label class="mt-4 block text-sm font-semibold">Catatan Kaki Faktur<textarea name="invoice_footer_note" rows="2" class="mt-1 w-full rounded-xl border p-3">{{ $values['invoice_footer_note'] }}</textarea></label>
+<div class="mt-5"><button class="rounded-xl bg-sky-700 px-6 py-3 font-bold text-white">Simpan pengaturan</button></div>
+</form>
+@endif
 
 <div class="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
 @if($canOrganization)
