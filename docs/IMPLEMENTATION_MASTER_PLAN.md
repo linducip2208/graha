@@ -215,3 +215,13 @@ Berikutnya (Pending): cage/casing domain penuh, tools check-out, fuel tank recon
 | QMS-SAT-001 | QMS | Survei kepuasan pelanggan (mutu/jadwal/komunikasi 1-5) + rata-rata | Tested | smoke HTTP | ISO clause 9.1.2 |
 | QMS-OBJ-001 | QMS | Sasaran mutu & KPI: target vs realisasi + capaian % | Tested | smoke HTTP | ISO clause 6.2 |
 | NAV-002 | UI | Submenu Casing Pile di Manufacturing Control; halaman /admin/casings | Tested | smoke HTTP | equipment.view/manage
+# Pembaruan 2026-08-23 (9) - OpenAPI Spec & Dashboard Role Lengkap
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| API-005 | API | Spesifikasi OpenAPI 3.0 publik di /docs/openapi.yaml | Tested | smoke HTTP | Token, projects, piles, daily reports, material requests |
+| DASH-QHS | Dashboard | Widget NCR terbuka + CAPA lewat tenggat (qms.view) | Tested | smoke HTTP | |
+| DASH-HSE | Dashboard | Widget incident terbuka + JSA aktif (hse.view) | Tested | smoke HTTP | |
+| DASH-MFG | Dashboard | Widget order produksi aktif + cage menunggu QC (manufacturing.view) | Tested | smoke HTTP | |
+
+Sisa Pending: tools check-out/in, foto evidence upload, auto-link dokumen registry, multi-currency.

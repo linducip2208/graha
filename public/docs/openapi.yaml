@@ -1,0 +1,128 @@
+openapi: 3.0.3
+info:
+  title: Graha Pondasi ERP — Field API v1
+  version: 1.0.0
+  description: >
+    API untuk aplikasi lapangan (mobile/PWA). Autentikasi memakai Bearer token
+    dari endpoint auth/token (Sanctum). Konteks perusahaan dikirim via header
+    X-Company-Id yang harus menjadi membership aktif pemilik token.
+servers:
+  - url: '{base}/api'
+    variables:
+      base:
+        default: https://your-domain.com
+security:
+  - bearerAuth: []
+paths:
+  /v1/auth/token:
+    post:
+      summary: Terbitkan token API
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, example: admin@grahapondasi.test }
+                password: { type: string, example: password }
+                device: { type: string, example: tablet-rig-01 }
+      responses:
+        '200': { description: Token diterbitkan }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /v1/projects:
+    get:
+      summary: Daftar proyek perusahaan aktif
+      parameters:
+        - { name: X-Company-Id, in: header, required: true, schema: { type: integer } }
+        - { name: page, in: query, schema: { type: integer } }
+      responses:
+        '200': { description: Paginated project list }
+        '403': { description: Bukan anggota perusahaan }
+  /v1/bored-piles:
+    get:
+      summary: Titik bored pile pada satu proyek
+      parameters:
+        - { name: X-Company-Id, in: header, required: true, schema: { type: integer } }
+        - { name: project_id, in: query, required: true, schema: { type: integer } }
+      responses:
+        '200': { description: Daftar titik pile }
+        '404': { description: Proyek tidak ditemukan di perusahaan ini }
+  /v1/daily-reports:
+    post:
+      summary: Kirim daily report lapangan (butuh permission project.manage)
+      parameters:
+        - { name: X-Company-Id, in: header, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [project_id, report_date, work_summary]
+              properties:
+                project_id: { type: integer }
+                report_date: { type: string, format: date }
+                weather: { type: string }
+                manpower_count: { type: integer }
+                work_summary: { type: string }
+                issues: { type: string }
+      responses:
+        '201': { description: Daily report dibuat }
+        '403': { description: Tanpa permission }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /v1/material-requests:
+    get:
+      summary: Daftar permintaan material terbaru
+      parameters:
+        - { name: X-Company-Id, in: header, required: true, schema: { type: integer } }
+      responses:
+        '200': { description: Daftar permintaan dengan lines }
+    post:
+      summary: Ajukan permintaan material (butuh permission inventory.manage)
+      parameters:
+        - { name: X-Company-Id, in: header, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [number, project_id, warehouse_id, lines]
+              properties:
+                number: { type: string }
+                project_id: { type: integer }
+                warehouse_id: { type: integer }
+                bored_pile_id: { type: integer, nullable: true }
+                notes: { type: string }
+                lines:
+                  type: array
+                  items:
+                    type: object
+                    required: [sku, quantity]
+                    properties:
+                      sku: { type: string }
+                      quantity: { type: number }
+      responses:
+        '201': { description: Permintaan dibuat status requested }
+        '403': { description: Tanpa permission }
+        '422': { $ref: '#/components/responses/ValidationError' }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  responses:
+    ValidationError:
+      description: Validasi gagal
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+              errors:
+                type: object
+                additionalProperties: { type: array, items: { type: string } }

@@ -4,9 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\ApprovalRequest;
 use App\Models\BoredPile;
+use App\Models\CorrectiveAction;
+use App\Models\HseIncident;
+use App\Models\JobSafetyAnalysis;
 use App\Models\Journal;
+use App\Models\Nonconformity;
+use App\Models\ProductionOrder;
 use App\Models\ProgressBilling;
 use App\Models\Project;
+use App\Models\ReinforcementCage;
 use App\Models\StockBalance;
 use App\Models\Tender;
 use App\Services\ReceivablePayableAgingService;
@@ -49,6 +55,21 @@ class DashboardController extends Controller
         if ($user->hasPermission('inventory.view', $companyId)) {
             $low = StockBalance::where('stock_balances.company_id', $companyId)->join('items', 'items.id', '=', 'stock_balances.item_id')->whereColumn('stock_balances.quantity', '<=', 'items.minimum_stock')->count();
             $stats['Stok Kritis'] = ['value' => $low, 'hint' => 'Item di bawah minimum stock'];
+        }
+        if ($user->hasPermission('qms.view', $companyId)) {
+            $openNcr = Nonconformity::where('company_id', $companyId)->whereIn('status', ['open', 'containment'])->count();
+            $overdueCapa = CorrectiveAction::where('status', 'open')->whereDate('due_at', '<', now())->count();
+            $stats['NCR Terbuka'] = ['value' => $openNcr, 'hint' => $overdueCapa > 0 ? "{$overdueCapa} CAPA lewat tenggat" : 'CAPA dalam kendali'];
+        }
+        if ($user->hasPermission('hse.view', $companyId)) {
+            $openIncidents = HseIncident::where('company_id', $companyId)->whereNotIn('status', ['closed'])->count();
+            $jsaActive = JobSafetyAnalysis::where('company_id', $companyId)->where('valid_until', '>=', today())->count();
+            $stats['Incident Terbuka'] = ['value' => $openIncidents, 'hint' => "JSA aktif: {$jsaActive}"];
+        }
+        if ($user->hasPermission('manufacturing.view', $companyId)) {
+            $activeOrders = ProductionOrder::where('company_id', $companyId)->whereNotIn('status', ['completed', 'completed_with_scrap', 'cancelled'])->count();
+            $cagesPending = ReinforcementCage::where('company_id', $companyId)->where('qc_status', 'draft')->count();
+            $stats['Order Produksi Aktif'] = ['value' => $activeOrders, 'hint' => "Cage menunggu QC: {$cagesPending}"];
         }
 
         $revenueTrend = null;
