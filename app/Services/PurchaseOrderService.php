@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\ApprovalRequest;
+use App\Models\Document;
 use App\Models\GoodsReceipt;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
@@ -89,6 +90,10 @@ class PurchaseOrderService
             $approved = ApprovalRequest::where('approvable_type', PurchaseOrder::class)->where('approvable_id', $order->id)->where('status', 'approved')->exists();
             throw_unless($approved, ValidationException::withMessages(['approval' => 'PO belum mempunyai approval yang selesai.']));
             $order->update(['status' => 'approved']);
+            Document::firstOrCreate(
+                ['company_id' => $order->company_id, 'document_type' => 'purchase_order', 'number' => $order->number],
+                ['title' => 'PO '.$order->number.' — '.$order->vendor?->name, 'owner_id' => $actor->id, 'workflow_status' => 'approved', 'signature_status' => 'unsigned']
+            );
             $this->audit->record($order->company_id, $actor->id, 'procurement.po_activated', $order);
 
             return $order->refresh();
