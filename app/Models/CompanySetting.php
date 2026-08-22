@@ -18,6 +18,8 @@ class CompanySetting extends Model
         'default_ppn_percent' => '11',
         'default_overbreak_tolerance_percent' => '8',
         'require_pile_test_pass' => '0',
+        'require_cage_passed' => '0',
+        'steel_variance_tolerance_percent' => '5',
         'invoice_footer_note' => 'Terima kasih atas kerja sama Anda.',
     ];
 

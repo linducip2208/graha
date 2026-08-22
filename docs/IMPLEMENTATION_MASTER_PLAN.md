@@ -195,3 +195,14 @@ Berikutnya (Pending): cage/casing domain penuh, tools check-out, fuel tank recon
 | FUEL-002 | Equipment | Transaksi signed (receipt/issue/adjustment) idempotent per key | Tested | FuelTankTest | Duplikat mengembalikan transaksi lama |
 | FUEL-003 | Equipment | Rekonsiliasi fisik: selisih buku vs stik dicatat sebagai reading_adjustment ter-audit | Tested | FuelTankTest | Seimbang = tanpa penyesuaian |
 | UI-003 | UI | Kartu stok tangki + form + konfirmasi rekonsiliasi di /admin/fuel-tanks | Tested | smoke HTTP | Nav group Engineering & Workshop
+# Pembaruan 2026-08-23 (7) - Reinforcement Cage Domain
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| MFG-CAGE-001 | Manufacturing | Master cage: spec bar/spiral/pengaku, segmen, coupler, heat no, mill cert, lokasi | Tested | ReinforcementCageTest | Nomor unik per company |
+| MFG-CAGE-002 | Manufacturing | Timbangan aktual + flag varians baja vs toleransi company (default 5%) | Tested | ReinforcementCageTest | QC lolos ditolak bila varians melebihi toleransi |
+| MFG-CAGE-003 | Manufacturing | QC independen: pembuat != pemeriksa; gagal/lolos final | Tested | ReinforcementCageTest | |
+| MFG-CAGE-004 | Manufacturing | Delivery cage ke titik pile siap (cleaning/inspection/cage_installation), satu cage aktif per titik | Tested | ReinforcementCageTest | Guard company di service |
+| MFG-CAGE-005 | Bored Pile | Gate opsional require_cage_passed pada transisi inspection -> cage_installation | Tested | ReinforcementCageTest | Default off, toggle via Pengaturan |
+| UI-004 | UI | Halaman /admin/manufacturing/cages + submenu Manufacturing Control | Tested | smoke HTTP | |
+| NAV-001 | UI | Restrukturisasi menu: Finance dipadatkan (GL parent + Penagihan&Pajak parent), Supply Chain jadi parent Inventory, Equipment&Tangki digabung, Pengaturan masuk Administrasi | Tested | smoke HTTP | Sidebar lebih pendek & berhierarki

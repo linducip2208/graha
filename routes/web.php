@@ -3,6 +3,7 @@
 use App\Http\Controllers\ApprovalController;
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\BillingController;
+use App\Http\Controllers\CageController;
 use App\Http\Controllers\CashBankController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentController;
@@ -131,6 +132,10 @@ Route::middleware(['auth', 'company', 'permission:manufacturing.view'])->prefix(
     Route::get('/manufacturing/quality', [ManufacturingController::class, 'quality'])->name('manufacturing.quality');
     Route::get('/manufacturing/nonconforming', [ManufacturingController::class, 'nonconforming'])->name('manufacturing.nonconforming');
     Route::get('/manufacturing/costing', [ManufacturingController::class, 'costing'])->name('manufacturing.costing');
+    Route::get('/manufacturing/cages', [CageController::class, 'index'])->name('cages.index');
+    Route::post('/manufacturing/cages', [CageController::class, 'store'])->middleware('permission:manufacturing.manage');
+    Route::post('/manufacturing/cages/{cage}/qc', [CageController::class, 'qc'])->middleware('permission:manufacturing.manage');
+    Route::post('/manufacturing/cages/{cage}/deliver', [CageController::class, 'deliver'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/work-centers', [ManufacturingController::class, 'workCenter'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/boms/{bom}/routing-operations', [ManufacturingController::class, 'routingOperation'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/orders/{order}/operations/{operation}', [ManufacturingController::class, 'recordOperation'])->middleware('permission:manufacturing.manage');

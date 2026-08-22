@@ -25,6 +25,9 @@ class BoredPileService
             if ($to === 'completed') {
                 app(FieldOpsService::class)->completionGate($pile);
             }
+            if ($to === 'cage_installation') {
+                app(ReinforcementCageService::class)->installationGate($pile);
+            }
             $pile->activities()->whereNull('finished_at')->latest()->first()?->update(['finished_at' => now()]);
             $pile->activities()->create(['from_status' => $from, 'to_status' => $to, 'started_at' => now(), 'notes' => $notes, 'recorded_by' => $actor->id]);
             $pile->update(['status' => $to]);
