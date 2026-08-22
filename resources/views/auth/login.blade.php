@@ -26,7 +26,7 @@
 @csrf
 <label class="block text-sm font-semibold">Email<input class="mt-1.5 w-full rounded-xl border border-stone-300 p-3 transition focus:border-sky-500 focus:outline-none focus:ring-3 focus:ring-sky-500/20" type="email" name="email" required autocomplete="username"></label>
 <label class="block text-sm font-semibold">Kata sandi<input class="mt-1.5 w-full rounded-xl border border-stone-300 p-3 transition focus:border-sky-500 focus:outline-none focus:ring-3 focus:ring-sky-500/20" type="password" name="password" required autocomplete="current-password"></label>
-<button class="w-full rounded-xl bg-gradient-to-r from-sky-700 to-cyan-700 p-3 font-bold text-white shadow-lg shadow-sky-900/20 transition hover:-translate-y-px hover:shadow-xl">Masuk</button>
+<button type="submit" class="w-full rounded-xl bg-gradient-to-r from-sky-700 to-cyan-700 p-3 font-bold text-white shadow-lg shadow-sky-900/20 transition hover:-translate-y-px hover:shadow-xl">Masuk</button>
 </form>
 <div class="mt-6 rounded-xl border border-stone-200 bg-stone-50 p-4 text-xs">
 <p class="mb-2 font-bold text-stone-800">🧪 Demo Login — semua role pakai password <code class="font-mono">password</code></p>
