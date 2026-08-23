@@ -24,6 +24,11 @@ class ConcreteDelivery extends Model
         return $this->belongsTo(Vendor::class);
     }
 
+    public function recorder(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'recorded_by');
+    }
+
     public function purchaseOrder(): BelongsTo
     {
         return $this->belongsTo(PurchaseOrder::class);

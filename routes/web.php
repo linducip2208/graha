@@ -22,6 +22,7 @@ use App\Http\Controllers\MyWorkController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OperationsController;
 use App\Http\Controllers\OrganizationController;
+use App\Http\Controllers\PileGenealogyController;
 use App\Http\Controllers\ProcurementController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectCostingController;
@@ -121,6 +122,9 @@ Route::middleware(['auth', 'company', 'permission:project.view'])->prefix('admin
     Route::post('/projects/field-ops/evidence/{type}', [FieldOpsController::class, 'uploadEvidence'])->middleware('permission:project.manage');
     Route::get('/field-evidence/{evidence}/download', [FieldOpsController::class, 'downloadEvidence'])->name('evidence.download');
     Route::get('/field-evidence/{evidence}/file', [FieldOpsController::class, 'fileEvidence'])->name('evidence.file');
+    Route::get('/bored-piles/{pile}/genealogy', [PileGenealogyController::class, 'show'])->name('piles.genealogy');
+    Route::get('/bored-piles/{pile}/as-built', [PileGenealogyController::class, 'asBuilt'])->name('piles.as-built');
+    Route::get('/projects/{project}/piles-as-built', [PileGenealogyController::class, 'batchAsBuilt'])->name('piles.as-built.batch');
     Route::post('/project-zones', [ProjectController::class, 'zone'])->middleware('permission:project.manage');
     Route::post('/bored-piles', [ProjectController::class, 'pile'])->middleware('permission:project.manage');
     Route::post('/bored-piles/{pile}/transition', [ProjectController::class, 'transition'])->middleware('permission:project.manage');

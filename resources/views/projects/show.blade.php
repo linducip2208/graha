@@ -1,4 +1,4 @@
-﻿<x-layouts.app title="{{ $project->code }} — {{ $project->name }}">
+<x-layouts.app title="{{ $project->code }} � {{ $project->name }}">
 @php($tabs = [
     'overview' => 'Ringkasan',
     'planning' => 'Perencanaan',
@@ -13,11 +13,11 @@
     'hse' => 'HSE',
 ])
 <section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-<p class="text-xs font-bold uppercase tracking-widest text-sky-700">{{ $project->code }} Â· {{ $project->location }}</p>
+<p class="text-xs font-bold uppercase tracking-widest text-sky-700">{{ $project->code }} · {{ $project->location }}</p>
 <h1 class="mt-1 text-3xl font-black">{{ $project->name }}</h1>
 <div class="mt-2 flex flex-wrap items-center gap-3 text-sm text-slate-500">
 <span class="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase">{{ str_replace('_', ' ', $project->status) }}</span>
-@if($project->planned_start)<span>Rencana: {{ $project->planned_start->format('d/m/Y') }} → {{ $project->planned_end?->format('d/m/Y') }}</span>@endif
+@if($project->planned_start)<span>Rencana: {{ $project->planned_start->format('d/m/Y') }} ? {{ $project->planned_end?->format('d/m/Y') }}</span>@endif
 @if($project->contract_value)<span>Kontrak: <strong class="font-mono">Rp {{ number_format((float) $project->contract_value, 0, ',', '.') }}</strong></span>@endif
 </div>
 
@@ -60,9 +60,9 @@
 
 @if($activeTab === 'piles')
 <section class="mt-6 overflow-x-auto rounded-2xl border bg-white">
-<table class="w-full text-sm table-sticky"><thead><tr><th>Pile</th><th>Zona</th><th>Diameter</th><th>Depth</th><th>Beton</th><th>Status</th></tr></thead><tbody>@forelse($piles as $pile)
-<tr><td class="font-mono font-bold">{{ $pile->pile_number }}</td><td>{{ $pile->zone?->code }}</td><td>{{ $pile->diameter_mm }} mm</td><td>{{ $pile->actual_depth_m ?? $pile->planned_depth_m }} m</td><td>{{ $pile->actual_concrete_m3 ?? '-' }} mÂ³</td><td>{{ str_replace('_', ' ', strtoupper($pile->status)) }}</td></tr>
-@empty<tr><td colspan="6" class="p-8 text-center text-slate-500">Belum ada titik bored pile pada proyek ini.</td></tr>@endforelse
+<table class="w-full text-sm table-sticky"><thead><tr><th>Pile</th><th>Zona</th><th>Diameter</th><th>Depth</th><th>Beton</th><th>Status</th><th>Genealogi</th></tr></thead><tbody>@forelse($piles as $pile)
+<tr><td class="font-mono font-bold">{{ $pile->pile_number }}</td><td>{{ $pile->zone?->code }}</td><td>{{ $pile->diameter_mm }} mm</td><td>{{ $pile->actual_depth_m ?? $pile->planned_depth_m }} m</td><td>{{ $pile->actual_concrete_m3 ?? '-' }} m³</td><td>{{ str_replace('_', ' ', strtoupper($pile->status)) }}</td><td><a href="{{ route('piles.genealogy', $pile) }}" class="font-bold text-sky-700 hover:underline">Genealogi</a> � <a href="{{ route('piles.as-built', $pile) }}" class="text-slate-500 hover:underline">PDF</a></td></tr>
+@empty<tr><td colspan="7" class="p-8 text-center text-slate-500">Belum ada titik bored pile pada proyek ini.</td></tr>@endforelse
 </tbody></table>
 </section>
 @endif
@@ -92,10 +92,10 @@
 
 @if($activeTab === 'procurement' && isset($purchaseOrders))
 <section class="mt-6 space-y-6">
-<article class="overflow-x-auto rounded-2xl border bg-white p-6 shadow-sm"><h2 class="font-bold">Purchase Order Proyek</h2><table class="mt-3 w-full text-sm table-sticky"><thead><tr><th>PO</th><th>Vendor</th><th class="text-right">Nilai</th><th>Status</th></tr></thead><tbody>@forelse($purchaseOrders ?? [] as $po)
+<article class="overflow-x-auto rounded-2xl border bg-white p-6 shadow-sm"><h2 class="font-bold">Purchase Order Proyek</h2><table class="mt-3 w-full text-sm table-sticky"><thead><tr><th>PO</th><th>Vendor</th><th class="text-right">Nilai</th><th>Status</th><th>Genealogi</th></tr></thead><tbody>@forelse($purchaseOrders ?? [] as $po)
 <tr><td class="font-mono text-xs">{{ $po->number }} v{{ $po->version }}</td><td>{{ $po->vendor?->name }}</td><td class="text-right font-mono">{{ number_format((float) $po->total, 0, ',', '.') }}</td><td>{{ strtoupper(str_replace('_', ' ', $po->status)) }}</td></tr>
 @empty<tr><td colspan="4" class="p-6 text-center text-slate-500">Belum ada PO untuk proyek ini.</td></tr>@endforelse</tbody></table></article>
-<article class="overflow-x-auto rounded-2xl border bg-white p-6 shadow-sm"><h2 class="font-bold">RFQ Proyek</h2><table class="mt-3 w-full text-sm table-sticky"><thead><tr><th>Nomor</th><th>Judul</th><th>Vendor Diundang</th><th>Status</th></tr></thead><tbody>@forelse($rfqs ?? [] as $rfq)
+<article class="overflow-x-auto rounded-2xl border bg-white p-6 shadow-sm"><h2 class="font-bold">RFQ Proyek</h2><table class="mt-3 w-full text-sm table-sticky"><thead><tr><th>Nomor</th><th>Judul</th><th>Vendor Diundang</th><th>Status</th><th>Genealogi</th></tr></thead><tbody>@forelse($rfqs ?? [] as $rfq)
 <tr><td class="font-mono text-xs">{{ $rfq->number }}</td><td>{{ $rfq->title }}</td><td>{{ $rfq->vendors_count }}</td><td>{{ strtoupper($rfq->status) }}</td></tr>
 @empty<tr><td colspan="4" class="p-6 text-center text-slate-500">Belum ada RFQ.</td></tr>@endforelse</tbody></table></article>
 </section>
@@ -103,9 +103,9 @@
 
 @if($activeTab === 'contracts' && isset($contractChanges))
 <section class="mt-6 overflow-x-auto rounded-2xl border bg-white">
-<table class="w-full text-sm table-sticky"><thead><tr><th>Nomor</th><th>Jenis</th><th>Judul</th><th class="text-right">Nilai</th><th>Status</th></tr></thead><tbody>@forelse($contractChanges ?? [] as $change)
+<table class="w-full text-sm table-sticky"><thead><tr><th>Nomor</th><th>Jenis</th><th>Judul</th><th class="text-right">Nilai</th><th>Status</th><th>Genealogi</th></tr></thead><tbody>@forelse($contractChanges ?? [] as $change)
 <tr onclick="location.href='/admin/contracts/{{ $change->id }}'" class="cursor-pointer hover:bg-slate-50 dark:hover:!bg-slate-800"><td class="font-mono text-xs">{{ $change->number }}</td><td>{{ \App\Models\ContractChange::TYPES[$change->type] ?? $change->type }}</td><td class="max-w-[220px] truncate">{{ $change->title }}</td><td class="text-right font-mono">{{ number_format((float) $change->amount, 0, ',', '.') }}</td><td>{{ str_replace('_', ' ', $change->status) }}</td></tr>
-@empty<tr><td colspan="5" class="p-8 text-center text-slate-500">Belum ada perubahan kontrak. Kelola di menu Komersial → Administrasi Kontrak.</td></tr>@endforelse
+@empty<tr><td colspan="5" class="p-8 text-center text-slate-500">Belum ada perubahan kontrak. Kelola di menu Komersial ? Administrasi Kontrak.</td></tr>@endforelse
 </tbody></table>
 </section>
 @endif
@@ -123,7 +123,7 @@
 
 @if($activeTab === 'billing' && isset($billings))
 <section class="mt-6 overflow-x-auto rounded-2xl border bg-white">
-<table class="w-full text-sm table-sticky"><thead><tr><th>Nomor</th><th>Tanggal</th><th class="text-right">Bruto</th><th class="text-right">Retensi</th><th>Status</th></tr></thead><tbody>@forelse($billings ?? [] as $billing)
+<table class="w-full text-sm table-sticky"><thead><tr><th>Nomor</th><th>Tanggal</th><th class="text-right">Bruto</th><th class="text-right">Retensi</th><th>Status</th><th>Genealogi</th></tr></thead><tbody>@forelse($billings ?? [] as $billing)
 <tr><td class="font-mono text-xs">{{ $billing->number }}</td><td>{{ $billing->billing_date?->format('d/m/Y') }}</td><td class="text-right font-mono">{{ number_format((float) $billing->gross_amount, 0, ',', '.') }}</td><td class="text-right font-mono">{{ number_format((float) $billing->retention_amount, 0, ',', '.') }}</td><td>{{ strtoupper($billing->status) }}</td></tr>
 @empty<tr><td colspan="5" class="p-8 text-center text-slate-500">Belum ada progress billing.</td></tr>@endforelse
 </tbody></table>
@@ -133,8 +133,8 @@
 @if($activeTab === 'quality' && isset($ncrs))
 <section class="mt-6 space-y-3">
 @forelse($ncrs ?? [] as $ncr)
-<article class="rounded-2xl border bg-white p-5 shadow-sm"><div class="flex flex-wrap items-center justify-between gap-2"><strong>{{ $ncr->number }}</strong><span class="text-xs uppercase text-slate-500">{{ $ncr->source_type }} Â· severitas {{ $ncr->severity }}</span><x-ui.badge :status="$ncr->status === 'closed' ? 'posted' : 'pending_approval'" :label="$ncr->status" /></div><p class="mt-2 text-sm text-slate-600">{{ $ncr->description }}</p>
-@if($ncr->actions->isNotEmpty())<ul class="mt-2 space-y-1 text-xs text-slate-500">@foreach($ncr->actions as $action)<li>↳ {{ str($action->action)->limit(90) }} — {{ $action->status }} @if($action->due_at)(tenggat {{ $action->due_at->format('d/m/Y') }})@endif</li>@endforeach</ul>@endif</article>
+<article class="rounded-2xl border bg-white p-5 shadow-sm"><div class="flex flex-wrap items-center justify-between gap-2"><strong>{{ $ncr->number }}</strong><span class="text-xs uppercase text-slate-500">{{ $ncr->source_type }} · severitas {{ $ncr->severity }}</span><x-ui.badge :status="$ncr->status === 'closed' ? 'posted' : 'pending_approval'" :label="$ncr->status" /></div><p class="mt-2 text-sm text-slate-600">{{ $ncr->description }}</p>
+@if($ncr->actions->isNotEmpty())<ul class="mt-2 space-y-1 text-xs text-slate-500">@foreach($ncr->actions as $action)<li>? {{ str($action->action)->limit(90) }} � {{ $action->status }} @if($action->due_at)(tenggat {{ $action->due_at->format('d/m/Y') }})@endif</li>@endforeach</ul>@endif</article>
 @empty
 <x-ui.empty icon="shield" title="Tidak ada NCR pada proyek ini" description="Kualitas pekerjaan dalam kendali." />
 @endforelse
@@ -144,7 +144,7 @@
 @if($activeTab === 'hse' && isset($incidents))
 <section class="mt-6 space-y-3">
 @forelse($incidents ?? [] as $incident)
-<article class="rounded-2xl border bg-white p-5 shadow-sm"><div class="flex flex-wrap items-center justify-between gap-2"><strong>{{ $incident->number }}</strong><span class="text-xs uppercase text-slate-500">{{ $incident->type }} Â· {{ $incident->severity }} Â· {{ $incident->occurred_at?->format('d/m/Y H:i') }}</span><x-ui.badge :status="$incident->status === 'closed' ? 'posted' : 'exception'" :label="$incident->status" /></div><p class="mt-2 text-sm text-slate-600">{{ $incident->description }}</p></article>
+<article class="rounded-2xl border bg-white p-5 shadow-sm"><div class="flex flex-wrap items-center justify-between gap-2"><strong>{{ $incident->number }}</strong><span class="text-xs uppercase text-slate-500">{{ $incident->type }} · {{ $incident->severity }} · {{ $incident->occurred_at?->format('d/m/Y H:i') }}</span><x-ui.badge :status="$incident->status === 'closed' ? 'posted' : 'exception'" :label="$incident->status" /></div><p class="mt-2 text-sm text-slate-600">{{ $incident->description }}</p></article>
 @empty
 <x-ui.empty icon="triangle-alert" title="Tidak ada incident tercatat" description="Riwayat HSE proyek ini bersih." />
 @endforelse

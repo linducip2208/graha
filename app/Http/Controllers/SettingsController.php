@@ -43,6 +43,9 @@ class SettingsController extends Controller
             'default_retention_percent' => ['required', 'decimal:0,4', 'between:0,100'],
             'default_ppn_percent' => ['required', 'decimal:0,4', 'between:0,100'],
             'default_overbreak_tolerance_percent' => ['required', 'decimal:0,3', 'between:0,100'],
+            'pile_depth_tolerance_percent' => ['required', 'decimal:0,3', 'between:0,100'],
+            'slump_min_cm' => ['required', 'decimal:0,2', 'between:0,50'],
+            'slump_max_cm' => ['required', 'decimal:0,2', 'between:0,50'],
             'require_pile_test_pass' => ['nullable', 'boolean'],
             'invoice_footer_note' => ['nullable', 'max:500'],
         ]);
