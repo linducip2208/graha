@@ -19,13 +19,16 @@
 <div class="min-h-screen lg:grid lg:grid-cols-[272px_1fr] print:block">
 <aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-40 w-[280px] -translate-x-full overflow-y-auto bg-slate-950 text-slate-200 shadow-2xl transition-transform lg:sticky lg:top-0 lg:h-screen lg:w-auto lg:translate-x-0 print:hidden">
  <div class="flex items-center justify-between border-b border-white/10 px-5 py-5"><a href="/dashboard" class="flex items-center gap-2 font-black text-white"><span class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-sky-500 to-cyan-600 text-sm">🏗️</span>Graha Pondasi ERP</a><button data-sidebar-close class="rounded-lg p-2 lg:hidden" aria-label="Tutup menu">✕</button></div>
- <nav id="admin-navigation" class="space-y-6 p-4 text-sm">
+ <nav id="admin-navigation" class="space-y-4 p-4 text-sm">
   @foreach($navGroups as $group)
-  <div>
-   <p class="px-3 pb-1 text-[11px] font-bold uppercase tracking-widest text-slate-500">{{ $group['label'] }}</p>
+  <details class="nav-group" data-group="{{ $group['label'] }}" open>
+   <summary class="flex cursor-pointer select-none items-center justify-between px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-300">
+    <span>{{ $group['label'] }}</span><span class="nav-chevron text-[9px] opacity-60">▼</span>
+   </summary>
+   <div class="space-y-0.5 pt-0.5">
    @foreach($group['items'] as $item)
     @if(! empty($item['children']))
-    <details class="nav-details">
+    <details class="nav-details" {{ url()->current() === url($item['href']) ? 'open' : '' }}>
      <summary class="admin-link cursor-pointer list-none"><x-ui.icon :name="$item['icon'] ?? 'dashboard'" class="h-[18px] w-[18px]" /><span>{{ $item['label'] }}</span><span class="nav-chevron ml-auto text-[10px] opacity-60">▼</span></summary>
      <div class="ml-6 mt-1 space-y-1 border-l border-white/10 pl-3">
       @foreach($item['children'] as $child)
@@ -38,7 +41,8 @@
     <a href="{{ $item['href'] }}" class="admin-link"><x-ui.icon :name="$item['icon'] ?? 'dashboard'" class="h-[18px] w-[18px]" /><span>{{ $item['label'] }}</span></a>
     @endif
    @endforeach
-  </div>
+   </div>
+  </details>
   @endforeach
  </nav>
 </aside>

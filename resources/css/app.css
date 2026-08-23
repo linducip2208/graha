@@ -47,3 +47,4 @@ table th,table td{padding:.8rem 1rem;text-align:left;border-bottom:1px solid #e2
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+.nav-group>summary{list-style:none}.nav-group[open]>summary .nav-chevron{transform:rotate(180deg)}.nav-group>summary::-webkit-details-marker{display:none}
