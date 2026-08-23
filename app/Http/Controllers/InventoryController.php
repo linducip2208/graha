@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BoredPile;
 use App\Models\Item;
 use App\Models\StockBalance;
 use App\Models\StockMovement;
@@ -14,6 +15,35 @@ use Illuminate\Http\Request;
 
 class InventoryController extends Controller
 {
+    /** Lot traceability (ADR-056): telusuri satu lot dari receipt hingga konsumsi. */
+    public function lotTrace(Request $request, CurrentCompany $current)
+    {
+        $companyId = $current->id();
+        $lot = trim((string) $request->query('lot'));
+        $movements = collect();
+        if ($lot !== '') {
+            $movements = StockMovement::where('company_id', $companyId)
+                ->where('lot_number', $lot)
+                ->with(['item:id,sku,name', 'warehouse:id,code', 'bin:id,code'])
+                ->orderBy('id')->limit(200)->get()
+                ->map(function (StockMovement $m): StockMovement {
+                    $m->setAttribute('source_label', match ($m->reference_type) {
+                        'goods_receipt' => 'GR #'.$m->reference_id,
+                        'material_request' => 'Material Request #'.$m->reference_id,
+                        'production_order' => 'Production Order #'.$m->reference_id,
+                        'reinforcement_cage' => 'Cage #'.$m->reference_id,
+                        'warehouse_transfer' => 'Transfer '.$m->reference_id,
+                        default => ucfirst(str_replace('_', ' ', (string) $m->reference_type)),
+                    });
+                    $m->setAttribute('pile_number', $m->bored_pile_id ? BoredPile::find($m->bored_pile_id)?->pile_number : null);
+
+                    return $m;
+                });
+        }
+
+        return view('inventory.lot-trace', ['lot' => $lot, 'movements' => $movements]);
+    }
+
     public function index(CurrentCompany $current)
     {
         $lowStock = StockBalance::where('stock_balances.company_id', $current->id())->join('items', 'items.id', '=', 'stock_balances.item_id')->whereColumn('stock_balances.quantity', '<=', 'items.minimum_stock')->select('stock_balances.*')->with(['item', 'warehouse', 'bin'])->get();

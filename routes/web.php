@@ -97,6 +97,7 @@ Route::middleware(['auth', 'company', 'permission:finance.view'])->prefix('admin
 Route::middleware(['auth', 'company', 'permission:inventory.view'])->prefix('admin')->group(function () {
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
     Route::get('/inventory/opname', [StockOpnameController::class, 'index'])->name('opname.index');
+    Route::get('/inventory/lots', [InventoryController::class, 'lotTrace'])->name('inventory.lot-trace');
     Route::post('/inventory/opname', [StockOpnameController::class, 'store'])->middleware('permission:inventory.manage');
     Route::post('/inventory/opname/{count}/approve', [StockOpnameController::class, 'approve'])->middleware('permission:inventory.manage');
     Route::get('/inventory/material-requests', [MaterialRequestController::class, 'index'])->name('material-requests.index');
