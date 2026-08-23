@@ -38,7 +38,7 @@ class AccountingService
                     ProjectCostLedger::create(['company_id' => $companyId, 'project_id' => $line['project_id'], 'project_cost_code_id' => $line['project_cost_code_id'] ?? null, 'journal_entry_id' => $entry->id, 'cost_type' => $line['cost_type'] ?? 'actual', 'amount' => $line['debit'], 'cost_date' => $date]);
                 }
             }$journal->update(['status' => 'posted', 'posted_by' => $actor->id, 'posted_at' => now()]);
-            $this->audit->record($companyId,$actor->id,'accounting.journal_posted',$journal);
+            $this->audit->record($companyId, $actor->id, 'accounting.journal_posted', $journal);
 
             return $journal->load('entries');
         }, 3);

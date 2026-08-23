@@ -16,12 +16,12 @@ Sistem ERP terintegrasi untuk kontraktor pondasi (bored pile): dari tender, kont
 | Dashboard | Executive Dashboard | Kartu per-permission, chart pendapatan/PPN, aging AR/AP |
 | Organisasi | Company, Branch, Department, RBAC per membership | `organization.*` |
 | Marketing & Tender | Pelanggan (term pembayaran), Tender, Outcome, Konversi Proyek | `tender.*` |
-| Project & Bored Pile | Proyek, Zona, Titik Pile (9-status lifecycle), Gantt & Kurva-S, **Field Operations** (drilling record + bore log ternormalisasi, concrete delivery dengan slump/accept-reject, pile testing PIT/PDA/CSL/SLT/DLT dengan gate kelulusan) | `project.*` |
-| Supply Chain | Item/UoM/Warehouse/Bin, ledger immutable, stok kritis alert harian | `inventory.*` |
+| Project & Bored Pile | Proyek, Zona, Titik Pile (9-status lifecycle), Gantt & Kurva-S, **Field Operations** (drilling record + bore log ternormalisasi, concrete delivery dengan slump/accept-reject, pile testing PIT/PDA/CSL/SLT/DLT dengan gate kelulusan, foto evidence privat) | `project.*` |
+| Supply Chain | Item/UoM/Warehouse/Bin, ledger immutable, stok kritis alert harian, tools check-out + foto kondisi | `inventory.*` |
 | Procurement | Vendor, PO versi + revision snapshot, three-way matching, GRNI posting | `procurement.*` |
-| Engineering & Workshop | BOM, routing work center, WIP reconciliation, QC disposition, equipment hour meter/fuel/MWO | `manufacturing.*`, `equipment.*` |
-| Finance & Accounting | COA, jurnal balanced idempotent, mapping configurable, periode fiskal + closing gate, Progress Billing (retensi/uang muka/**PPN keluaran**/faktur PDF terbilang), release retensi, kas-bank + rekonsiliasi, **Pajak & Bukti Potong** (PPN masukan, PPh 23, PPh final 4(2)), project costing EAC, fixed asset depresiasi | `finance.*`, `accounting.post` |
-| Governance | Document control versi + hash SHA-256, download isolation | `document.*` |
+| Engineering & Workshop | BOM, routing work center, WIP reconciliation, QC disposition, equipment hour meter/fuel/MWO (+tutup WO → registry), cage/casing + foto evidence | `manufacturing.*`, `equipment.*` |
+| Finance & Accounting | COA, jurnal balanced idempotent, mapping configurable, periode fiskal + closing gate, Progress Billing (retensi/uang muka/**PPN keluaran**/faktur PDF terbilang), release retensi, kas-bank + rekonsiliasi, **Pajak & Bukti Potong** (PPN masukan, PPh 23, PPh final 4(2)), project costing EAC, fixed asset depresiasi, selisih kurs realized saat pelunasan dokumen asing | `finance.*`, `accounting.post` |
+| Governance | Document control versi + hash SHA-256, download isolation, auto-register billing posted / PO aktif / MWO / NCR / CAPA | `document.*` |
 | Approval & Signing | Approval engine sequential/any/all/quorum + SLA + delegasi; digital signing provider-agnostic terikat version+hash | `approval.*`, `signature.*` |
 | Quality, HSE & ISO | Risiko/peluang, NCR/CAPA (independence guard), audit mutu internal, evidence expiry; JSA, izin kerja, incident | `qms.*`, `hse.*` |
 | Pengaturan | Default perusahaan (termin, retensi %, PPN %, toleransi overbreak, catatan faktur) | `finance.manage` |
@@ -100,6 +100,6 @@ Company isolation di controller + invariant service; RBAC per membership; CSRF +
 ## Known Limitations
 
 - Business Process Mapping Level 0 (`docs/PM 04`) belum tersedia → baseline alur bisnis internal (lihat docs).
-- Multi-currency baru fondasi kolom; kurs & selisih kurs belum.
+- Multi-currency: selisih kurs hanya REALIZED saat pelunasan kas (ADR-040); revaluation unrealized belum.
 - HR/payroll sengaja di luar scope.
 - Dark mode: override permukaan umum; chart per-halaman masih default terang saat toggle runtime (refresh menyinkronkan).

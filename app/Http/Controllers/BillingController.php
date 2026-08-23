@@ -12,6 +12,7 @@ use App\Models\Project;
 use App\Models\RetentionRelease;
 use App\Models\TaxRate;
 use App\Services\ApprovalEngine;
+use App\Services\FxService;
 use App\Services\ProgressBillingService;
 use App\Services\RetentionReleaseService;
 use App\Support\Tenancy\CurrentCompany;
@@ -27,12 +28,21 @@ class BillingController extends Controller
 
     public function store(Request $request, CurrentCompany $current, ProgressBillingService $service)
     {
-        $data = $request->validate(['project_id' => ['required', 'exists:projects,id'], 'number' => ['required', 'max:80'], 'billing_date' => ['required', 'date'], 'due_date' => ['nullable', 'date', 'after_or_equal:billing_date'], 'progress_percent' => ['required', 'decimal:0,4', 'between:0.0001,100'], 'gross_amount' => ['required', 'decimal:0,2', 'gt:0'], 'retention_percent' => ['nullable', 'decimal:0,4', 'between:0,100'], 'advance_recovery' => ['required', 'decimal:0,2', 'min:0'], 'tax_rate_id' => ['nullable', 'integer'], 'idempotency_key' => ['required', 'max:120']]);
+        $data = $request->validate(['project_id' => ['required', 'exists:projects,id'], 'number' => ['required', 'max:80'], 'billing_date' => ['required', 'date'], 'due_date' => ['nullable', 'date', 'after_or_equal:billing_date'], 'progress_percent' => ['required', 'decimal:0,4', 'between:0.0001,100'], 'gross_amount' => ['required', 'decimal:0,2', 'gt:0'], 'retention_percent' => ['nullable', 'decimal:0,4', 'between:0,100'], 'advance_recovery' => ['required', 'decimal:0,2', 'min:0'], 'tax_rate_id' => ['nullable', 'integer'], 'currency' => ['nullable', 'size:3'], 'exchange_rate' => ['nullable', 'decimal:0,6', 'gt:0'], 'idempotency_key' => ['required', 'max:120']]);
         $data['retention_percent'] ??= CompanySetting::val($current->id(), 'default_retention_percent');
         if (! empty($data['tax_rate_id'])) {
             abort_unless(TaxRate::where('company_id', $current->id())->where('kind', 'ppn_output')->where('is_active', true)->whereKey($data['tax_rate_id'])->exists(), 422);
         } else {
             unset($data['tax_rate_id']);
+        }
+        // Multi-currency: nilai billing disimpan sebagai IDR ekuivalen; kurs dokumen dicatat untuk selisih kurs realized saat pelunasan.
+        $currency = strtoupper($data['currency'] ?? 'IDR');
+        if ($currency === 'IDR') {
+            $data['exchange_rate'] = '1';
+            unset($data['currency']);
+        } else {
+            $data['currency'] = $currency;
+            $data['exchange_rate'] ??= app(FxService::class)->rate($current->id(), $currency, $data['billing_date']);
         }
         $project = Project::where('company_id', $current->id())->findOrFail($data['project_id']);
         $service->create($project, $data, $request->user());
@@ -46,7 +56,7 @@ class BillingController extends Controller
         $data = $request->validate(['workflow_id' => ['required', 'exists:approval_workflows,id'], 'idempotency_key' => ['required', 'max:100']]);
         $workflow = ApprovalWorkflow::where('company_id', $current->id())->where('document_type', 'progress_billing')->findOrFail($data['workflow_id']);
         $approval = $engine->submit($workflow, $billing, $request->user(), $data['idempotency_key']);
-        $approval->update(['amount' => $billing->gross_amount, 'currency' => 'IDR']);
+        $approval->update(['amount' => $billing->gross_amount, 'currency' => $billing->currency ?? 'IDR']);
         $billing->update(['status' => 'pending_approval']);
 
         return back()->with('status', 'Billing dikirim ke approval.');

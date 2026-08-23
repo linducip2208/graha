@@ -87,4 +87,14 @@ class OperationsController extends Controller
 
         return back()->with('status', 'Maintenance work order dibuka.');
     }
+
+    /** Tutup WO: biaya aktual final + otomatis terdaftar di document registry. */
+    public function closeMaintenance(Request $request, Equipment $equipment, MaintenanceWorkOrder $wo, CurrentCompany $current, EquipmentService $service)
+    {
+        abort_unless($equipment->company_id === $current->id() && $wo->equipment_id === $equipment->id, 404);
+        $data = $request->validate(['actual_cost' => ['nullable', 'decimal:0,2', 'min:0']]);
+        $service->closeMaintenanceOrder($wo->refresh(), $data, $request->user());
+
+        return back()->with('status', 'Work order ditutup dan terdaftar di registry dokumen.');
+    }
 }

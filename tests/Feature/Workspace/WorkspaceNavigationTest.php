@@ -2,13 +2,16 @@
 
 namespace Tests\Feature\Workspace;
 
+use App\Models\CasingUnit;
 use App\Models\Company;
 use App\Models\ContractChange;
 use App\Models\Customer;
 use App\Models\Permission;
 use App\Models\Project;
+use App\Models\ReinforcementCage;
 use App\Models\Role;
 use App\Models\Tender;
+use App\Models\Tool;
 use App\Models\User;
 use App\Services\TenderService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -200,5 +203,44 @@ class WorkspaceNavigationTest extends TestCase
         $this->assertSame('approved', $change->fresh()->status);
         $this->assertNotNull($change->fresh()->approved_at);
         unset($sync);
+    }
+
+    public function test_tender_list_search_and_status_persist_as_saved_view(): void
+    {
+        $customer = Customer::create(['company_id' => $this->company->id, 'code' => 'C-SV', 'name' => 'Pelanggan Saved View']);
+        $jalan = Tender::create(['company_id' => $this->company->id, 'customer_id' => $customer->id, 'number' => 'T-JALAN', 'year' => 2026, 'project_name' => 'Jembatan Selatan', 'status' => 'bidding', 'created_by' => $this->user->id]);
+        $pelabuhan = Tender::create(['company_id' => $this->company->id, 'customer_id' => $customer->id, 'number' => 'T-PELABUHAN', 'year' => 2026, 'project_name' => 'Dermaga Utara', 'status' => 'preparation', 'created_by' => $this->user->id]);
+        $this->actingAs($this->user)->withSession(['company_id' => $this->company->id]);
+        $this->givePermissions(['tender.view']);
+
+        // Pencarian kata kunci tersimpan sebagai URL; baris tabel tender lain tidak dirender
+        // (dropdown pilihan peserta memang selalu menampilkan semua tender).
+        // Baris tabel memakai location.href='...' dengan kutip tunggal.
+        $search = $this->get('/admin/tenders?q=Jembatan');
+        $search->assertOk()->assertSee("location.href='/admin/tenders/{$jalan->id}'", false)->assertDontSee("location.href='/admin/tenders/{$pelabuhan->id}'", false);
+
+        // Filter status tetap bekerja berdampingan dengan pencarian.
+        $statusOnly = $this->get('/admin/tenders?status=preparation');
+        $statusOnly->assertOk()->assertSee("location.href='/admin/tenders/{$pelabuhan->id}'", false)->assertDontSee("location.href='/admin/tenders/{$jalan->id}'", false);
+    }
+
+    public function test_equipment_inventory_pages_render_with_photo_evidence_forms(): void
+    {
+        // Tombol "Lampirkan foto" berada di kartu per item — sediakan satu baris per halaman.
+        Tool::create(['company_id' => $this->company->id, 'code' => 'TL-NAV-1', 'name' => 'Bor Duduk']);
+        CasingUnit::create(['company_id' => $this->company->id, 'code' => 'CS-NAV-1', 'diameter_mm' => '700', 'length_m' => '6', 'ownership' => 'owned', 'status' => 'in_stock', 'created_by' => $this->user->id]);
+        ReinforcementCage::create(['company_id' => $this->company->id, 'number' => 'CAGE-NAV-1', 'diameter_mm' => '600', 'total_length_m' => '12', 'created_by' => $this->user->id]);
+        $this->actingAs($this->user)->withSession(['company_id' => $this->company->id]);
+
+        $this->givePermissions(['inventory.view']);
+        $this->get('/admin/tools')->assertOk()->assertSee('Lampirkan foto');
+
+        $this->givePermissions(['equipment.view']);
+        $this->get('/admin/casings')->assertOk()->assertSee('Lampirkan foto');
+        $this->get('/admin/fuel-tanks')->assertOk();
+
+        $this->givePermissions(['manufacturing.view']);
+        $this->get('/admin/manufacturing/cages')->assertOk()->assertSee('Lampirkan foto');
+        $this->get('/admin/operations')->assertOk();
     }
 }

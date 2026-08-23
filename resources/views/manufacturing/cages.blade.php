@@ -67,6 +67,15 @@
 <button onclick="return confirm('Catat pengiriman cage ke titik ini?')" class="font-bold text-sky-700">Catat pengiriman</button></form>
 @endif
 @endif
+<form method="post" action="/admin/manufacturing/cages/{{ $cage->id }}/evidence" enctype="multipart/form-data" class="mt-2 flex flex-wrap items-center gap-2 no-print">@csrf
+<input type="file" name="file" accept="image/jpeg,image/png,image/webp" required class="rounded-lg border p-1.5 text-xs">
+<button class="font-bold text-violet-700">Lampirkan foto</button>
+@if(($evidences[$cage->id] ?? collect())->isNotEmpty())<span class="text-xs text-slate-500">{{ ($evidences[$cage->id])->count() }} foto tersimpan</span>@endif
+</form>
+@forelse($evidences[$cage->id] ?? [] as $ev)
+<div class="mt-2 flex items-center gap-3 rounded-xl bg-slate-50 p-2 text-xs"><img src="{{ route('evidence.file', $ev) }}" alt="{{ $ev->original_name }}" class="h-14 w-14 rounded-lg border object-cover"><div><strong>{{ \Illuminate\Support\Str::limit($ev->original_name, 40) }}</strong><br>{{ $ev->size_kb }} KB · {{ $ev->created_at->format('d/m/Y H:i') }} · {{ $ev->uploader?->name }} <a href="{{ route('evidence.download', $ev) }}" class="font-bold text-sky-700">Unduh</a></div></div>
+@empty
+@endforelse
 </article>
 @endforeach</div>
 </section></x-layouts.app>

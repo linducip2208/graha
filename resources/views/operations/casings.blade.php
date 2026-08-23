@@ -40,6 +40,15 @@
 <details class="mt-2"><summary class="cursor-pointer text-xs font-bold text-sky-700">Riwayat ({{ $unit->movements->count() }} terakhir)</summary>
 <ul class="mt-1 space-y-1 text-xs text-slate-600">@foreach($unit->movements as $m)<li>{{ $m->occurred_at->format('d/m/Y') }} — <strong>{{ str($m->type)->replace('_',' ') }}</strong> {{ $m->pile?->pile_number ? '· '.$m->pile->pile_number : '' }} {{ $m->notes ? '· '.\Illuminate\Support\Str::limit($m->notes, 60) : '' }}</li>@endforeach</ul>
 </details>
+<form method="post" action="/admin/casings/{{ $unit->id }}/evidence" enctype="multipart/form-data" class="mt-2 flex flex-wrap items-center gap-2 no-print">@csrf
+<input type="file" name="file" accept="image/jpeg,image/png,image/webp" required class="rounded-lg border p-1.5 text-xs">
+<button class="font-bold text-violet-700">Lampirkan foto</button>
+@if(($evidences[$unit->id] ?? collect())->isNotEmpty())<span class="text-xs text-slate-500">{{ ($evidences[$unit->id])->count() }} foto tersimpan</span>@endif
+</form>
+@forelse($evidences[$unit->id] ?? [] as $ev)
+<div class="mt-2 flex items-center gap-3 rounded-xl bg-slate-50 p-2 text-xs"><img src="{{ route('evidence.file', $ev) }}" alt="{{ $ev->original_name }}" class="h-14 w-14 rounded-lg border object-cover"><div><strong>{{ \Illuminate\Support\Str::limit($ev->original_name, 40) }}</strong><br>{{ $ev->size_kb }} KB · {{ $ev->created_at->format('d/m/Y H:i') }} · {{ $ev->uploader?->name }} <a href="{{ route('evidence.download', $ev) }}" class="font-bold text-sky-700">Unduh</a></div></div>
+@empty
+@endforelse
 </article>
 @empty<x-ui.empty icon="archive" title="Belum ada casing" description="Daftarkan casing pertama untuk mulai melacak siklus pemakaiannya." />@endforelse</div>
 </section></x-layouts.app>

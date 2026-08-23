@@ -3,12 +3,14 @@
 namespace App\Services;
 
 use App\Models\CorrectiveAction;
+use App\Models\Document;
 use App\Models\InternalAudit;
 use App\Models\Nonconformity;
 use App\Models\QmsComplianceMapping;
 use App\Models\RiskOpportunity;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class QmsService
@@ -34,9 +36,19 @@ class QmsService
             throw_if(empty($action->evidence), ValidationException::withMessages(['evidence' => 'Evidence wajib tersedia.']));
             $action->update(['status' => 'effective', 'verified_by' => $verifier->id, 'verified_at' => now(), 'effectiveness_notes' => $notes]);
             $ncr = Nonconformity::with('actions')->findOrFail($action->nonconformity_id);
+            // Registry: CAPA efektif dan NCR tertutup otomatis terdaftar sebagai dokumen (idempotent).
+            Document::firstOrCreate(
+                ['company_id' => $ncr->company_id, 'document_type' => 'corrective_action', 'number' => $ncr->number.'-CA'.$action->id],
+                ['title' => 'CAPA '.$ncr->number.' — '.Str::limit($action->action, 60), 'owner_id' => $verifier->id, 'workflow_status' => 'approved', 'signature_status' => 'unsigned']
+            );
             if ($ncr->actions->every(fn ($item) => $item->status === 'effective')) {
                 $ncr->update(['status' => 'closed']);
-            }$this->audit->record($ncr->company_id, $verifier->id, 'qms.capa_verified', $action);
+                Document::firstOrCreate(
+                    ['company_id' => $ncr->company_id, 'document_type' => 'nonconformity_report', 'number' => $ncr->number],
+                    ['title' => 'NCR '.$ncr->number.' — '.Str::limit($ncr->description, 80), 'owner_id' => $verifier->id, 'workflow_status' => 'approved', 'signature_status' => 'unsigned']
+                );
+            }
+            $this->audit->record($ncr->company_id, $verifier->id, 'qms.capa_verified', $action);
 
             return $action->refresh();
         }, 3);
@@ -53,6 +65,6 @@ class QmsService
 
     public function refreshEvidenceStatus(int $companyId): int
     {
-        return QmsComplianceMapping::where('company_id', $companyId)->whereNotNull('evidence_expires_at')->whereDate('evidence_expires_at', '<', today())->where('status','!=','evidence_expired')->update(['status' => 'evidence_expired']);
+        return QmsComplianceMapping::where('company_id', $companyId)->whereNotNull('evidence_expires_at')->whereDate('evidence_expires_at', '<', today())->where('status', '!=', 'evidence_expired')->update(['status' => 'evidence_expired']);
     }
 }

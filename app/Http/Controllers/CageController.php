@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\BoredPile;
 use App\Models\CompanySetting;
+use App\Models\FieldEvidence;
 use App\Models\ReinforcementCage;
+use App\Services\FieldOpsService;
 use App\Services\ReinforcementCageService;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Http\Request;
@@ -20,6 +22,9 @@ class CageController extends Controller
             'cages' => $cages,
             'piles' => BoredPile::whereHas('project', fn ($q) => $q->where('company_id', $companyId))->whereIn('status', ['cleaning', 'inspection', 'cage_installation'])->with(['project', 'zone'])->get(),
             'tolerance' => CompanySetting::val($companyId, 'steel_variance_tolerance_percent'),
+            'evidences' => FieldEvidence::where('company_id', $companyId)->where('evidence_type', 'cage')
+                ->whereIn('evidence_id', ReinforcementCage::where('company_id', $companyId)->select('id'))
+                ->with('uploader')->latest()->get()->groupBy(fn ($e) => $e->evidence_id),
         ]);
     }
 
@@ -70,5 +75,17 @@ class CageController extends Controller
         $service->deliverToPile($cage->refresh(), $pile, $request->user());
 
         return back()->with('status', 'Cage dikirim ke titik '.$pile->pile_number.'.');
+    }
+
+    /** Foto evidence cage (proses fabrikasi, timbangan, QC, pengiriman). */
+    public function uploadEvidence(Request $request, ReinforcementCage $cage, CurrentCompany $current, FieldOpsService $service)
+    {
+        abort_unless($cage->company_id === $current->id(), 404);
+        $data = $request->validate([
+            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ]);
+        $evidence = $service->storeEvidence('cage', $cage->id, $data['file'], $request->user());
+
+        return back()->with('status', "Foto cage terlampir (#{$evidence->id}).");
     }
 }

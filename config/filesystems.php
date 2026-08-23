@@ -17,6 +17,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Disk Evidence Privat
+    |--------------------------------------------------------------------------
+    |
+    | Disk tempat foto evidence lapangan (drilling, delivery, test, cage,
+    | casing, tool) disimpan. Nilai "local" untuk storage server; "r2" untuk
+    | object storage S3-compatible. Unduhan tetap ber-authorization: disk
+    | non-local mengeluarkan temporary URL berbatas waktu.
+    |
+    */
+
+    'evidence' => env('EVIDENCE_DISK', 'local'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Filesystem Disks
     |--------------------------------------------------------------------------
     |
@@ -56,6 +70,23 @@ return [
             'url' => env('AWS_URL'),
             'endpoint' => env('AWS_ENDPOINT'),
             'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'throw' => false,
+            'report' => false,
+        ],
+
+        /*
+        | Disk S3-compatible untuk object storage privat (mis. Cloudflare R2).
+        | Semua nilai dari env — tanpa kredensial di kode. Endpoint contoh:
+        | https://{ACCOUNT_ID}.r2.cloudflarestorage.com
+        */
+        'r2' => [
+            'driver' => 's3',
+            'key' => env('R2_ACCESS_KEY_ID'),
+            'secret' => env('R2_SECRET_ACCESS_KEY'),
+            'region' => env('R2_REGION', 'auto'),
+            'bucket' => env('R2_BUCKET'),
+            'endpoint' => env('R2_ENDPOINT'),
+            'use_path_style_endpoint' => env('R2_USE_PATH_STYLE_ENDPOINT', true),
             'throw' => false,
             'report' => false,
         ],

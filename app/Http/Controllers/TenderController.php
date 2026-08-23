@@ -19,10 +19,13 @@ class TenderController extends Controller
         $view = $r->query('view', 'table');
         $companyId = $current->id();
 
-        // Saved view via query string: filter status dapat dibagikan sebagai URL.
+        // Saved view via query string: filter status + kata kunci dapat dibagikan sebagai URL.
         $listQuery = Tender::where('company_id', $companyId);
         if ($status = $r->query('status')) {
             $listQuery->where('status', $status);
+        }
+        if ($term = trim((string) $r->query('q'))) {
+            $listQuery->where(fn ($w) => $w->where('number', 'like', "%{$term}%")->orWhere('project_name', 'like', "%{$term}%"));
         }
 
         return view('tenders.index', ['tenders' => $listQuery->with(['customer', 'outcome'])->latest()->paginate(20), 'customers' => Customer::where('company_id', $companyId)->orderBy('name')->get(), 'metrics' => $service->metrics($companyId, now()->year), 'intel' => $intelligence->stats($companyId), 'competitors' => Competitor::where('company_id', $companyId)->orderBy('name')->get(), 'recentTenders' => Tender::where('company_id', $companyId)->orderByDesc('id')->limit(20)->get(),

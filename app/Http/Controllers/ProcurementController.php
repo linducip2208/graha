@@ -12,6 +12,7 @@ use App\Models\VendorEvaluation;
 use App\Models\VendorInvoice;
 use App\Models\Warehouse;
 use App\Services\ApprovalEngine;
+use App\Services\FxService;
 use App\Services\ProcurementAccountingService;
 use App\Services\PurchaseOrderService;
 use App\Services\TaxService;
@@ -115,7 +116,10 @@ class ProcurementController extends Controller
         }
         $subtotal = (string) $data['total'];
         $taxAmount = $taxService->compute($subtotal, $rate);
-        $invoice = VendorInvoice::create([...$data, 'total' => bcadd($subtotal, $taxAmount, 2), 'subtotal' => $subtotal, 'tax_rate_id' => $rate?->id, 'tax_amount' => $taxAmount, 'company_id' => $current->id(), 'vendor_id' => $order->vendor_id, 'purchase_order_id' => $order->id]);
+        // Kurs dokumen diambil dari kurs efektif pada tanggal invoice untuk perhitungan selisih kurs realized saat pembayaran.
+        $currency = strtoupper($order->currency ?? 'IDR');
+        $exchangeRate = $currency === 'IDR' ? '1' : app(FxService::class)->rate($current->id(), $currency, $data['invoice_date']);
+        $invoice = VendorInvoice::create([...$data, 'total' => bcadd($subtotal, $taxAmount, 2), 'subtotal' => $subtotal, 'tax_rate_id' => $rate?->id, 'tax_amount' => $taxAmount, 'company_id' => $current->id(), 'vendor_id' => $order->vendor_id, 'purchase_order_id' => $order->id, 'currency' => $currency, 'exchange_rate' => $exchangeRate]);
         $service->match($invoice);
 
         return back()->with('status', 'Invoice dicatat dan three-way matching dijalankan.');

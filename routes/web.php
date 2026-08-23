@@ -120,6 +120,7 @@ Route::middleware(['auth', 'company', 'permission:project.view'])->prefix('admin
     Route::post('/projects/field-ops/tests/{test}/approve', [FieldOpsController::class, 'approveTest'])->middleware('permission:project.manage');
     Route::post('/projects/field-ops/evidence/{type}', [FieldOpsController::class, 'uploadEvidence'])->middleware('permission:project.manage');
     Route::get('/field-evidence/{evidence}/download', [FieldOpsController::class, 'downloadEvidence'])->name('evidence.download');
+    Route::get('/field-evidence/{evidence}/file', [FieldOpsController::class, 'fileEvidence'])->name('evidence.file');
     Route::post('/project-zones', [ProjectController::class, 'zone'])->middleware('permission:project.manage');
     Route::post('/bored-piles', [ProjectController::class, 'pile'])->middleware('permission:project.manage');
     Route::post('/bored-piles/{pile}/transition', [ProjectController::class, 'transition'])->middleware('permission:project.manage');
@@ -169,6 +170,7 @@ Route::middleware(['auth', 'company', 'permission:manufacturing.view'])->prefix(
     Route::post('/manufacturing/cages', [CageController::class, 'store'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/cages/{cage}/qc', [CageController::class, 'qc'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/cages/{cage}/deliver', [CageController::class, 'deliver'])->middleware('permission:manufacturing.manage');
+    Route::post('/manufacturing/cages/{cage}/evidence', [CageController::class, 'uploadEvidence'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/work-centers', [ManufacturingController::class, 'workCenter'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/boms/{bom}/routing-operations', [ManufacturingController::class, 'routingOperation'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/orders/{order}/operations/{operation}', [ManufacturingController::class, 'recordOperation'])->middleware('permission:manufacturing.manage');
@@ -184,6 +186,7 @@ Route::middleware(['auth', 'company', 'permission:manufacturing.view'])->prefix(
     Route::post('/equipment/{equipment}/meter', [OperationsController::class, 'meter'])->middleware('permission:equipment.manage');
     Route::post('/equipment/{equipment}/fuel', [OperationsController::class, 'fuel'])->middleware('permission:equipment.manage');
     Route::post('/equipment/{equipment}/maintenance', [OperationsController::class, 'maintenance'])->middleware('permission:equipment.manage');
+    Route::post('/equipment/{equipment}/maintenance/{wo}/close', [OperationsController::class, 'closeMaintenance'])->middleware('permission:equipment.manage');
 });
 Route::middleware(['auth', 'company', 'permission:procurement.view'])->prefix('admin/procurement')->group(function () {
     Route::get('/', [ProcurementController::class, 'index'])->name('procurement.index');
@@ -281,10 +284,12 @@ Route::post('/admin/my-signature', [SignatureImageController::class, 'upload'])-
 Route::get('/admin/casings', [CasingController::class, 'index'])->middleware(['auth', 'company', 'permission:equipment.view'])->name('casings.index');
 Route::post('/admin/casings', [CasingController::class, 'store'])->middleware(['auth', 'company', 'permission:equipment.manage']);
 Route::post('/admin/casings/{casing}/move', [CasingController::class, 'move'])->middleware(['auth', 'company', 'permission:equipment.manage']);
+Route::post('/admin/casings/{casing}/evidence', [CasingController::class, 'uploadEvidence'])->middleware(['auth', 'company', 'permission:equipment.manage']);
 Route::get('/admin/tools', [ToolController::class, 'index'])->middleware(['auth', 'company', 'permission:inventory.view'])->name('tools.index');
 Route::post('/admin/tools', [ToolController::class, 'store'])->middleware(['auth', 'company', 'permission:inventory.manage']);
 Route::post('/admin/tools/{tool}/checkout', [ToolController::class, 'checkOut'])->middleware(['auth', 'company', 'permission:inventory.manage']);
 Route::post('/admin/tools/{tool}/checkin', [ToolController::class, 'checkIn'])->middleware(['auth', 'company', 'permission:inventory.manage']);
 Route::post('/admin/tools/{tool}/lost', [ToolController::class, 'markLost'])->middleware(['auth', 'company', 'permission:inventory.manage']);
+Route::post('/admin/tools/{tool}/evidence', [ToolController::class, 'uploadEvidence'])->middleware(['auth', 'company', 'permission:inventory.manage']);
 Route::get('/admin/settings', [SettingsController::class, 'index'])->middleware(['auth', 'company'])->name('settings.index');
 Route::post('/admin/settings', [SettingsController::class, 'save'])->middleware(['auth', 'company', 'permission:finance.manage'])->name('settings.save');

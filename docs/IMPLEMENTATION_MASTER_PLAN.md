@@ -262,3 +262,21 @@ Item Pending yang tersisa (di luar scope penutupan ini):
 - Auto-link registry untuk MWO/NCR/CAPA
 - OpenAPI endpoint cages/casings/fuel-tanks/tools
 - Posting selisih kurs (Decision Required: realized vs unrealized)
+
+# Pembaruan 2026-08-23 (14) - Evidence Disk Configurable, Registry Auto-Link, FX Realized (Penutupan Backlog)
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| FO-EV-002 | Bored Pile | Disk evidence configurable (EVIDENCE_DISK: local/r2 S3-compatible) + kolom disk per evidence | Tested | EvidenceTypesTest | Unduhan non-local memakai temporary URL 15 menit; pratinjau inline via /field-evidence/{id}/file |
+| FO-EV-003 | Field Ops | Foto evidence cage/casing/tool (upload, galeri, unduh ber-authorization) | Tested | EvidenceTypesTest | Whitelist JPG/PNG/WebP 5MB; 404 lintas company terverifikasi |
+| BUG-001 | Field Ops | `FieldEvidence` tanpa import + tabel salah resolve (`field_evidence` vs `field_evidences`) — upload evidence sebelumnya selalu gagal | Fixed | EvidenceTypesTest | Bug laten dari sesi FO-EV terdeteksi saat pengujian |
+| DOC-LINK-002 | Governance | MWO ditutup otomatis terdaftar di registry (alur tutup WO baru + biaya aktual) | Tested | RegistryAutoLinkTest | Guard status open; audit `equipment.mwo_closed` |
+| DOC-LINK-003 | Governance | CAPA efektif + NCR tertutup otomatis terdaftar di registry (idempotent) | Tested | RegistryAutoLinkTest | Pola `Document::firstOrCreate` sama dengan billing/PO |
+| ACC-FX-003 | Accounting | Posting selisih kurs REALIZED saat pelunasan kas dokumen asing (keputusan ADR-040) | Tested | FxRealizedSettlementTest | Penerimaan: gain saat kurs naik; pembayaran: loss saat kurs naik; jurnal selalu seimbang; idempotent; `fx_difference` tercatat |
+| ACC-FX-004 | Accounting | Kurs dokumen: input currency/exchange_rate di billing + auto-resolve kurs invoice vendor dari PO | Implemented | FxRealizedSettlementTest | Mapping `fx_gain_credit`/`fx_loss_debit` wajib hanya untuk dokumen non-IDR |
+| UI-005 | UI | Pencarian (q) + filter status tersimpan sebagai URL di daftar tender | Tested | Suite smoke | Konsisten dengan saved view projects |
+| NAV-003 | UI | Aksi tutup WO + biaya di tabel Maintenance; form foto di cages/casings/tools | Tested | Suite smoke | |
+
+Backlog sebelumnya dari commit workspace UX yang ikut diselesaikan/terverifikasi: badge batas nominal workflow config (sudah ada), saved view projects+tenders (lengkap), anti-N+1 `summariesFor()` (sudah ada). Test audit completeness diperluas (`AuditCompletenessTest::test_operational_and_fx_flows_leave_audit_trail`) mencakup event MWO/CAPA; smoke halaman tools/casings/cages/operations + saved view tender ditambahkan di `WorkspaceNavigationTest`. Unrealized FX revaluation sengaja tidak dikerjakan (ADR-040).
+
+Verifikasi penutupan sesi: 119 tests / 420 assertions lulus, pint bersih, semua Blade terkompilasi (bug berdempet `@empty@endforelse` di 3 view diperbaiki sesuai ADR-037).

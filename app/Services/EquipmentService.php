@@ -2,15 +2,41 @@
 
 namespace App\Services;
 
+use App\Models\Document;
 use App\Models\Equipment;
 use App\Models\EquipmentMeterLog;
 use App\Models\FuelUsage;
+use App\Models\MaintenanceWorkOrder;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class EquipmentService
 {
+    public function __construct(private AuditTrail $audit) {}
+
+    /** Tutup maintenance work order + daftarkan ke registry dokumen (idempotent). */
+    public function closeMaintenanceOrder(MaintenanceWorkOrder $wo, array $data, User $actor): MaintenanceWorkOrder
+    {
+        return DB::transaction(function () use ($wo, $data, $actor) {
+            $wo = MaintenanceWorkOrder::lockForUpdate()->findOrFail($wo->id);
+            throw_unless($wo->status === 'open', ValidationException::withMessages(['status' => 'Work order sudah ditutup.']));
+            if (isset($data['actual_cost']) && $data['actual_cost'] !== '' && $data['actual_cost'] !== null) {
+                $wo->actual_cost = $data['actual_cost'];
+            }
+            $wo->status = 'closed';
+            $wo->closed_at = now();
+            $wo->save();
+            Document::firstOrCreate(
+                ['company_id' => $wo->company_id, 'document_type' => 'maintenance_work_order', 'number' => $wo->number],
+                ['title' => 'MWO '.$wo->number.' — '.$wo->equipment?->name, 'owner_id' => $actor->id, 'workflow_status' => 'approved', 'signature_status' => 'unsigned']
+            );
+            $this->audit->record($wo->company_id, $actor->id, 'equipment.mwo_closed', $wo);
+
+            return $wo->refresh();
+        }, 3);
+    }
+
     public function recordMeter(Equipment $equipment, string $reading, User $actor): EquipmentMeterLog
     {
         return DB::transaction(function () use ($equipment, $reading, $actor) {

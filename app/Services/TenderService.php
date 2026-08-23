@@ -50,6 +50,6 @@ class TenderService
         $lost = (clone $base)->where('status', 'lost')->count();
         $decided = $won + $lost;
 
-        return ['followed' => (clone $base)->count(), 'won' => $won, 'lost' => $lost, 'win_rate' => $decided ? round($won / $decided * 100, 2) : 0.0, 'loss_rate' => $decided ? round($lost / $decided * 100,2) : 0.0];
+        return ['followed' => (clone $base)->count(), 'won' => $won, 'lost' => $lost, 'win_rate' => $decided ? round($won / $decided * 100, 2) : 0.0, 'loss_rate' => $decided ? round($lost / $decided * 100, 2) : 0.0];
     }
 }

@@ -8,8 +8,9 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * Fondasi multi-currency: konversi nilai asing ke IDR memakai kurs efektif
- * terakhir sebelum tanggal transaksi. Posting selisih kurs (realized/
- * unrealized) masih Pending dan TIDAK dilakukan di sini.
+ * terakhir sebelum tanggal transaksi. Selisih kurs REALIZED dihitung di sini
+ * dan diposting oleh CashBankService saat pelunasan kas dokumen asing
+ * (ADR-040). Unrealized revaluation tidak dilakukan.
  */
 class FxService
 {
@@ -57,10 +58,10 @@ class FxService
     }
 
     /**
-     * Kebijakan proposed (ADR-039): hanya REALIZED difference — selisih kurs
-     * saat penyelesaian pembayaran vs kurs saat dokumen diposting.
-     * Positif = gain (kredit), negatif = loss (debit). Belum di-wire ke
-     * alur kas sampai mapping akun & persetujuan kebijakan tersedia.
+     * Kebijakan ADR-040: hanya REALIZED difference — selisih antara nilai kas
+     * penyelesaian (kurs hari settlement) dan nilai setara pada kurs saat
+     * dokumen diposting. Dipakai CashBankService untuk posting jurnal
+     * FX gain/loss via accounting mapping configurable.
      */
     public function realizedDifference(string $settledAmountForeign, string $rateAtDocument, string $rateAtSettlement): string
     {

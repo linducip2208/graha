@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\FieldEvidence;
 use App\Models\Project;
 use App\Models\Tool;
 use App\Models\User;
+use App\Services\FieldOpsService;
 use App\Services\ToolService;
 use App\Support\Tenancy\CurrentCompany;
 use Carbon\Carbon;
@@ -21,6 +23,9 @@ class ToolController extends Controller
             'tools' => Tool::where('company_id', $companyId)->with(['holder', 'movements' => fn ($q) => $q->limit(4), 'movements.holder'])->orderBy('code')->get(),
             'members' => User::whereIn('id', DB::table('company_user')->where('company_id', $companyId)->where('is_active', true)->select('user_id'))->orderBy('name')->get(),
             'projects' => Project::where('company_id', $companyId)->whereIn('status', ['active', 'in_progress'])->orderBy('code')->get(),
+            'evidences' => FieldEvidence::where('company_id', $companyId)->where('evidence_type', 'tool')
+                ->whereIn('evidence_id', Tool::where('company_id', $companyId)->select('id'))
+                ->with('uploader')->latest()->get()->groupBy(fn ($e) => $e->evidence_id),
         ]);
     }
 
@@ -70,5 +75,17 @@ class ToolController extends Controller
         $service->markLost($tool->refresh(), $data['lost_note'], $request->user());
 
         return back()->with('status', 'Alat dilaporkan hilang.');
+    }
+
+    /** Foto evidence alat (kondisi saat keluar/masuk, kerusakan, kehilangan). */
+    public function uploadEvidence(Request $request, Tool $tool, CurrentCompany $current, FieldOpsService $service)
+    {
+        abort_unless($tool->company_id === $current->id(), 404);
+        $data = $request->validate([
+            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ]);
+        $evidence = $service->storeEvidence('tool', $tool->id, $data['file'], $request->user());
+
+        return back()->with('status', "Foto alat terlampir (#{$evidence->id}).");
     }
 }

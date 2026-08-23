@@ -184,10 +184,33 @@ class FieldOpsController extends Controller
 
     public function downloadEvidence(Request $request, FieldEvidence $evidence)
     {
-        abort_unless($evidence->company_id === app(CurrentCompany::class)->id(), 404);
-        abort_unless(Storage::disk('local')->exists($evidence->disk_path), 404);
+        return $this->serveEvidence($evidence, true);
+    }
 
-        return Storage::disk('local')->download($evidence->disk_path, $evidence->original_name);
+    /** Pratinjau inline untuk tag <img> — tetap ber-authorization per company. */
+    public function fileEvidence(Request $request, FieldEvidence $evidence)
+    {
+        return $this->serveEvidence($evidence, false);
+    }
+
+    private function serveEvidence(FieldEvidence $evidence, bool $asAttachment)
+    {
+        abort_unless($evidence->company_id === app(CurrentCompany::class)->id(), 404);
+        $diskName = filled($evidence->disk) ? $evidence->disk : 'local';
+        abort_unless(array_key_exists($diskName, config('filesystems.disks', [])), 404);
+        $disk = Storage::disk($diskName);
+        abort_unless($disk->exists($evidence->disk_path), 404);
+
+        if ($diskName === 'local') {
+            return $asAttachment
+                ? $disk->download($evidence->disk_path, $evidence->original_name)
+                : $disk->response($evidence->disk_path, $evidence->mime);
+        }
+
+        // Object storage S3-compatible: redirect ke temporary URL berbatas waktu.
+        return redirect()->away($disk->temporaryUrl($evidence->disk_path, now()->addMinutes(15), [
+            'ResponseContentDisposition' => ($asAttachment ? 'attachment' : 'inline').'; filename="'.addcslashes($evidence->original_name, '"\\').'"',
+        ]));
     }
 
     private function parseLayers(string $raw): array

@@ -7,12 +7,16 @@ use App\Models\ApprovalStep;
 use App\Models\ApprovalWorkflow;
 use App\Models\Company;
 use App\Models\Customer;
+use App\Models\Equipment;
 use App\Models\FiscalPeriod;
+use App\Models\MaintenanceWorkOrder;
+use App\Models\Nonconformity;
 use App\Models\NumberSequence;
 use App\Models\Tender;
 use App\Models\User;
 use App\Services\AccountingService;
 use App\Services\ApprovalEngine;
+use App\Services\EquipmentService;
 use App\Services\QmsService;
 use App\Services\TenderService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -91,6 +95,25 @@ class AuditCompletenessTest extends TestCase
         foreach ($rows as $row) {
             $this->assertNotNull($row->actor_id, 'Event '.$row->event.' tanpa aktor.');
             $this->assertNotNull($row->event);
+        }
+    }
+
+    /** Alur operasional & keuangan baru wajib meninggalkan jejak audit. */
+    public function test_operational_and_fx_flows_leave_audit_trail(): void
+    {
+        // 1. Tutup MWO (equipment).
+        $equipment = Equipment::create(['company_id' => $this->company->id, 'code' => 'EX-AUD', 'name' => 'Rig Audit', 'ownership' => 'owned', 'category' => 'rig', 'current_hour_meter' => '10']);
+        $wo = MaintenanceWorkOrder::create(['company_id' => $this->company->id, 'equipment_id' => $equipment->id, 'number' => 'MWO-AUD', 'type' => 'corrective', 'problem' => 'Rem blong', 'meter_reading' => '10', 'status' => 'open', 'opened_by' => $this->actor->id]);
+        app(EquipmentService::class)->closeMaintenanceOrder($wo, [], $this->actor);
+
+        // 2. Verifikasi CAPA independen (QMS).
+        $owner = User::factory()->create();
+        $ncr = Nonconformity::create(['company_id' => $this->company->id, 'number' => 'NCR-AUD-1', 'source_type' => 'inspection', 'severity' => 'minor', 'description' => 'Cover beton tidak rata', 'reported_by' => $owner->id]);
+        $action = $ncr->actions()->create(['action' => 'Perbaiki finishing', 'owner_id' => $owner->id, 'due_at' => '2026-09-15', 'evidence' => 'Foto']);
+        app(QmsService::class)->verifyCapa($action, $this->actor, 'Efektif');
+
+        foreach (['equipment.mwo_closed', 'qms.capa_verified'] as $event) {
+            $this->assertDatabaseHas('audit_logs', ['company_id' => $this->company->id, 'event' => $event]);
         }
     }
 }

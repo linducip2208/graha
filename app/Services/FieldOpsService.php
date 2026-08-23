@@ -7,6 +7,7 @@ use App\Models\BoredPileDrilling;
 use App\Models\BoredPileDrillingLayer;
 use App\Models\CompanySetting;
 use App\Models\ConcreteDelivery;
+use App\Models\FieldEvidence;
 use App\Models\PileTest;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -158,7 +159,7 @@ class FieldOpsService
         }, 3);
     }
 
-    /** Simpan foto evidence ke storage privat dengan whitelist MIME dan batas 5 MB. */
+    /** Simpan foto evidence ke disk privat configurable (local/R2) dengan whitelist MIME dan batas 5 MB. */
     public function storeEvidence(string $type, int $id, UploadedFile $file, User $actor): FieldEvidence
     {
         $class = FieldEvidence::TYPES[$type] ?? throw ValidationException::withMessages(['evidence' => 'Jenis evidence tidak dikenal.']);
@@ -169,13 +170,16 @@ class FieldOpsService
         throw_unless(in_array($file->getMimeType(), ['image/jpeg', 'image/png', 'image/webp'], true), ValidationException::withMessages(['file' => 'Hanya JPG/PNG/WebP yang diizinkan.']));
         throw_if($file->getSize() > 5 * 1024 * 1024, ValidationException::withMessages(['file' => 'Ukuran maksimal 5 MB.']));
 
-        $path = $file->store("evidence/{$companyId}/{$type}/{$id}", 'local');
+        $disk = (string) config('filesystems.evidence', 'local');
+        throw_unless(array_key_exists($disk, config('filesystems.disks', [])), ValidationException::withMessages(['file' => "Disk evidence '{$disk}' tidak dikenal."]));
+        $path = $file->store("evidence/{$companyId}/{$type}/{$id}", $disk);
 
         return FieldEvidence::create([
             'company_id' => $companyId,
             'evidence_type' => $type,
             'evidence_id' => $id,
             'disk_path' => $path,
+            'disk' => $disk,
             'original_name' => $file->getClientOriginalName(),
             'mime' => $file->getMimeType(),
             'size_kb' => (int) ceil($file->getSize() / 1024),

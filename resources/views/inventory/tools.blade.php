@@ -35,6 +35,16 @@
 <button onclick="return confirm('Laporkan alat ini HILANG? Status tidak dapat dikembalikan.')" @disabled($tool->status === 'lost') class="font-bold text-red-600 disabled:opacity-40">Hilang</button>
 </form>
 
+<form method="post" action="/admin/tools/{{ $tool->id }}/evidence" enctype="multipart/form-data" class="mt-2 flex flex-wrap items-center gap-2 no-print">@csrf
+<input type="file" name="file" accept="image/jpeg,image/png,image/webp" required class="rounded-lg border p-1.5 text-xs">
+<button class="font-bold text-violet-700">Lampirkan foto</button>
+@if(($evidences[$tool->id] ?? collect())->isNotEmpty())<span class="text-xs text-slate-500">{{ ($evidences[$tool->id])->count() }} foto tersimpan</span>@endif
+</form>
+@forelse($evidences[$tool->id] ?? [] as $ev)
+<div class="mt-2 flex items-center gap-3 rounded-xl bg-slate-50 p-2 text-xs"><img src="{{ route('evidence.file', $ev) }}" alt="{{ $ev->original_name }}" class="h-14 w-14 rounded-lg border object-cover"><div><strong>{{ \Illuminate\Support\Str::limit($ev->original_name, 40) }}</strong><br>{{ $ev->size_kb }} KB · {{ $ev->created_at->format('d/m/Y H:i') }} · {{ $ev->uploader?->name }} <a href="{{ route('evidence.download', $ev) }}" class="font-bold text-sky-700">Unduh</a></div></div>
+@empty
+@endforelse
+
 <details class="mt-2"><summary class="cursor-pointer text-xs font-bold text-sky-700">Riwayat</summary>
 <ul class="mt-1 space-y-1 text-xs text-slate-600">@foreach($tool->movements as $mv)<li>{{ $mv->occurred_at->format('d/m/Y H:i') }} — <strong>{{ str($mv->type)->replace('_',' ') }}</strong> oleh {{ $mv->holder?->name }} {{ $mv->notes ? '· '.\Illuminate\Support\Str::limit($mv->notes, 60) : '' }}</li>@endforeach</ul>
 </details>

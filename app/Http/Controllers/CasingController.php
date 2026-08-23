@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\BoredPile;
 use App\Models\CasingUnit;
+use App\Models\FieldEvidence;
 use App\Services\CasingService;
+use App\Services\FieldOpsService;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Http\Request;
 
@@ -17,6 +19,9 @@ class CasingController extends Controller
         return view('operations.casings', [
             'units' => CasingUnit::where('company_id', $companyId)->with(['movements' => fn ($q) => $q->limit(5), 'currentPile'])->orderBy('code')->get(),
             'piles' => BoredPile::whereHas('project', fn ($q) => $q->where('company_id', $companyId))->whereIn('status', ['setting_out', 'drilling', 'cleaning'])->with('project')->get(),
+            'evidences' => FieldEvidence::where('company_id', $companyId)->where('evidence_type', 'casing')
+                ->whereIn('evidence_id', CasingUnit::where('company_id', $companyId)->select('id'))
+                ->with('uploader')->latest()->get()->groupBy(fn ($e) => $e->evidence_id),
         ]);
     }
 
@@ -51,5 +56,17 @@ class CasingController extends Controller
         $service->move($casing->refresh(), $data['type'], $data['bored_pile_id'] ?? null, $data['notes'] ?? null, (float) ($data['cost'] ?? 0), now(), $request->user());
 
         return back()->with('status', 'Pergerakan casing dicatat.');
+    }
+
+    /** Foto evidence casing (kondisi, kerusakan, perbaikan, posisi di titik). */
+    public function uploadEvidence(Request $request, CasingUnit $casing, CurrentCompany $current, FieldOpsService $service)
+    {
+        abort_unless($casing->company_id === $current->id(), 404);
+        $data = $request->validate([
+            'file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+        ]);
+        $evidence = $service->storeEvidence('casing', $casing->id, $data['file'], $request->user());
+
+        return back()->with('status', "Foto casing terlampir (#{$evidence->id}).");
     }
 }

@@ -16,7 +16,7 @@ use Illuminate\Validation\ValidationException;
 
 class CashBankService
 {
-    public function __construct(private AccountingService $accounting, private AuditTrail $audit, private TaxService $tax) {}
+    public function __construct(private AccountingService $accounting, private AuditTrail $audit, private TaxService $tax, private FxService $fx) {}
 
     public function receiveCustomer(ProgressBilling $billing, BankAccount $bank, string $amount, string $date, string $number, string $reference, string $key, User $actor, array $withholding = []): CustomerReceipt
     {
@@ -32,13 +32,17 @@ class CashBankService
             $settled = bcadd(bcadd($paidCash, $paidWithheld, 2), bcadd($amount, $withheld, 2), 2);
             throw_if(bccomp($settled, (string) $billing->net_receivable, 2) === 1, ValidationException::withMessages(['amount' => 'Total pelunasan (kas + dipotong) melebihi outstanding AR.']));
             $ar = $this->mapping($billing->company_id, 'customer_receipt', 'ar_credit');
+
+            [$fxLine, $fxDifference] = $this->realizedFx($billing->company_id, 'customer_receipt', $billing->currency ?? FxService::BASE, $billing->exchange_rate ?? null, $billing->billing_date?->toDateString(), $amount, $date);
+            $arCredit = bcsub(bcadd($amount, $withheld, 2), $fxDifference, 2);
+
             $lines = [['account_id' => $bank->account_id, 'debit' => $amount, 'credit' => '0', 'project_id' => $billing->project_id]];
             if (bccomp($withheld, '0', 2) === 1) {
                 $lines[] = ['account_id' => $this->mapping($billing->company_id, 'customer_receipt', 'withholding_debit'), 'debit' => $withheld, 'credit' => '0', 'project_id' => $billing->project_id];
             }
-            $lines[] = ['account_id' => $ar, 'debit' => '0', 'credit' => bcadd($amount, $withheld, 2), 'project_id' => $billing->project_id];
+            $lines = [...$lines, ...$fxLine, ['account_id' => $ar, 'debit' => '0', 'credit' => $arCredit, 'project_id' => $billing->project_id]];
             $journal = $this->accounting->post($billing->company_id, $date, 'customer_receipt', $number, 'Penerimaan '.$number, $lines, 'customer-receipt:'.$key, $actor);
-            $receipt = CustomerReceipt::create(['company_id' => $billing->company_id, 'progress_billing_id' => $billing->id, 'bank_account_id' => $bank->id, 'number' => $number, 'receipt_date' => $date, 'amount' => $amount, 'withholding_tax_rate_id' => $rate?->id, 'withholding_amount' => $withheld, 'bukti_potong_number' => $withholding['bukti_potong_number'] ?? null, 'bukti_potong_date' => $withholding['bukti_potong_date'] ?? null, 'reference' => $reference, 'status' => 'posted', 'journal_id' => $journal->id, 'created_by' => $actor->id, 'idempotency_key' => $key]);
+            $receipt = CustomerReceipt::create(['company_id' => $billing->company_id, 'progress_billing_id' => $billing->id, 'bank_account_id' => $bank->id, 'number' => $number, 'receipt_date' => $date, 'amount' => $amount, 'withholding_tax_rate_id' => $rate?->id, 'withholding_amount' => $withheld, 'fx_difference' => $fxDifference, 'bukti_potong_number' => $withholding['bukti_potong_number'] ?? null, 'bukti_potong_date' => $withholding['bukti_potong_date'] ?? null, 'reference' => $reference, 'status' => 'posted', 'journal_id' => $journal->id, 'created_by' => $actor->id, 'idempotency_key' => $key]);
             $this->audit->record($billing->company_id, $actor->id, 'finance.customer_receipt', $receipt);
 
             return $receipt;
@@ -60,13 +64,16 @@ class CashBankService
             $settled = bcadd(bcadd($paidCash, $paidWithheld, 2), bcadd($amount, $withheld, 2), 2);
             throw_if(bccomp($settled, (string) $invoice->total, 2) === 1, ValidationException::withMessages(['amount' => 'Total pelunasan (kas + dipotong) melebihi outstanding AP.']));
             $ap = $this->mapping($invoice->company_id, 'vendor_payment', 'ap_debit');
-            $lines = [['account_id' => $ap, 'debit' => bcadd($amount, $withheld, 2), 'credit' => '0']];
-            $lines[] = ['account_id' => $bank->account_id, 'debit' => '0', 'credit' => $amount];
+
+            [$fxLine, $fxDifference] = $this->realizedFx($invoice->company_id, 'vendor_payment', $invoice->currency ?? FxService::BASE, $invoice->exchange_rate ?? null, $invoice->invoice_date?->toDateString() ?? $invoice->created_at?->toDateString(), $amount, $date);
+            $apDebit = bcsub(bcadd($amount, $withheld, 2), $fxDifference, 2);
+
+            $lines = [['account_id' => $ap, 'debit' => $apDebit, 'credit' => '0'], ['account_id' => $bank->account_id, 'debit' => '0', 'credit' => $amount], ...$fxLine];
             if (bccomp($withheld, '0', 2) === 1) {
                 $lines[] = ['account_id' => $this->mapping($invoice->company_id, 'vendor_payment', 'withholding_credit'), 'debit' => '0', 'credit' => $withheld];
             }
             $journal = $this->accounting->post($invoice->company_id, $date, 'vendor_payment', $number, 'Pembayaran '.$number, $lines, 'vendor-payment:'.$key, $actor);
-            $payment = VendorPayment::create(['company_id' => $invoice->company_id, 'vendor_invoice_id' => $invoice->id, 'bank_account_id' => $bank->id, 'number' => $number, 'payment_date' => $date, 'amount' => $amount, 'withholding_tax_rate_id' => $rate?->id, 'withholding_amount' => $withheld, 'bukti_potong_number' => $withholding['bukti_potong_number'] ?? null, 'bukti_potong_date' => $withholding['bukti_potong_date'] ?? null, 'reference' => $reference, 'status' => 'posted', 'journal_id' => $journal->id, 'created_by' => $actor->id, 'idempotency_key' => $key]);
+            $payment = VendorPayment::create(['company_id' => $invoice->company_id, 'vendor_invoice_id' => $invoice->id, 'bank_account_id' => $bank->id, 'number' => $number, 'payment_date' => $date, 'amount' => $amount, 'withholding_tax_rate_id' => $rate?->id, 'withholding_amount' => $withheld, 'fx_difference' => $fxDifference, 'bukti_potong_number' => $withholding['bukti_potong_number'] ?? null, 'bukti_potong_date' => $withholding['bukti_potong_date'] ?? null, 'reference' => $reference, 'status' => 'posted', 'journal_id' => $journal->id, 'created_by' => $actor->id, 'idempotency_key' => $key]);
             $this->audit->record($invoice->company_id, $actor->id, 'finance.vendor_payment', $payment);
 
             return $payment;
@@ -97,5 +104,35 @@ class CashBankService
         throw_unless($mapping, ValidationException::withMessages(['mapping' => "Mapping $event/$side belum tersedia."]));
 
         return $mapping->account_id;
+    }
+
+    /**
+     * Selisih kurs REALIZED saat penyelesaian kas dokumen ber mata uang asing
+     * (ADR-040). Mengembalikan [baris P&L tambahan, selisih mentah D] dengan
+     * D = nilai kas − nilai setara kurs dokumen. Baris AR/AP dipanggil
+     * (X + W) − D sehingga jurnal selalu seimbang; arah P&L mengikuti alur:
+     * penerimaan D > 0 = gain (kredit), pembayaran D > 0 = loss (debit).
+     */
+    private function realizedFx(int $companyId, string $event, ?string $currency, ?string $rateAtDocument, ?string $documentDate, string $settledIdr, string $settlementDate): array
+    {
+        $currency = strtoupper((string) ($currency ?? FxService::BASE));
+        if ($currency === FxService::BASE || bccomp($settledIdr, '0', 2) === 0) {
+            return [[], '0'];
+        }
+        $rateDoc = filled($rateAtDocument) && bccomp((string) $rateAtDocument, '1', 6) !== 0 && bccomp((string) $rateAtDocument, '0', 6) === 1
+            ? (string) $rateAtDocument
+            : $this->fx->rate($companyId, $currency, $documentDate ?? $settlementDate);
+        $rateSettle = $this->fx->rate($companyId, $currency, $settlementDate);
+        $difference = $this->fx->realizedDifference(bcdiv($settledIdr, $rateSettle, 6), $rateDoc, $rateSettle);
+        if (bccomp($difference, '0', 2) === 0) {
+            return [[], '0'];
+        }
+        // Penerimaan memakai D apa adanya; pembayaran membalik arahnya.
+        $pnlAmount = $event === 'customer_receipt' ? $difference : bcmul($difference, '-1', 2);
+        $line = bccomp($pnlAmount, '0', 2) === 1
+            ? ['account_id' => $this->mapping($companyId, $event, 'fx_gain_credit'), 'debit' => '0', 'credit' => $pnlAmount]
+            : ['account_id' => $this->mapping($companyId, $event, 'fx_loss_debit'), 'debit' => bcmul($pnlAmount, '-1', 2), 'credit' => '0'];
+
+        return [[$line], $difference];
     }
 }
