@@ -52,10 +52,16 @@ class ProjectCostingService
 
         $actuals = ProjectCostLedger::whereIn('project_id', $ids)->where('cost_type', 'actual')
             ->groupBy('project_id')->selectRaw('project_id, SUM(amount) as total')->pluck('total', 'project_id');
-        $committeds = PurchaseOrder::where('company_id', $companyId)->whereIn('status', ['approved', 'issued', 'partially_received', 'received'])
-            ->whereHas('purchaseRequest', fn ($q) => $q->whereIn('project_id', $ids))
+        // Kolom di-qualify eksplisit: kedua tabel punya company_id & status — tanpa kualifikasi
+        // MySQL menolak dengan "ambiguous column" (SQLite di test memaafkan).
+        $committeds = PurchaseOrder::query()
             ->join('purchase_requests as pr', 'pr.id', '=', 'purchase_orders.purchase_request_id')
-            ->groupBy('pr.project_id')->selectRaw('pr.project_id as project_id, SUM(purchase_orders.total) as total')->pluck('total', 'project_id');
+            ->where('purchase_orders.company_id', $companyId)
+            ->whereIn('purchase_orders.status', ['approved', 'issued', 'partially_received', 'received'])
+            ->whereIn('pr.project_id', $ids)
+            ->groupBy('pr.project_id')
+            ->selectRaw('pr.project_id as project_id, SUM(purchase_orders.total) as total')
+            ->pluck('total', 'project_id');
         $forecasts = ProjectCostForecast::whereIn('project_id', $ids)->where('status', 'active')
             ->orderByDesc('forecast_date')->orderByDesc('id')->get()->unique('project_id');
 
