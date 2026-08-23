@@ -95,6 +95,17 @@ class ProjectController extends Controller
                 $totalDays = max(1, $project->planned_start->diffInDays($project->planned_end));
                 $elapsed = min($totalDays, max(0, $project->planned_start->diffInDays(now())));
                 $data['plannedPercent'] = round($elapsed * 100 / $totalDays, 1);
+                // EVM ringkas (ADR-051): EV dari progres fisik terkontrak, PV dari jadwal,
+                // AC dari project cost ledger. Hanya tampil bila semua sumber tersedia.
+                if ($can('finance.view')) {
+                    $ev = $contract * $data['physicalPercent'] / 100;
+                    $pv = $contract * ($data['plannedPercent'] ?? 0) / 100;
+                    $ac = (float) (($data['costing']['actual'] ?? null) ?: 0);
+                    if ($ac > 0) {
+                        $data['cpi'] = round($ev / $ac, 2);
+                        $data['spi'] = $pv > 0 ? round($ev / $pv, 2) : null;
+                    }
+                }
             }
         }
 

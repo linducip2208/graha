@@ -299,3 +299,20 @@ Item "Decision required" ADR-027 selesai. Sisa terbuka hanya BPM-001 (menunggu w
 | UI-006 | UI | Form potong tangki di fuel equipment + form bebankan material di kartu cage | Tested | WorkspaceNavigationTest | Halaman cages/operations render OK |
 
 Bug berdempet `@endforeach@endforeach` pada cages.blade.php diperbaiki (ADR-037). Verifikasi: 125 tests / 441 assertions lulus, pint bersih.
+
+# Pembaruan 2026-08-24 (3) - Enterprise Wave: Bid Decision, Planning Support, EVM Ringkas
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| TEN-BID-001 | Tender | Bid/No-Bid scoring 4 faktor nyata, bobot+ambang configurable, snapshot ter-audit | Tested | BidDecisionAndPlanningTest | Margin tanpa data = Perlu Review (tidak dikarang) |
+| TEN-LOSS-001 | Tender | Analitik alasan/tahap kalah per perusahaan | Tested | BidDecisionAndPlanningTest | Isolasi lintas company diverifikasi |
+| PLN-CST-001 | Planning | Constraint log 9 jenis, transisi terjaga, resolusi wajib catatan | Tested | BidDecisionAndPlanningTest | Bagian baru di tab Planning |
+| PRO-PLAN-001 | Procurement | Rencana pengadaan + deteksi terlambat + taut PR/PO tervalidasi | Tested | BidDecisionAndPlanningTest | Widget Pengadaan Terlambat di procurement |
+| PRO-EVM-001 | Project | CPI/SPI ringkas di overview (EV/AC, EV/PV) dari data existing | Implemented Core | Suite smoke | Hanya bila AC>0; SPI butuh PV>0 |
+
+Docs baru: docs/ENTERPRISE_GAP_ANALYSIS.md (matriks modul-gap-rencana +
+keputusan blocked). Backlog besar berikutnya: budget baseline versi,
+cash flow forecast, ITP/calibration/transmittal, UI redesign shell.
+
+ADR baru: 048 (bid decision), 049 (constraint log), 050 (procurement plan),
+051 (EVM ringkas).
