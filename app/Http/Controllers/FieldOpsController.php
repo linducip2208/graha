@@ -170,13 +170,16 @@ class FieldOpsController extends Controller
         return back()->with('status', 'Hasil uji disetujui konsultan.');
     }
 
+    /** Tipe evidence milik Field Ops; cage/casing/tool punya route + permission sendiri. */
+    private const FIELD_OPS_TYPES = ['drilling', 'delivery', 'test'];
+
     public function uploadEvidence(Request $request, string $type, CurrentCompany $current, FieldOpsService $service)
     {
         $data = $request->validate([
             'id' => ['required', 'integer'],
             'file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
-        abort_unless(in_array($type, array_keys(FieldEvidence::TYPES), true), 404);
+        abort_unless(in_array($type, self::FIELD_OPS_TYPES, true), 404);
         $evidence = $service->storeEvidence($type, (int) $data['id'], $request->file('file'), $request->user());
 
         return back()->with('status', "Foto terlampir (#{$evidence->id}).");
