@@ -37,3 +37,4 @@
 - ADR-036 Accepted: transisi bored pile inspection -> cage_installation dapat diwajibkan menunggu cage lolos QC terkirim melalui company setting require_cage_passed (default off agar migrasi data lama aman).
 - ADR-037 Accepted: pengalaman compiler Blade - hindari match()/ternary kompleks dan @if inline di dalam atribut komponen pada satu elemen; kondisi dipindah ke @php variabel sebelum HTML.
 - ADR-038 Accepted: fondasi multi-currency hanya menyediakan lookup kurs efektif-terakhir dan konversi ke IDR untuk agregasi laporan; jurnal tetap dicatat dalam mata uang transaksi, dan posting selisih kurs ditunda sampai kebijakan realized/unrealized disepakati.
+- ADR-039 Accepted: tanda tangan digital memakai mode INTERNAL saja untuk seluruh alur operasional agar pengalaman user sederhana; provider eksternal tetap tersedia di backend (webhook + adapter) namun disembunyikan dari UI sampai ada kebutuhan sertifikasi elektronik resmi.

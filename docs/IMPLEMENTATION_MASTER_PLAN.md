@@ -250,3 +250,15 @@ Sisa Pending terakhir: foto evidence upload, auto-link dokumen registry, posting
 | ID | Domain | Requirement | Status | Test | Catatan |
 |---|---|---|---|---|---|
 | DOC-LINK-001 | Governance | Progress billing posted otomatis terdaftar di document registry (idempotent) | Tested | TaxIntegrationTest | Pola sama bisa diterapkan ke PO/MWO berikutnya
+# Keputusan Signing Internal-Only (2026-08-23)
+
+Owner memutuskan: Digital Signing memakai INTERNAL signing saja (server-side,
+terikat user + versi + SHA-256) tanpa penyedia eksternal di UI agar tidak
+membingungkan pengguna. Backend external adapter/webhook dipertahankan
+untuk integrasi masa depan bila kelak dibutuhkan tanda tangan tersertifikasi.
+
+Item Pending yang tersisa (di luar scope penutupan ini):
+- Foto evidence untuk cage/casing/tools
+- Auto-link registry untuk MWO/NCR/CAPA
+- OpenAPI endpoint cages/casings/fuel-tanks/tools
+- Posting selisih kurs (Decision Required: realized vs unrealized)
