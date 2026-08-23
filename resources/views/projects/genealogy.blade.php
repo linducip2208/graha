@@ -2,7 +2,7 @@
 <section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 <header class="flex flex-wrap items-start justify-between gap-3">
 <div>
-<h1 class="text-3xl font-black">Genealogi {{ $pile->pile_number }}</h1>
+<h1 class="text-2xl font-bold tracking-tight">Genealogi {{ $pile->pile_number }}</h1>
 <p class="mt-1 text-sm text-slate-500">{{ $pile->project->code }} — {{ $pile->project->name }} · Zona {{ $pile->zone?->name ?? '-' }} · Ø{{ $pile->diameter_mm }} mm</p>
 </div>
 <div class="flex flex-wrap gap-2 no-print">

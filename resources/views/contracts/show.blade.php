@@ -1,7 +1,7 @@
 <x-layouts.app title="Kontrak — {{ $contract->number }}">
 <section class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
 <p class="text-xs font-bold uppercase tracking-widest text-sky-700">{{ ($types = \App\Models\ContractChange::TYPES)[$contract->type] ?? $contract->type }}</p>
-<h1 class="mt-1 text-3xl font-black">{{ $contract->number }} — {{ $contract->title }}</h1>
+<h1 class="mt-1 text-2xl font-bold tracking-tight">{{ $contract->number }} — {{ $contract->title }}</h1>
 <div class="mt-2 flex flex-wrap items-center gap-3 text-sm text-slate-500">
 <x-ui.badge :status="match ($contract->status) { 'approved' => 'posted', 'rejected' => 'exception', 'pending_approval' => 'pending_approval', default => 'draft' }" :label="str_replace('_', ' ', $contract->status)" />
 @if($contract->project)<a href="/admin/projects/{{ $contract->project->id }}" class="font-semibold text-sky-700 hover:underline">{{ $contract->project->code }} — {{ $contract->project->name }}</a>@endif

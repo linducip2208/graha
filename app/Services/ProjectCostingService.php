@@ -32,12 +32,14 @@ class ProjectCostingService
         $actual = (string) ProjectCostLedger::where('project_id', $project->id)->where('cost_type', 'actual')->sum('amount');
         $committed = (string) PurchaseOrder::where('company_id', $project->company_id)->whereIn('status', ['approved', 'issued', 'partially_received', 'received'])->whereHas('purchaseRequest', fn ($q) => $q->where('project_id', $project->id))->sum('total');
         $forecast = ProjectCostForecast::where('project_id', $project->id)->where('status', 'active')->latest('forecast_date')->latest('id')->first();
-        $remainingBudget = bcsub((string) ($project->estimated_cost ?? '0'), $actual, 2);
+        // ADR-053: Revised Budget = baseline approved; tanpa baseline fallback ke estimated_cost lama.
+        $approved = BudgetBaselineService::activeApproved($project->id);
+        $budget = $approved ? (string) $approved->total_budget : (string) ($project->estimated_cost ?? '0');
+        $remainingBudget = bcsub($budget, $actual, 2);
         $ctc = (string) ($forecast?->cost_to_complete ?? (bccomp($remainingBudget, '0', 2) === 1 ? $remainingBudget : '0'));
         $eac = bcadd($actual, $ctc, 2);
-        $budget = (string) ($project->estimated_cost ?? '0');
 
-        return ['actual' => $actual, 'committed' => $committed, 'cost_to_complete' => $ctc, 'eac' => $eac, 'budget' => $budget, 'variance' => bcsub($budget, $eac, 2), 'contract_value' => (string) ($project->contract_value ?? '0'), 'forecast' => $forecast];
+        return ['actual' => $actual, 'committed' => $committed, 'cost_to_complete' => $ctc, 'eac' => $eac, 'budget' => $budget, 'variance' => bcsub($budget, $eac, 2), 'contract_value' => (string) ($project->contract_value ?? '0'), 'forecast' => $forecast, 'baseline_version' => $approved?->version];
     }
 
     /** Ringkasan biaya untuk banyak proyek sekaligus (anti N+1 di dashboard/portofolio). */

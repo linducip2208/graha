@@ -1,6 +1,6 @@
 <x-layouts.app title="Administrasi Kontrak">
 <section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-<h1 class="text-3xl font-black">Administrasi Kontrak</h1>
+<h1 class="text-2xl font-bold tracking-tight">Administrasi Kontrak</h1>
 <p class="mt-2 text-slate-500">Variation Order, addendum, EOT, claim, denda keterlambatan, dan bond — semua melalui approval berjenjang, tanpa posting jurnal otomatis.</p>
 @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800">{{ session('status') }}</div>@endif
 @if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-700">{{ $errors->first() }}</div>@endif

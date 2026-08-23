@@ -1,6 +1,6 @@
 <x-layouts.app title="Dokumentasi — Graha Pondasi ERP"><section class="mx-auto max-w-5xl px-6 py-12">
 <p class="text-xs font-bold uppercase tracking-widest text-sky-700">Dokumentasi Produk</p>
-<h1 class="mt-1 text-4xl font-black">Cara Kerja ERP Graha Pondasi</h1>
+<h1 class="mt-1 text-3xl font-bold tracking-tight">Cara Kerja ERP Graha Pondasi</h1>
 <p class="mt-4 max-w-3xl text-slate-600">Sistem mendukung implementasi dan bukti penerapan sistem manajemen mutu; tidak menyatakan sertifikasi ISO. Ikuti tutorial berurutan sesuai alur bisnis kontraktor pondasi: setup → master data → pengadaan → pelaksanaan → tagihan & pajak → laporan.</p>
 
 <nav class="sticky top-[57px] z-10 mt-8 flex gap-2 overflow-x-auto rounded-2xl border bg-white/95 p-2 backdrop-blur no-print">

@@ -1,8 +1,8 @@
-﻿<x-layouts.app title="Tender {{ $tender->number }}">
+<x-layouts.app title="Tender {{ $tender->number }}">
 @php($tabs = ['overview' => 'Ringkasan', 'estimate' => 'Estimasi & Margin', 'decision' => 'Bid / No-Bid', 'participants' => 'Peserta', 'outcome' => 'Outcome', 'lessons' => 'Lessons Learned'])
 <section class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
 <p class="text-xs font-bold uppercase tracking-widest text-sky-700">{{ $tender->number }} Â· {{ $tender->year }}</p>
-<h1 class="mt-1 text-3xl font-black">{{ $tender->project_name }}</h1>
+<h1 class="mt-1 text-2xl font-bold tracking-tight">{{ $tender->project_name }}</h1>
 <div class="mt-2 flex flex-wrap items-center gap-3 text-sm text-slate-500">
 <span class="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase">{{ str_replace('_', ' ', $tender->status) }}</span>
 <span>Pelanggan: <strong>{{ $tender->customer?->name }}</strong></span>
@@ -71,7 +71,7 @@
 <div class="mt-4 grid gap-4 lg:grid-cols-[220px_1fr]">
 <div class="rounded-xl border p-4 text-center {{ in_array($tender->status, ['won','lost']) ? 'opacity-60' : '' }}">
 <p class="text-xs uppercase tracking-wide text-slate-500">Skor</p>
-<p class="text-4xl font-black">{{ $decision['score'] }}</p>
+<p class="text-3xl font-bold tracking-tight">{{ $decision['score'] }}</p>
 @php($rec = match($decision['recommendation']) { 'recommended_bid' => ['BID', 'bg-emerald-50 text-emerald-700 border-emerald-300'], 'recommended_no_bid' => ['NO-BID', 'bg-red-50 text-red-700 border-red-300'], default => ['PERLU REVIEW', 'bg-amber-50 text-amber-700 border-amber-300'] })
 <span class="mt-1 inline-block rounded-full border px-3 py-1 text-xs font-black {{ $rec[1] }}">{{ $rec[0] }}</span>
 <p class="mt-2 text-[11px] text-slate-400">Ambang: bid ≥ {{ $decision['thresholds']['bid'] }} · no-bid < {{ $decision['thresholds']['no_bid'] }}<br>Evaluasi terakhir {{ \Carbon\Carbon::parse($decision['evaluated_at'])->format('d/m/Y H:i') }}</p>

@@ -1,5 +1,5 @@
 <x-layouts.app title="Tanda Tangan Saya"><section class="mx-auto max-w-2xl px-4 py-10">
-<h1 class="text-3xl font-black">Tanda Tangan Saya</h1>
+<h1 class="text-2xl font-bold tracking-tight">Tanda Tangan Saya</h1>
 <p class="mt-2 text-slate-600">Halo {{ $user->name }} — unggah gambar tanda tangan basah Anda sekali saja. Setelah tersimpan, tanda tangan ini otomatis muncul pada faktur dan dokumen yang Anda tandatangani di sistem.</p>
 @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4">{{ session('status') }}</div>@endif
 @if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{{ $errors->first() }}</div>@endif

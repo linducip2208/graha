@@ -9,6 +9,7 @@ use App\Models\Journal;
 use App\Models\ProgressBilling;
 use App\Models\VendorInvoice;
 use App\Services\AccountingService;
+use App\Services\CashFlowForecastService;
 use App\Services\ReceivablePayableAgingService;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Http\Request;
@@ -41,6 +42,7 @@ class FinanceController extends Controller
             'pendingBillings' => ProgressBilling::where('company_id', $companyId)->whereIn('status', ['draft', 'pending_approval'])->count(),
             'openVendorInvoices' => VendorInvoice::where('company_id', $companyId)->whereNotIn('match_status', ['posted'])->count(),
             'recentJournals' => Journal::where('company_id', $companyId)->with('entries')->latest('journal_date')->limit(8)->get(),
+            'forecast' => $aging ? app(CashFlowForecastService::class)->forecast($companyId) : null,
         ]);
     }
 

@@ -1,5 +1,5 @@
 <x-layouts.app title="Tangki BBM & Rekonsiliasi"><section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-<h1 class="text-3xl font-black">Tangki BBM & Rekonsiliasi</h1>
+<h1 class="text-2xl font-bold tracking-tight">Tangki BBM & Rekonsiliasi</h1>
 <p class="mt-2 text-slate-500">Kartu stok tangki solar: penerimaan, pengeluaran ke alat, dan rekonsiliasi fisik — selisih otomatis dicatat sebagai penyesuaian ter-audit.</p>
 @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4">{{ session('status') }}</div>@endif
 @if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{{ $errors->first() }}</div>@endif

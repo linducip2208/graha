@@ -19,7 +19,7 @@
 
 <section class="flex items-center justify-center p-8">
 <div class="w-full max-w-md">
-<h1 class="text-4xl font-black">Masuk</h1>
+<h1 class="text-3xl font-bold tracking-tight">Masuk</h1>
 <p class="mt-2 text-slate-500">Gunakan akun demo di bawah untuk menjelajah seluruh modul.</p>
 @if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-700">{{ $errors->first() }}</div>@endif
 <form method="post" action="/login" class="mt-6 space-y-4">

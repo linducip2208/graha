@@ -1,4 +1,4 @@
-﻿<x-layouts.app title="{{ $project->code }} — {{ $project->name }}">
+<x-layouts.app title="{{ $project->code }} — {{ $project->name }}">
 @php($tabs = [
     'overview' => 'Ringkasan',
     'planning' => 'Perencanaan',
@@ -14,7 +14,7 @@
 ])
 <section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 <p class="text-xs font-bold uppercase tracking-widest text-sky-700">{{ $project->code }} Â· {{ $project->location }}</p>
-<h1 class="mt-1 text-3xl font-black">{{ $project->name }}</h1>
+<h1 class="mt-1 text-2xl font-bold tracking-tight">{{ $project->name }}</h1>
 <div class="mt-2 flex flex-wrap items-center gap-3 text-sm text-slate-500">
 <span class="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase">{{ str_replace('_', ' ', $project->status) }}</span>
 @if($project->planned_start)<span>Rencana: {{ $project->planned_start->format('d/m/Y') }} ? {{ $project->planned_end?->format('d/m/Y') }}</span>@endif
@@ -32,16 +32,16 @@
 @if($activeTab === 'overview')
 <section class="mt-6 grid gap-5">
 <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-<article class="rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">Progress Fisik</p><p class="mt-1 text-3xl font-black">{{ number_format($physicalPercent, 1) }}%</p>@if($plannedPercent !== null)<div class="mt-2 h-2 rounded-full bg-slate-100"><div class="h-2 rounded-full bg-gradient-to-r from-sky-500 to-cyan-500" style="width: {{ min(100, $physicalPercent) }}%"></div></div><p class="mt-1 text-xs text-slate-500">Rencana s.d. hari ini: {{ number_format($plannedPercent, 1) }}%</p>@endif</article>
+<article class="rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">Progress Fisik</p><p class="mt-1 text-2xl font-bold tracking-tight">{{ number_format($physicalPercent, 1) }}%</p>@if($plannedPercent !== null)<div class="mt-2 h-2 rounded-full bg-slate-100"><div class="h-2 rounded-full bg-gradient-to-r from-sky-500 to-cyan-500" style="width: {{ min(100, $physicalPercent) }}%"></div></div><p class="mt-1 text-xs text-slate-500">Rencana s.d. hari ini: {{ number_format($plannedPercent, 1) }}%</p>@endif</article>
 @if(isset($cpi))
-<article class="rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">CPI (Indeks Biaya)</p><p class="mt-1 text-3xl font-black {{ $cpi >= 1 ? 'text-emerald-600' : 'text-red-600' }}">{{ number_format($cpi, 2) }}</p><p class="mt-1 text-xs text-slate-500">{{ $cpi >= 1 ? 'Biaya di bawah nilai kerja' : 'Biaya melebihi nilai kerja' }} · EV/AC</p></article>
+<article class="rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">CPI (Indeks Biaya)</p><p class="mt-1 text-2xl font-bold tracking-tight {{ $cpi >= 1 ? 'text-emerald-600' : 'text-red-600' }}">{{ number_format($cpi, 2) }}</p><p class="mt-1 text-xs text-slate-500">{{ $cpi >= 1 ? 'Biaya di bawah nilai kerja' : 'Biaya melebihi nilai kerja' }} · EV/AC</p></article>
 @endif
 @if(isset($spi) && $spi !== null)
-<article class="rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">SPI (Indeks Jadwal)</p><p class="mt-1 text-3xl font-black {{ $spi >= 1 ? 'text-emerald-600' : 'text-amber-600' }}">{{ number_format($spi, 2) }}</p><p class="mt-1 text-xs text-slate-500">{{ $spi >= 1 ? 'Progres sejalan jadwal' : 'Progres tertinggal jadwal' }} · EV/PV</p></article>
-@endif<article class="rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">Total Titik Pile</p><p class="mt-1 text-3xl font-black">{{ $piles->count() }}</p><p class="text-xs text-slate-500">Selesai: {{ $piles->where('status', 'completed')->count() }}</p></article>
+<article class="rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">SPI (Indeks Jadwal)</p><p class="mt-1 text-2xl font-bold tracking-tight {{ $spi >= 1 ? 'text-emerald-600' : 'text-amber-600' }}">{{ number_format($spi, 2) }}</p><p class="mt-1 text-xs text-slate-500">{{ $spi >= 1 ? 'Progres sejalan jadwal' : 'Progres tertinggal jadwal' }} · EV/PV</p></article>
+@endif<article class="rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">Total Titik Pile</p><p class="mt-1 text-2xl font-bold tracking-tight">{{ $piles->count() }}</p><p class="text-xs text-slate-500">Selesai: {{ $piles->where('status', 'completed')->count() }}</p></article>
 @if($costing)
 <article class="rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">EAC (Estimasi Akhir)</p><p class="mt-1 text-xl font-black">Rp {{ number_format((float) $costing['eac'], 0, ',', '.') }}</p><p class="text-xs {{ (float) $costing['variance'] < 0 ? 'text-red-600 font-bold' : 'text-emerald-700' }}">Varians vs RAB: Rp {{ number_format((float) $costing['variance'], 0, ',', '.') }}</p></article>
-<article class="rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">Margin Estimasi</p>@php($margin = (float) $project->contract_value > 0 ? round((float) bcdiv(bcmul(bcsub((string) $project->contract_value, $costing['eac'], 2), '100', 4), (string) $project->contract_value, 4), 1) : null)<p class="mt-1 text-3xl font-black {{ ($margin ?? 0) < 0 ? 'text-red-600' : 'text-emerald-700' }}">{{ $margin !== null ? $margin.'%' : '-' }}</p></article>
+<article class="rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">Margin Estimasi</p>@php($margin = (float) $project->contract_value > 0 ? round((float) bcdiv(bcmul(bcsub((string) $project->contract_value, $costing['eac'], 2), '100', 4), (string) $project->contract_value, 4), 1) : null)<p class="mt-1 text-2xl font-bold tracking-tight {{ ($margin ?? 0) < 0 ? 'text-red-600' : 'text-emerald-700' }}">{{ $margin !== null ? $margin.'%' : '-' }}</p></article>
 @endif
 </div>
 <div class="grid gap-5 lg:grid-cols-3">
@@ -176,6 +176,30 @@
 </section>
 @endif
 
+@if($activeTab === 'cost' && isset($baselines))
+<article class="lg:col-span-3 rounded-2xl border bg-white p-6 shadow-sm">
+<div class="flex flex-wrap items-center justify-between gap-2"><h2 class="font-bold">Budget Baseline (versi)</h2><span class="text-xs text-slate-400">Baseline aktif: {{ $costing['baseline_version'] ? 'v'.$costing['baseline_version'] : 'belum ada — memakai estimated cost proyek' }}</span></div>
+<form method="post" action="/admin/project-costing/baselines" class="mt-3 grid gap-2 no-print">@csrf
+<input type="hidden" name="project_id" value="{{ $project->id }}">
+<textarea name="lines" required rows="3" placeholder="kode|uraian|qty|harga_satuan per baris&#10;MAT-BETON|Beton fc25|38|1500000" class="rounded-xl border p-2.5 font-mono text-xs"></textarea>
+<div class="flex flex-wrap gap-2"><input name="notes" placeholder="Catatan revisi (opsional)" class="min-w-56 flex-1 rounded-xl border p-2.5 text-sm"><button class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white">Buat versi draft</button></div>
+</form>
+<div class="mt-3 space-y-2">@forelse($baselines as $b)
+<div class="flex flex-wrap items-center justify-between gap-2 rounded-xl border p-3 text-sm">
+<strong>Budget v{{ $b->version }}</strong>
+<span class="font-mono">Rp {{ number_format((float) $b->total_budget, 0, ',', '.') }}</span>
+<span class="rounded-full px-2 py-0.5 text-[11px] font-bold {{ $b->status === 'approved' ? 'bg-emerald-50 text-emerald-700' : ($b->status === 'draft' ? 'bg-sky-50 text-sky-700' : 'bg-slate-100 text-slate-500') }}">{{ strtoupper($b->status) }}</span>
+@if($b->approved_at)<span class="text-[11px] text-slate-400">{{ $b->approved_at->format('d/m/Y') }} oleh {{ $b->approver?->name }}</span>@endif
+@if($b->status === 'draft')
+<form method="post" action="/admin/project-costing/baselines/{{ $b->id }}/approve" class="no-print">@csrf
+<button onclick="return confirm('Setujui Budget v{{ $b->version }} sebagai baseline aktif? Versi approved lama otomatis superseded.')" class="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white">Setujui</button>
+</form>
+@endif
+</div>
+@empty<p class="text-sm text-slate-400">Belum ada baseline — buat v0 untuk mengunci anggaran awal proyek.</p>@endforelse
+</div>
+</article>
+@endif
 @if($activeTab === 'cost' && isset($costByCode))
 <section class="mt-6 grid gap-5 lg:grid-cols-3">
 @if(isset($costing))

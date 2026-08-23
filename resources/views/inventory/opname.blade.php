@@ -1,5 +1,5 @@
 <x-layouts.app title="Stock Opname"><section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-<h1 class="text-3xl font-black">Stock Opname</h1>
+<h1 class="text-2xl font-bold tracking-tight">Stock Opname</h1>
 <p class="mt-2 text-slate-500">Penghitungan fisik per gudang. Approval oleh user lain (bukan penghitung) akan memposting adjustment in/out ke ledger secara idempotent — hanya baris dengan selisih.</p>
 @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4">{{ session('status') }}</div>@endif
 @if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{{ $errors->first() }}</div>@endif

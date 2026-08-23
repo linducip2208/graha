@@ -1,6 +1,6 @@
 <x-layouts.app title="Quality, HSE & ISO">
 <section class="mx-auto max-w-7xl px-4 py-8 sm:px-6">
- <h1 class="text-3xl font-black">Quality, HSE & ISO</h1><p class="mt-2 text-slate-500">Dukungan implementasi QMS—bukan klaim sertifikasi ISO.</p>
+ <h1 class="text-2xl font-bold tracking-tight">Quality, HSE & ISO</h1><p class="mt-2 text-slate-500">Dukungan implementasi QMS—bukan klaim sertifikasi ISO.</p>
  @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4 text-emerald-800">{{ session('status') }}</div>@endif
  @if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{{ $errors->first() }}</div>@endif
  <div class="mt-8 flex gap-2 no-print"><a href="/admin/qms" @class(['rounded-xl border px-4 py-2 text-sm font-semibold', 'bg-sky-700 text-white' => !request('view'), 'bg-white' => request('view')])>Tabel</a><a href="/admin/qms?view=kanban" @class(['rounded-xl border px-4 py-2 text-sm font-semibold', 'bg-sky-700 text-white' => request('view') === 'kanban', 'bg-white' => request('view') !== 'kanban'])>Kanban NCR</a></div>

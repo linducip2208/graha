@@ -1,5 +1,5 @@
 <x-layouts.app title="Pajak & Bukti Potong"><section class="mx-auto max-w-7xl px-4 py-8 lg:px-8">
-<h1 class="text-3xl font-black">Pajak & Bukti Potong</h1>
+<h1 class="text-2xl font-bold tracking-tight">Pajak & Bukti Potong</h1>
 <p class="mt-2 text-slate-500">Rekapitulasi PPN keluaran/masukan dan PPh yang dipotong atau dipotongkan, plus master tarif pajak perusahaan.</p>
 @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4">{{ session('status') }}</div>@endif
 @if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{{ $errors->first() }}</div>@endif

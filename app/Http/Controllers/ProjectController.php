@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BoredPile;
 use App\Models\BoredPileDrilling;
+use App\Models\BudgetBaseline;
 use App\Models\ConcreteDelivery;
 use App\Models\ConstraintLog;
 use App\Models\ContractChange;
@@ -150,6 +151,7 @@ class ProjectController extends Controller
                 ->selectRaw('project_cost_codes.code, project_cost_codes.name, project_cost_ledger.cost_type, SUM(project_cost_ledger.amount) as total')
                 ->groupBy('project_cost_codes.code', 'project_cost_codes.name', 'project_cost_ledger.cost_type')->get();
             $data['costing'] = app(ProjectCostingService::class)->summary($project);
+            $data['baselines'] = BudgetBaseline::where('project_id', $project->id)->with('approver:id,name')->orderByDesc('version')->limit(10)->get();
         }
 
         if ($tab === 'billing' && $can('finance.view')) {

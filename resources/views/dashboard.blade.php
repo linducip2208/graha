@@ -1,6 +1,6 @@
 <x-layouts.app title="Executive Dashboard"><section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 <p class="text-xs font-bold uppercase tracking-widest text-sky-700">{{ $company->code }}</p>
-<h1 class="mt-1 text-3xl font-black">Ringkasan Operasional</h1>
+<h1 class="mt-1 text-2xl font-bold tracking-tight">Ringkasan Operasional</h1>
 <p class="mt-2 text-slate-500">Angka kunci {{ $company->name }} sesuai kewenangan Anda — diperbarui real-time dari dokumen posted.</p>
 
 <div class="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">

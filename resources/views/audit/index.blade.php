@@ -1,5 +1,5 @@
 <x-layouts.app title="Audit Trail"><section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-<h1 class="text-3xl font-black">Audit Trail</h1>
+<h1 class="text-2xl font-bold tracking-tight">Audit Trail</h1>
 <p class="mt-2 text-slate-500">Catatan append-only dengan hash chain — setiap entri terikat ke entri sebelumnya dan tidak dapat diubah atau dihapus.</p>
 
 @if($eventSummary->isNotEmpty())

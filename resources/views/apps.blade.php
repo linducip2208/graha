@@ -1,7 +1,7 @@
 <x-layouts.app title="Semua Aplikasi">
 <section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 <p class="text-xs font-bold uppercase tracking-widest text-sky-700">{{ $company?->code }}</p>
-<h1 class="mt-1 text-3xl font-black">Semua Aplikasi</h1>
+<h1 class="mt-1 text-2xl font-bold tracking-tight">Semua Aplikasi</h1>
 <p class="mt-2 text-slate-500">Seluruh workspace {{ $company?->name ?? 'ERP' }} sesuai kewenangan Anda. Tandai bintang untuk menyematkan ke favorit.</p>
 
 @if($favorites->isNotEmpty())

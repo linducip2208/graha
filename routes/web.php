@@ -259,6 +259,8 @@ Route::middleware(['auth', 'company', 'permission:finance.view'])->prefix('admin
 Route::middleware(['auth', 'company', 'permission:finance.view'])->prefix('admin/project-costing')->group(function () {
     Route::get('/', [ProjectCostingController::class, 'index'])->name('project-costing.index');
     Route::post('/forecasts', [ProjectCostingController::class, 'forecast'])->middleware('permission:finance.manage');
+    Route::post('/baselines', [ProjectCostingController::class, 'storeBaseline'])->middleware('permission:finance.manage');
+    Route::post('/baselines/{baseline}/approve', [ProjectCostingController::class, 'approveBaseline'])->middleware('permission:accounting.post');
 });
 Route::middleware(['auth', 'company', 'permission:finance.view'])->prefix('admin/fixed-assets')->group(function () {
     Route::get('/', [FixedAssetController::class, 'index'])->name('fixed-assets.index');
