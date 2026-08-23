@@ -7,10 +7,12 @@ use App\Models\Customer;
 use App\Models\Project;
 use App\Models\Tender;
 use App\Services\NumberSequenceService;
+use App\Services\TenderDecisionService;
 use App\Services\TenderIntelligenceService;
 use App\Services\TenderService;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class TenderController extends Controller
 {
@@ -31,6 +33,7 @@ class TenderController extends Controller
         return view('tenders.index', ['tenders' => $listQuery->with(['customer', 'outcome'])->latest()->paginate(20), 'customers' => Customer::where('company_id', $companyId)->orderBy('name')->get(), 'metrics' => $service->metrics($companyId, now()->year), 'intel' => $intelligence->stats($companyId), 'competitors' => Competitor::where('company_id', $companyId)->orderBy('name')->get(), 'recentTenders' => Tender::where('company_id', $companyId)->orderByDesc('id')->limit(20)->get(),
             'kanban' => $view === 'kanban' ? $this->kanban($companyId) : null,
             'activeStatus' => $r->query('status'),
+            'lossAnalysis' => app(TenderDecisionService::class)->lossAnalysis($companyId),
         ]);
     }
 
@@ -114,6 +117,21 @@ class TenderController extends Controller
         $service->recordOutcome($tender, $r->user(), $outcome, $data);
 
         return back()->with('status', 'Hasil tender dicatat.');
+    }
+
+    /** Evaluasi Bid/No-Bid: skor faktor nyata + rekomendasi configurable (ADR-048). */
+    public function bidDecision(Request $r, Tender $tender, CurrentCompany $current, TenderDecisionService $service)
+    {
+        abort_unless($tender->company_id === $current->id(), 404);
+        throw_unless(in_array($tender->status, ['preparation', 'bidding'], true), ValidationException::withMessages(['status' => 'Keputusan bid hanya untuk tender preparation/bidding.']));
+        $decision = $service->evaluate($tender, $r->user());
+        $label = match ($decision['recommendation']) {
+            TenderDecisionService::RECOMMEND_BID => 'Rekomendasi: BID',
+            TenderDecisionService::RECOMMEND_NO_BID => 'Rekomendasi: NO-BID',
+            default => 'Rekomendasi: PERLU REVIEW',
+        };
+
+        return back()->with('status', "Evaluasi selesai — skor {$decision['score']}. {$label}");
     }
 
     public function convert(Tender $tender, CurrentCompany $current, TenderService $service, Request $r)

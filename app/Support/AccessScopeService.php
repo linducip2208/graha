@@ -2,11 +2,14 @@
 
 namespace App\Support;
 
+use App\Models\Branch;
 use App\Models\Company;
+use App\Models\Department;
 use App\Models\Project;
 use App\Models\ProjectUserAccess;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Centralized access scope resolution.
@@ -25,7 +28,7 @@ class AccessScopeService
     /** Membership aktif user pada sebuah company. */
     public function membership(User $user, int $companyId): ?object
     {
-        return \Illuminate\Support\Facades\DB::table('company_user')
+        return DB::table('company_user')
             ->where('user_id', $user->id)
             ->where('company_id', $companyId)
             ->where('is_active', true)
@@ -105,12 +108,12 @@ class AccessScopeService
         return match ($membership->data_scope ?? 'all_company') {
             'branch' => [
                 'type' => 'branch',
-                'label' => 'Branch: '.(\App\Models\Branch::find($membership->scope_branch_id)?->name ?? '-'),
+                'label' => 'Branch: '.(Branch::find($membership->scope_branch_id)?->name ?? '-'),
             ],
             'department' => [
                 'type' => 'department',
-                'label' => 'Department: '.(\App\Models\Department::find($membership->scope_department_id)?->name ?? '-')
-                    .' @ '.(\App\Models\Branch::find($membership->scope_branch_id)?->name ?? '-'),
+                'label' => 'Department: '.(Department::find($membership->scope_department_id)?->name ?? '-')
+                    .' @ '.(Branch::find($membership->scope_branch_id)?->name ?? '-'),
             ],
             'projects' => [
                 'type' => 'projects',

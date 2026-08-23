@@ -2,7 +2,8 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 /**
  * TOTP (RFC 6238) implementation — tanpa dependency eksternal.
@@ -33,7 +34,7 @@ class TotpService
     /**
      * Verifikasi kode 6-digit dengan window ±1 periode (toleransi drift).
      *
-     * @param string[]|null $recoveryCodes hashed recovery codes alternatif
+     * @param  string[]|null  $recoveryCodes  hashed recovery codes alternatif
      * @return bool|string true = TOTP valid; string recovery code = valid via recovery; false = invalid
      */
     public function verify(string $secret, string $code): bool
@@ -58,12 +59,12 @@ class TotpService
     /**
      * Cek recovery code (hashed bcrypt di DB).
      *
-     * @param array<int,string> $hashedCodes
+     * @param  array<int,string>  $hashedCodes
      */
     public function verifyRecovery(string $code, array $hashedCodes): ?array
     {
         foreach ($hashedCodes as $index => $hash) {
-            if (\Illuminate\Support\Facades\Hash::check(trim($code), $hash)) {
+            if (Hash::check(trim($code), $hash)) {
                 // single-use: hapus dari daftar
                 unset($hashedCodes[$index]);
 
@@ -79,7 +80,7 @@ class TotpService
     {
         $codes = [];
         for ($i = 0; $i < $count; $i++) {
-            $codes[] = strtoupper(\Illuminate\Support\Str::random(5)).'-'.strtoupper(\Illuminate\Support\Str::random(5));
+            $codes[] = strtoupper(Str::random(5)).'-'.strtoupper(Str::random(5));
         }
 
         return $codes;
@@ -87,7 +88,7 @@ class TotpService
 
     public function hashRecoveryCodes(array $rawCodes): array
     {
-        return array_map(fn ($c) => \Illuminate\Support\Facades\Hash::make($c), $rawCodes);
+        return array_map(fn ($c) => Hash::make($c), $rawCodes);
     }
 
     /** HOTP RFC 4226 dengan base32 secret. */

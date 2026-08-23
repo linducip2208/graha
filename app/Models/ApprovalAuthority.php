@@ -47,7 +47,7 @@ class ApprovalAuthority extends Model
     }
 
     /** Authority aktif pada tanggal referensi & mencakup nominal. */
-    public function covers(float $amount, \DateTimeInterface $date = new \DateTimeImmutable()): bool
+    public function covers(float $amount, \DateTimeInterface $date = new \DateTimeImmutable): bool
     {
         if (! $this->is_active) {
             return false;

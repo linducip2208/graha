@@ -129,6 +129,10 @@ Route::middleware(['auth', 'company', 'permission:project.view'])->prefix('admin
     Route::post('/bored-piles', [ProjectController::class, 'pile'])->middleware('permission:project.manage');
     Route::post('/bored-piles/{pile}/transition', [ProjectController::class, 'transition'])->middleware('permission:project.manage');
     Route::post('/bored-piles/{pile}/concrete', [ProjectController::class, 'concrete'])->middleware('permission:project.manage');
+    Route::post('/projects/{project}/constraints', [ProjectController::class, 'storeConstraint'])->middleware('permission:project.manage');
+    Route::post('/constraints/{constraint}/status', [ProjectController::class, 'updateConstraintStatus'])->middleware('permission:project.manage');
+    Route::post('/projects/{project}/procurement-plans', [ProjectController::class, 'storePlan'])->middleware('permission:procurement.manage');
+    Route::post('/procurement-plans/{plan}/link', [ProjectController::class, 'linkPlanDocument'])->middleware('permission:procurement.manage');
 });
 Route::middleware(['auth', 'company', 'permission:tender.view'])->prefix('admin')->group(function () {
     Route::get('/tenders', [TenderController::class, 'index'])->name('tenders.index');
@@ -138,6 +142,7 @@ Route::middleware(['auth', 'company', 'permission:tender.view'])->prefix('admin'
     Route::post('/participants', [TenderController::class, 'storeParticipant'])->middleware('permission:tender.manage');
     Route::post('/tenders', [TenderController::class, 'store'])->middleware('permission:tender.manage');
     Route::post('/tenders/{tender}/outcome', [TenderController::class, 'outcome'])->middleware('permission:tender.manage');
+    Route::post('/tenders/{tender}/bid-decision', [TenderController::class, 'bidDecision'])->middleware('permission:tender.manage');
     Route::post('/tenders/{tender}/convert', [TenderController::class, 'convert'])->middleware('permission:tender.manage');
 });
 Route::middleware(['auth', 'company', 'permission:document.view'])->prefix('admin')->group(function () {

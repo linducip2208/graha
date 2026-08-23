@@ -13,6 +13,7 @@ use App\Models\VendorInvoice;
 use App\Models\Warehouse;
 use App\Services\ApprovalEngine;
 use App\Services\FxService;
+use App\Services\PlanningSupportService;
 use App\Services\ProcurementAccountingService;
 use App\Services\PurchaseOrderService;
 use App\Services\TaxService;
@@ -36,6 +37,7 @@ class ProcurementController extends Controller
             'workflows' => ApprovalWorkflow::where('company_id', $id)->where('document_type', 'purchase_order')->where('is_active', true)->get(),
             'taxRates' => TaxRate::where('company_id', $id)->where('kind', 'ppn_input')->where('is_active', true)->orderBy('code')->get(),
             'evaluations' => VendorEvaluation::where('company_id', $id)->with('vendor:id,code,name')->latest()->limit(30)->get(),
+            'latePlans' => PlanningSupportService::latePlansForCompany($id),
         ]);
     }
 

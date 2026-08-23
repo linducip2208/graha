@@ -5,16 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\BoredPile;
 use App\Models\BoredPileDrilling;
 use App\Models\ConcreteDelivery;
+use App\Models\ConstraintLog;
 use App\Models\ContractChange;
+use App\Models\Item;
 use App\Models\MaterialRequest;
 use App\Models\PileTest;
+use App\Models\ProcurementPlan;
 use App\Models\ProgressBilling;
 use App\Models\Project;
 use App\Models\ProjectWbs;
 use App\Models\ProjectZone;
 use App\Models\PurchaseOrder;
 use App\Models\Rfq;
+use App\Models\Vendor;
 use App\Services\BoredPileService;
+use App\Services\PlanningSupportService;
 use App\Services\ProjectCostingService;
 use App\Support\Tenancy\CurrentCompany;
 use Carbon\Carbon;
@@ -96,6 +101,7 @@ class ProjectController extends Controller
         if ($tab === 'planning') {
             $data['schedule'] = $this->buildSchedule($project);
             $data['wbs'] = ProjectWbs::where('project_id', $project->id)->orderBy('code')->get();
+            $data['constraints'] = ConstraintLog::where('project_id', $project->id)->with(['pile:id,pile_number', 'recorder:id,name'])->orderByRaw("FIELD(status,'open','in_progress','resolved')")->orderBy('raised_at')->limit(50)->get();
         }
 
         if ($tab === 'fieldops' && $can('project.view')) {
@@ -120,6 +126,7 @@ class ProjectController extends Controller
         if ($tab === 'procurement' && $can('procurement.view')) {
             $data['purchaseOrders'] = PurchaseOrder::whereHas('purchaseRequest', fn ($q) => $q->where('project_id', $project->id))->with('vendor:id,name')->latest()->limit(25)->get();
             $data['rfqs'] = Rfq::where('project_id', $project->id)->withCount('vendors')->latest()->limit(15)->get();
+            $data['plans'] = ProcurementPlan::where('project_id', $project->id)->with(['item:id,name', 'vendor:id,name'])->orderBy('required_date')->limit(60)->get();
         }
 
         if ($tab === 'contracts' && $can('contract.view')) {
@@ -244,5 +251,79 @@ class ProjectController extends Controller
         $service->recordConcrete($pile, $d['actual_depth_m'], $d['actual_concrete_m3'], $r->user());
 
         return back()->with('status', 'Data beton diperbarui.');
+    }
+
+    /** Log kendala rencana (ADR-049). */
+    public function storeConstraint(Request $r, Project $project, CurrentCompany $current, PlanningSupportService $service)
+    {
+        abort_unless($project->company_id === $current->id(), 404);
+        $d = $r->validate([
+            'type' => ['required', 'max:30'],
+            'title' => ['required', 'max:150'],
+            'description' => ['required', 'max:2000'],
+            'impact_notes' => ['nullable', 'max:1000'],
+            'bored_pile_id' => ['nullable', 'integer'],
+            'raised_at' => ['required', 'date'],
+            'target_date' => ['nullable', 'date', 'after_or_equal:raised_at'],
+        ]);
+        if (! empty($d['bored_pile_id'])) {
+            abort_unless(BoredPile::where('project_id', $project->id)->whereKey($d['bored_pile_id'])->exists(), 422);
+        } else {
+            unset($d['bored_pile_id']);
+        }
+        $service->createConstraint($current->id(), [...$d, 'project_id' => $project->id], $r->user());
+
+        return back()->with('status', 'Kendala tercatat di constraint log.');
+    }
+
+    public function updateConstraintStatus(Request $r, ConstraintLog $constraint, CurrentCompany $current, PlanningSupportService $service)
+    {
+        abort_unless($constraint->company_id === $current->id(), 404);
+        $d = $r->validate(['status' => ['required', 'in:in_progress,resolved'], 'resolution_notes' => ['nullable', 'max:2000']]);
+        $service->updateConstraintStatus($constraint, $d['status'], $d['resolution_notes'] ?? null, $r->user());
+
+        return back()->with('status', 'Status kendala diperbarui.');
+    }
+
+    /** Rencana pengadaan proyek (ADR-050). */
+    public function storePlan(Request $r, Project $project, CurrentCompany $current, PlanningSupportService $service)
+    {
+        abort_unless($project->company_id === $current->id(), 404);
+        $d = $r->validate([
+            'title' => ['required', 'max:180'],
+            'item_id' => ['nullable', 'integer'],
+            'project_wbs_id' => ['nullable', 'integer'],
+            'quantity' => ['required', 'decimal:0,4', 'gt:0'],
+            'estimated_value' => ['nullable', 'decimal:0,2', 'min:0'],
+            'required_date' => ['required', 'date'],
+            'planned_pr_date' => ['nullable', 'date'],
+            'planned_po_date' => ['nullable', 'date'],
+            'vendor_id' => ['nullable', 'integer'],
+            'notes' => ['nullable', 'max:1000'],
+        ]);
+        foreach (['item_id' => Item::class, 'vendor_id' => Vendor::class] as $key => $model) {
+            if (! empty($d[$key])) {
+                abort_unless($model::where('company_id', $current->id())->whereKey($d[$key])->exists(), 422);
+            } else {
+                unset($d[$key]);
+            }
+        }
+        if (! empty($d['project_wbs_id'])) {
+            abort_unless(ProjectWbs::where('project_id', $project->id)->whereKey($d['project_wbs_id'])->exists(), 422);
+        } else {
+            unset($d['project_wbs_id']);
+        }
+        $service->createPlan($current->id(), [...$d, 'project_id' => $project->id], $r->user());
+
+        return back()->with('status', 'Baris rencana pengadaan ditambahkan.');
+    }
+
+    public function linkPlanDocument(Request $r, ProcurementPlan $plan, CurrentCompany $current, PlanningSupportService $service)
+    {
+        abort_unless($plan->company_id === $current->id(), 404);
+        $d = $r->validate(['kind' => ['required', 'in:pr,po'], 'document_id' => ['required', 'integer']]);
+        $plan = $service->linkDocument($plan, $d['kind'], (int) $d['document_id'], $r->user());
+
+        return back()->with('status', 'Rencana tertaut ke '.strtoupper($d['kind']).' #'.$plan->{ $d['kind'] === 'pr' ? 'purchase_request_id' : 'purchase_order_id' }.'.');
     }
 }

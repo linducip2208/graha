@@ -36,7 +36,7 @@ class ProjectUserAccess extends Model
     }
 
     /** Assignment aktif pada tanggal referensi. */
-    public function isActiveAt(\DateTimeInterface $date = new \DateTimeImmutable()): bool
+    public function isActiveAt(\DateTimeInterface $date = new \DateTimeImmutable): bool
     {
         if ($this->starts_at && $this->starts_at->isFuture()) {
             return false;
