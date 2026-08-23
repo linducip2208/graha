@@ -109,6 +109,50 @@ paths:
         '201': { description: Permintaan dibuat status requested }
         '403': { description: Tanpa permission }
         '422': { $ref: '#/components/responses/ValidationError' }
+  /v1/cages:
+    get:
+      summary: Daftar reinforcement cage (butuh permission manufacturing.view)
+      parameters:
+        - { name: X-Company-Id, in: header, required: true, schema: { type: integer } }
+        - { name: qc_status, in: query, schema: { type: string } }
+        - { name: page, in: query, schema: { type: integer } }
+      responses:
+        '200': { description: Paginated cage list (dengan relasi pile) }
+        '403': { description: Tanpa permission }
+  /v1/casings:
+    get:
+      summary: Daftar casing pile (butuh permission equipment.view)
+      parameters:
+        - { name: X-Company-Id, in: header, required: true, schema: { type: integer } }
+      responses:
+        '200': { description: Daftar casing unit dengan lokasi pile saat ini }
+        '403': { description: Tanpa permission }
+  /v1/fuel-tanks:
+    get:
+      summary: Daftar tangki BBM (butuh permission equipment.view)
+      parameters:
+        - { name: X-Company-Id, in: header, required: true, schema: { type: integer } }
+      responses:
+        '200': { description: Daftar tangki BBM perusahaan aktif }
+        '403': { description: Tanpa permission }
+  /v1/tools:
+    get:
+      summary: Daftar tools (butuh permission inventory.view)
+      parameters:
+        - { name: X-Company-Id, in: header, required: true, schema: { type: integer } }
+        - { name: status, in: query, schema: { type: string, enum: [available, checked_out, lost] } }
+      responses:
+        '200': { description: Daftar tools dan status check-out }
+        '403': { description: Tanpa permission }
+  /v1/equipment:
+    get:
+      summary: Daftar equipment (butuh permission equipment.view)
+      parameters:
+        - { name: X-Company-Id, in: header, required: true, schema: { type: integer } }
+        - { name: status, in: query, schema: { type: string } }
+      responses:
+        '200': { description: Daftar equipment perusahaan aktif }
+        '403': { description: Tanpa permission }
 components:
   securitySchemes:
     bearerAuth:

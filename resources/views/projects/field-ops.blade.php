@@ -7,6 +7,11 @@
 <div class="mt-6 no-print"><form method="get" class="flex gap-2"><select name="project" onchange="this.form.submit()" class="rounded-xl border p-3 text-sm"><option value="">Pilih proyek aktif</option>@foreach($projects as $p)<option value="{{ $p->id }}" @selected($project?->id === $p->id)>{{ $p->code }} — {{ $p->name }}</option>@endforeach</select></form></div>
 
 @if($project)
+<div class="mt-4 grid grid-cols-3 gap-2 lg:hidden no-print">
+<a href="#drilling" class="flex min-h-[56px] items-center justify-center rounded-2xl bg-sky-700 text-sm font-bold text-white shadow active:scale-95">⛏️ Drilling</a>
+<a href="#concrete" class="flex min-h-[56px] items-center justify-center rounded-2xl bg-amber-600 text-sm font-bold text-white shadow active:scale-95">🚛 Beton</a>
+<a href="#testing" class="flex min-h-[56px] items-center justify-center rounded-2xl bg-emerald-700 text-sm font-bold text-white shadow active:scale-95">🧪 Testing</a>
+</div>
 @php($canManage = auth()->user()->hasPermission('project.manage', app(\App\Support\Tenancy\CurrentCompany::class)->id()))
 
 <h2 id="drilling" class="mt-10 scroll-mt-24 text-lg font-black">1 · Drilling Record & Bore Log</h2>

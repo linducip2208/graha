@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Competitor;
 use App\Models\Customer;
+use App\Models\Project;
 use App\Models\Tender;
 use App\Services\NumberSequenceService;
 use App\Services\TenderIntelligenceService;
@@ -13,9 +14,53 @@ use Illuminate\Http\Request;
 
 class TenderController extends Controller
 {
-    public function index(CurrentCompany $current, TenderService $service, TenderIntelligenceService $intelligence)
+    public function index(Request $r, CurrentCompany $current, TenderService $service, TenderIntelligenceService $intelligence)
     {
-        return view('tenders.index', ['tenders' => Tender::where('company_id', $current->id())->with(['customer', 'outcome'])->latest()->paginate(20), 'customers' => Customer::where('company_id', $current->id())->orderBy('name')->get(), 'metrics' => $service->metrics($current->id(), now()->year), 'intel' => $intelligence->stats($current->id()), 'competitors' => Competitor::where('company_id', $current->id())->orderBy('name')->get(), 'recentTenders' => Tender::where('company_id', $current->id())->orderByDesc('id')->limit(20)->get()]);
+        $view = $r->query('view', 'table');
+        $companyId = $current->id();
+
+        // Saved view via query string: filter status dapat dibagikan sebagai URL.
+        $listQuery = Tender::where('company_id', $companyId);
+        if ($status = $r->query('status')) {
+            $listQuery->where('status', $status);
+        }
+
+        return view('tenders.index', ['tenders' => $listQuery->with(['customer', 'outcome'])->latest()->paginate(20), 'customers' => Customer::where('company_id', $companyId)->orderBy('name')->get(), 'metrics' => $service->metrics($companyId, now()->year), 'intel' => $intelligence->stats($companyId), 'competitors' => Competitor::where('company_id', $companyId)->orderBy('name')->get(), 'recentTenders' => Tender::where('company_id', $companyId)->orderByDesc('id')->limit(20)->get(),
+            'kanban' => $view === 'kanban' ? $this->kanban($companyId) : null,
+            'activeStatus' => $r->query('status'),
+        ]);
+    }
+
+    /** Papan kanban pipeline tender per status. */
+    private function kanban(int $companyId): array
+    {
+        $tenders = Tender::where('company_id', $companyId)->with('customer:id,name')->orderByDesc('id')->get();
+        $columns = [];
+
+        foreach (['preparation' => 'Persiapan', 'bidding' => 'Bidding', 'won' => 'Menang', 'lost' => 'Kalah'] as $status => $label) {
+            $columns[] = ['label' => $label, 'items' => $tenders->where('status', $status)->map(fn ($t) => [
+                'title' => $t->project_name,
+                'subtitle' => $t->customer?->name,
+                'meta' => $t->bid_value ? 'Rp '.number_format((float) $t->bid_value / 1_000_000, 0).' jt' : $t->number,
+                'href' => '/admin/tenders/'.$t->id,
+            ])->values()];
+        }
+
+        return $columns;
+    }
+
+    /** Workspace detail tender: estimasi, peserta, kompetitor, outcome, lessons. */
+    public function show(Request $r, Tender $tender, CurrentCompany $current)
+    {
+        abort_unless($tender->company_id === $current->id(), 404);
+        $tab = $r->query('tab', 'overview');
+
+        return view('tenders.show', [
+            'tender' => $tender->load(['customer', 'outcome', 'participants', 'estimate.items']),
+            'activeTab' => $tab,
+            'competitors' => Competitor::where('company_id', $current->id())->orderBy('name')->get(),
+            'project' => Project::where('source_tender_id', $tender->id)->first(),
+        ]);
     }
 
     public function storeCompetitor(Request $r, CurrentCompany $current, TenderIntelligenceService $intelligence)

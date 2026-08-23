@@ -3,6 +3,9 @@
  <h1 class="text-3xl font-black">Quality, HSE & ISO</h1><p class="mt-2 text-slate-500">Dukungan implementasi QMS—bukan klaim sertifikasi ISO.</p>
  @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4 text-emerald-800">{{ session('status') }}</div>@endif
  @if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{{ $errors->first() }}</div>@endif
+ <div class="mt-8 flex gap-2 no-print"><a href="/admin/qms" @class(['rounded-xl border px-4 py-2 text-sm font-semibold', 'bg-sky-700 text-white' => !request('view'), 'bg-white' => request('view')])>Tabel</a><a href="/admin/qms?view=kanban" @class(['rounded-xl border px-4 py-2 text-sm font-semibold', 'bg-sky-700 text-white' => request('view') === 'kanban', 'bg-white' => request('view') !== 'kanban'])>Kanban NCR</a></div>
+ @if($kanban)<x-ui.kanban :columns="$kanban" class="mt-6" />@endif
+ @if(!request('view'))
  <div class="mt-8 grid gap-5 lg:grid-cols-3">
   <form method="post" action="/admin/qms/risks" class="grid gap-3 rounded-2xl border bg-white p-5">@csrf<h2 class="font-bold">Risk & Opportunity</h2><input name="code" required placeholder="Kode" class="rounded-xl border p-3"><select name="type" class="rounded-xl border p-3"><option value="risk">Risiko</option><option value="opportunity">Peluang</option></select><input name="title" required placeholder="Judul" class="rounded-xl border p-3"><textarea name="description" required placeholder="Deskripsi" class="rounded-xl border p-3"></textarea><div class="grid grid-cols-2 gap-2"><input type="number" min="1" max="5" name="likelihood" required placeholder="Likelihood 1-5" class="rounded-xl border p-3"><input type="number" min="1" max="5" name="impact" required placeholder="Impact 1-5" class="rounded-xl border p-3"></div><select name="owner_id" required class="rounded-xl border p-3"><option value="">Owner</option>@foreach($users as $user)<option value="{{ $user->id }}">{{ $user->name }}</option>@endforeach</select><button class="rounded-xl bg-sky-700 p-3 text-white">Simpan & hitung skor</button></form>
   <form method="post" action="/admin/qms/ncrs" class="grid gap-3 rounded-2xl border bg-white p-5">@csrf<h2 class="font-bold">Nonconformity (NCR)</h2><input name="number" required placeholder="Nomor NCR" class="rounded-xl border p-3"><input name="source_type" required placeholder="Sumber: inspection/audit" class="rounded-xl border p-3"><select name="severity" class="rounded-xl border p-3"><option value="minor">Minor</option><option value="major">Major</option><option value="observation">Observasi</option></select><textarea name="description" required placeholder="Ketidaksesuaian" class="rounded-xl border p-3"></textarea><textarea name="containment" placeholder="Containment" class="rounded-xl border p-3"></textarea><input type="date" name="due_at" class="rounded-xl border p-3"><button class="rounded-xl bg-amber-600 p-3 text-white">Catat NCR</button></form>
@@ -63,4 +66,20 @@
 <tr><td>{{ $sv->survey_date->format('d/m/Y') }}</td><td>{{ $sv->customer?->name }}{{ $sv->project ? ' · '.$sv->project->code : '' }}<span class="block text-slate-400">{{ $sv->respondent_name }}</span></td><td class="text-right">{{ $sv->quality_score }}</td><td class="text-right">{{ $sv->schedule_score }}</td><td class="text-right">{{ $sv->communication_score }}</td><td class="{{ $svClass }}">{{ $svAvg }}</td></tr>
 @endforeach
 </tbody></table></div>
+
+<div class="mt-12"><h2 id="timeline-ncr" class="scroll-mt-24 text-lg font-black">Timeline NCR & Tindakan</h2><p class="mt-1 text-sm text-slate-500">Kronologi ketidaksesuaian dan tindakan korektifnya dari yang terbaru.</p>
+<ol class="mt-4 space-y-4 border-l-2 border-slate-200 pl-6">
+@forelse($ncrs as $ncr)
+<li class="relative">
+<span class="absolute -left-[31px] top-1.5 grid h-5 w-5 place-items-center rounded-full {{ $ncr->status === 'closed' ? 'bg-emerald-500' : ($ncr->severity === 'critical' ? 'bg-red-500' : 'bg-amber-500') }} text-[9px] font-black text-white">{{ $ncr->status === 'closed' ? '✓' : '!' }}</span>
+<article class="rounded-xl border bg-white p-4"><div class="flex flex-wrap items-center justify-between gap-2 text-sm"><strong>{{ $ncr->number }}</strong><span class="text-xs uppercase text-slate-500">{{ $ncr->source_type }} · severitas {{ $ncr->severity }}</span></div>
+<p class="mt-1 text-sm text-slate-600">{{ str($ncr->description)->limit(140) }}</p>
+@if($ncr->actions->isNotEmpty())<ul class="mt-2 space-y-1 border-t pt-2 text-xs text-slate-500">@foreach($ncr->actions as $action)<li>↳ <strong>{{ $action->status }}</strong> · {{ str($action->action)->limit(90) }} @if($action->due_at)· tenggat {{ $action->due_at->format('d/m/Y') }}@endif</li>@endforeach</ul>@endif
+</article>
+</li>
+@empty
+<li class="text-sm text-slate-500">Belum ada NCR tercatat — kualitas dalam kendali.</li>
+@endforelse
+</ol></div>
+@endif
 </section></x-layouts.app>

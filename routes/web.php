@@ -6,15 +6,19 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CageController;
 use App\Http\Controllers\CashBankController;
 use App\Http\Controllers\CasingController;
+use App\Http\Controllers\ContractController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\FieldOpsController;
+use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\FixedAssetController;
 use App\Http\Controllers\FuelTankController;
+use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\HseController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\ManufacturingController;
 use App\Http\Controllers\MaterialRequestController;
+use App\Http\Controllers\MyWorkController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OperationsController;
 use App\Http\Controllers\OrganizationController;
@@ -31,6 +35,8 @@ use App\Http\Controllers\StockOpnameController;
 use App\Http\Controllers\TaxController;
 use App\Http\Controllers\TenderController;
 use App\Http\Controllers\ToolController;
+use App\Http\Controllers\WorkspaceController;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -54,6 +60,17 @@ Route::post('/logout', function (Request $r) {
     return redirect('/');
 })->middleware('auth');
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'company'])->name('dashboard');
+Route::get('/apps', [WorkspaceController::class, 'apps'])->middleware(['auth', 'company'])->name('apps');
+Route::get('/admin/my-work', [MyWorkController::class, 'index'])->middleware(['auth', 'company'])->name('my-work.index');
+Route::post('/admin/preferences/favorites', [WorkspaceController::class, 'toggleFavorite'])->middleware(['auth', 'company'])->name('preferences.favorites.toggle');
+Route::post('/admin/preferences/recent', [WorkspaceController::class, 'recordRecent'])->middleware(['auth', 'company'])->withoutMiddleware(VerifyCsrfToken::class)->name('preferences.recent.record');
+Route::get('/admin/search', [GlobalSearchController::class, 'query'])->middleware(['auth', 'company'])->name('global-search.query');
+Route::middleware(['auth', 'company', 'permission:contract.view'])->prefix('admin/contracts')->group(function () {
+    Route::get('/', [ContractController::class, 'index'])->name('contracts.index');
+    Route::get('/{contract}', [ContractController::class, 'show'])->name('contracts.show');
+    Route::post('/', [ContractController::class, 'store'])->middleware('permission:contract.manage')->name('contracts.store');
+    Route::post('/{contract}/submit', [ContractController::class, 'submit'])->middleware('permission:contract.manage')->name('contracts.submit');
+});
 Route::middleware(['auth', 'company', 'permission:organization.view'])->prefix('admin')->group(function () {
     Route::get('/organization', [OrganizationController::class, 'index'])->name('organization.index');
     Route::get('/organization/roles', [OrganizationController::class, 'roles'])->name('organization.roles');
@@ -65,6 +82,7 @@ Route::middleware(['auth', 'company', 'permission:organization.view'])->prefix('
     Route::post('/departments', [OrganizationController::class, 'storeDepartment'])->middleware('permission:organization.manage')->name('departments.store');
 });
 Route::middleware(['auth', 'company', 'permission:finance.view'])->prefix('admin')->group(function () {
+    Route::get('/finance/overview', [FinanceController::class, 'overview'])->name('finance.overview');
     Route::get('/finance', [FinanceController::class, 'index'])->name('finance.index');
     Route::get('/finance/accounts', [FinanceController::class, 'accounts'])->name('finance.accounts');
     Route::get('/finance/periods', [FinanceController::class, 'periods'])->name('finance.periods');
@@ -91,6 +109,7 @@ Route::middleware(['auth', 'company', 'permission:inventory.view'])->prefix('adm
 Route::middleware(['auth', 'company', 'permission:project.view'])->prefix('admin')->group(function () {
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
     Route::get('/projects/field-ops', [FieldOpsController::class, 'index'])->name('field-ops.index');
+    Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
     Route::post('/projects/field-ops/drillings', [FieldOpsController::class, 'storeDrilling'])->middleware('permission:project.manage');
     Route::post('/projects/field-ops/drillings/{drilling}/verify', [FieldOpsController::class, 'verifyDrilling'])->middleware('permission:project.manage');
     Route::post('/projects/field-ops/deliveries', [FieldOpsController::class, 'storeDelivery'])->middleware('permission:project.manage');
@@ -108,6 +127,7 @@ Route::middleware(['auth', 'company', 'permission:project.view'])->prefix('admin
 });
 Route::middleware(['auth', 'company', 'permission:tender.view'])->prefix('admin')->group(function () {
     Route::get('/tenders', [TenderController::class, 'index'])->name('tenders.index');
+    Route::get('/tenders/{tender}', [TenderController::class, 'show'])->name('tenders.show');
     Route::post('/customers', [TenderController::class, 'storeCustomer'])->middleware('permission:tender.manage');
     Route::post('/competitors', [TenderController::class, 'storeCompetitor'])->middleware('permission:tender.manage');
     Route::post('/participants', [TenderController::class, 'storeParticipant'])->middleware('permission:tender.manage');
@@ -178,6 +198,7 @@ Route::middleware(['auth', 'company', 'permission:procurement.view'])->prefix('a
     Route::post('/orders/{order}/activate', [ProcurementController::class, 'activate'])->middleware('permission:procurement.manage');
     Route::post('/orders/{order}/receive', [ProcurementController::class, 'receive'])->middleware('permission:inventory.manage');
     Route::post('/orders/{order}/invoice', [ProcurementController::class, 'invoice'])->middleware('permission:finance.manage');
+    Route::post('/vendor-evaluations', [ProcurementController::class, 'storeEvaluation'])->middleware('permission:procurement.manage')->name('procurement.evaluations.store');
 });
 Route::get('/admin/procurement-accounting', [ProcurementController::class, 'accountingIndex'])->middleware(['auth', 'company', 'permission:accounting.post'])->name('procurement.accounting');
 Route::post('/admin/procurement/receipts/{receipt}/post-accounting', [ProcurementController::class, 'postReceipt'])->middleware(['auth', 'company', 'permission:accounting.post']);

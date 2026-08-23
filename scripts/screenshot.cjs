@@ -7,7 +7,14 @@ const OUT = path.join(__dirname, '..', 'public', 'marketing', 'screens');
 
 const PAGES = [
   { name: 'dashboard', url: '/dashboard' },
+  { name: 'apps-launcher', url: '/apps' },
+  { name: 'my-work', url: '/admin/my-work' },
+  { name: 'contracts-administration', url: '/admin/contracts' },
+  { name: 'finance-overview', url: '/admin/finance/overview' },
   { name: 'projects-gantt', url: '/admin/projects' },
+  { name: 'project-detail-overview', url: '/admin/projects/1?tab=overview' },
+  { name: 'project-detail-planning', url: '/admin/projects/1?tab=planning' },
+  { name: 'tenders-kanban', url: '/admin/tenders?view=kanban' },
   { name: 'inventory', url: '/admin/inventory' },
   { name: 'procurement', url: '/admin/procurement' },
   { name: 'manufacturing-control', url: '/admin/manufacturing' },

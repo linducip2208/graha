@@ -11,6 +11,46 @@
 @endforelse
 </div>
 
+@if($executive)
+<h2 class="mt-10 text-xl font-black">Cockpit Eksekutif</h2>
+<div class="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-5">
+<article class="rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">Pendapatan MTD</p><p class="mt-1 text-xl font-black">Rp {{ number_format($executive['revenue_mtd'], 0, ',', '.') }}</p><p class="text-xs text-slate-500">Billing posted bulan ini</p></article>
+<article class="rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">Pendapatan YTD</p><p class="mt-1 text-xl font-black">Rp {{ number_format($executive['revenue_ytd'], 0, ',', '.') }}</p><p class="text-xs text-slate-500">Akumulasi tahun berjalan</p></article>
+<article class="rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">Gross Profit YTD</p><p class="mt-1 text-xl font-black {{ $executive['gp_ytd'] < 0 ? 'text-red-600' : 'text-emerald-700' }}">Rp {{ number_format($executive['gp_ytd'], 0, ',', '.') }}</p><p class="text-xs text-slate-500">Billing − biaya aktual tercatat</p></article>
+<article class="rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">Nilai Kontrak Aktif</p><p class="mt-1 text-xl font-black">Rp {{ number_format($executive['contract_active'], 0, ',', '.') }}</p><p class="text-xs text-slate-500">Proyek aktif berjalan</p></article>
+<article class="rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">Win Rate Tender</p><p class="mt-1 text-xl font-black">{{ $executive['win_rate'] !== null ? $executive['win_rate'].'%' : '-' }}</p><p class="text-xs text-slate-500">Dari tender yang diputuskan</p></article>
+</div>
+@endif
+
+@if($projectHealth->isNotEmpty())
+<h2 class="mt-10 text-xl font-black">Kesehatan Proyek</h2>
+<p class="mt-1 text-sm text-slate-500">Fisik vs rencana, EAC dan margin — status hijau/kuning/merah mengikuti ambang yang dapat diatur di Pengaturan Perusahaan.</p>
+<div class="mt-4 overflow-x-auto rounded-2xl border bg-white shadow-sm">
+<table class="w-full text-sm table-sticky"><thead><tr><th>Proyek</th><th class="text-right">Fisik</th><th class="text-right">Rencana</th><th class="text-right">Varians</th><th class="text-right">EAC</th><th class="text-right">Margin Est.</th><th>Status</th></tr></thead><tbody>
+@foreach($projectHealth as $row)
+<tr onclick="location.href='/admin/projects/{{ $row['project']->id }}'" class="cursor-pointer hover:bg-slate-50 dark:hover:!bg-slate-800">
+<td><strong>{{ $row['project']->code }}</strong> · {{ $row['project']->name }}</td>
+<td class="text-right font-mono">{{ number_format($row['physical'], 1) }}%</td>
+<td class="text-right font-mono">{{ number_format($row['planned'], 1) }}%</td>
+<td class="text-right font-mono {{ abs($row['variance']) > 0 ? ($row['variance'] < 0 ? 'text-red-600' : 'text-emerald-700') : '' }}">{{ $row['variance'] > 0 ? '+' : '' }}{{ number_format($row['variance'], 1) }} pp</td>
+<td class="text-right font-mono">{{ number_format($row['eac'], 0, ',', '.') }}</td>
+<td class="text-right font-mono {{ $row['margin'] !== null && $row['margin'] < 0 ? 'text-red-600' : '' }}">{{ $row['margin'] !== null ? number_format($row['margin'], 1).'%' : '-' }}</td>
+<td>@if($row['health'] === 'green')<span class="rounded-md bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800">● HIJAU</span>@elseif($row['health'] === 'yellow')<span class="rounded-md bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800">● KUNING</span>@else<span class="rounded-md bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-800">● MERAH</span>@endif</td>
+</tr>
+@endforeach
+</tbody></table>
+</div>
+@endif
+
+@if($procurementQueue)
+<h2 class="mt-10 text-xl font-black">Antrean Procurement</h2>
+<div class="mt-4 grid gap-5 sm:grid-cols-3">
+<a href="/admin/procurement/rfq" class="card-lift rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">RFQ Terbuka</p><p class="mt-1 text-2xl font-black">{{ $procurementQueue['rfqOpen'] }}</p></a>
+<a href="/admin/procurement" class="card-lift rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">PO Menunggu Terima</p><p class="mt-1 text-2xl font-black">{{ $procurementQueue['poPendingReceive'] }}</p></a>
+<a href="/admin/procurement" class="card-lift rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">Komitmen PO</p><p class="mt-1 text-2xl font-black">Rp {{ number_format((float) $procurementQueue['poValue'], 0, ',', '.') }}</p></a>
+</div>
+@endif
+
 @if($revenueTrend && $revenueTrend->isNotEmpty())
 <div class="mt-8 grid gap-5 lg:grid-cols-5">
 <article class="rounded-2xl border bg-white p-6 shadow-sm lg:col-span-3">

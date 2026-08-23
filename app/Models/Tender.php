@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Tender extends Model
@@ -28,5 +29,15 @@ class Tender extends Model
     public function outcome(): HasOne
     {
         return $this->hasOne(TenderOutcome::class);
+    }
+
+    public function participants(): HasMany
+    {
+        return $this->hasMany(TenderParticipant::class);
+    }
+
+    public function estimate(): HasOne
+    {
+        return $this->hasOne(TenderEstimate::class);
     }
 }

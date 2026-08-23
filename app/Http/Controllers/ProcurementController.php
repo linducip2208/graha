@@ -8,6 +8,7 @@ use App\Models\Item;
 use App\Models\PurchaseOrder;
 use App\Models\TaxRate;
 use App\Models\Vendor;
+use App\Models\VendorEvaluation;
 use App\Models\VendorInvoice;
 use App\Models\Warehouse;
 use App\Services\ApprovalEngine;
@@ -33,6 +34,7 @@ class ProcurementController extends Controller
             'invoices' => VendorInvoice::where('company_id', $id)->latest()->limit(50)->get(),
             'workflows' => ApprovalWorkflow::where('company_id', $id)->where('document_type', 'purchase_order')->where('is_active', true)->get(),
             'taxRates' => TaxRate::where('company_id', $id)->where('kind', 'ppn_input')->where('is_active', true)->orderBy('code')->get(),
+            'evaluations' => VendorEvaluation::where('company_id', $id)->with('vendor:id,code,name')->latest()->limit(30)->get(),
         ]);
     }
 
@@ -133,6 +135,27 @@ class ProcurementController extends Controller
         $service->postVendorInvoice($invoice, $request->user());
 
         return back()->with('status', 'Jurnal GRNI/AP diposting.');
+    }
+
+    /** Vendor scorecard: rekam evaluasi periodik per vendor (1-5 tiap dimensi). */
+    public function storeEvaluation(Request $request, CurrentCompany $current)
+    {
+        $data = $request->validate([
+            'vendor_id' => ['required', 'integer'],
+            'period' => ['required', 'max:20'],
+            'quality_score' => ['required', 'integer', 'between:1,5'],
+            'delivery_score' => ['required', 'integer', 'between:1,5'],
+            'price_score' => ['required', 'integer', 'between:1,5'],
+            'service_score' => ['required', 'integer', 'between:1,5'],
+            'notes' => ['nullable', 'max:1000'],
+        ]);
+        abort_unless(Vendor::where('company_id', $current->id())->whereKey($data['vendor_id'])->exists(), 422);
+        VendorEvaluation::updateOrCreate(
+            ['company_id' => $current->id(), 'vendor_id' => $data['vendor_id'], 'period' => $data['period']],
+            [...collect($data)->except(['vendor_id', 'period'])->all(), 'evaluated_by' => $request->user()->id]
+        );
+
+        return back()->with('status', 'Scorecard vendor tersimpan.');
     }
 
     private function owned(PurchaseOrder $order, CurrentCompany $current): void

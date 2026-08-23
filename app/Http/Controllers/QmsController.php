@@ -18,9 +18,10 @@ use Illuminate\Http\Request;
 
 class QmsController extends Controller
 {
-    public function index(CurrentCompany $current)
+    public function index(Request $request, CurrentCompany $current)
     {
         $companyId = $current->id();
+        $ncrs = Nonconformity::where('company_id', $companyId)->with('actions')->latest()->limit(50)->get();
 
         return view('qms.index', [
             'objectives' => QualityObjective::where('company_id', $companyId)->orderBy('due_date')->limit(20)->get(),
@@ -29,11 +30,28 @@ class QmsController extends Controller
             'projects' => Project::where('company_id', $companyId)->orderBy('code')->get(),
             'customers' => Customer::where('company_id', $companyId)->orderBy('name')->get(),
             'risks' => RiskOpportunity::where('company_id', $companyId)->latest()->limit(50)->get(),
-            'ncrs' => Nonconformity::where('company_id', $companyId)->with('actions')->latest()->limit(50)->get(),
+            'ncrs' => $ncrs,
             'audits' => InternalAudit::where('company_id', $companyId)->latest('scheduled_at')->limit(50)->get(),
             'departments' => Department::where('company_id', $companyId)->orderBy('name')->get(),
             'users' => User::whereHas('companies', fn ($query) => $query->whereKey($companyId))->orderBy('name')->get(),
+            'kanban' => $request->query('view') === 'kanban' ? $this->ncrKanban($ncrs) : null,
         ]);
+    }
+
+    /** Papan kanban NCR per status, dibangun dari koleksi yang sudah dimuat. */
+    private function ncrKanban($ncrs): array
+    {
+        $columns = [];
+        foreach (['open' => 'Terbuka', 'closed' => 'Selesai'] as $status => $label) {
+            $columns[] = ['label' => $label, 'items' => $ncrs->where('status', $status)->map(fn ($ncr) => [
+                'title' => $ncr->number,
+                'subtitle' => str($ncr->description)->limit(60),
+                'meta' => strtoupper($ncr->severity),
+                'href' => '/admin/qms#timeline-ncr',
+            ])->values()];
+        }
+
+        return $columns;
     }
 
     public function risk(Request $request, CurrentCompany $current, QmsService $service)

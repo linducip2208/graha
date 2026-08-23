@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Contracts\ApprovalSyncable;
 use App\Models\ApprovalDelegation;
 use App\Models\ApprovalRequest;
 use App\Models\ApprovalWorkflow;
@@ -18,15 +19,40 @@ class ApprovalController extends Controller
     public function index(Request $request, CurrentCompany $current)
     {
         $id = $current->id();
+        $pending = ApprovalRequest::where('company_id', $id)->where('status', 'pending')->with(['workflow', 'decisions'])->latest()->get();
+        $history = ApprovalRequest::where('company_id', $id)->where('status', '!=', 'pending')->with('workflow')->latest('completed_at')->limit(100)->get();
 
         return view('approvals.index', [
-            'pending' => ApprovalRequest::where('company_id', $id)->where('status', 'pending')->with(['workflow', 'decisions'])->latest()->get(),
-            'history' => ApprovalRequest::where('company_id', $id)->where('status', '!=', 'pending')->with('workflow')->latest('completed_at')->limit(100)->get(),
+            'pending' => $pending,
+            'history' => $history,
             'workflows' => ApprovalWorkflow::where('company_id', $id)->with('steps.role')->orderBy('document_type')->get(),
             'roles' => Role::where('company_id', $id)->orderBy('name')->get(),
             'users' => User::whereHas('companies', fn ($query) => $query->whereKey($id))->orderBy('name')->get(),
             'delegations' => ApprovalDelegation::where('company_id', $id)->with(['delegator', 'delegate', 'role'])->latest()->get(),
+            'kanban' => $request->query('view') === 'kanban' ? $this->kanban($pending, $history) : null,
         ]);
+    }
+
+    /** Papan kanban status approval, dibangun dari koleksi yang sudah dimuat. */
+    private function kanban($pending, $history): array
+    {
+        $columns = [];
+        $columns[] = ['label' => 'Pending', 'items' => $pending->map(fn ($a) => [
+            'title' => $a->workflow->name,
+            'subtitle' => class_basename($a->approvable_type).' #'.$a->approvable_id,
+            'meta' => $a->currency.' '.number_format((float) $a->amount, 0),
+            'href' => '/admin/approvals',
+        ])->values()];
+        foreach (['approved' => 'Disetujui', 'rejected' => 'Ditolak', 'revision_requested' => 'Revisi'] as $status => $label) {
+            $columns[] = ['label' => $label, 'items' => $history->where('status', $status)->take(20)->map(fn ($a) => [
+                'title' => $a->workflow->name,
+                'subtitle' => class_basename($a->approvable_type).' #'.$a->approvable_id,
+                'meta' => $a->completed_at?->format('d/m/y') ?? strtoupper($a->status),
+                'href' => '/admin/approvals',
+            ])->values()];
+        }
+
+        return $columns;
     }
 
     public function workflow(Request $request, CurrentCompany $current)
@@ -76,6 +102,9 @@ class ApprovalController extends Controller
             'reject' => $engine->reject($approval, $request->user(), $data['comment']),
             'request_revision' => $engine->requestRevision($approval, $request->user(), $data['comment']),
         };
+        if ($approval->approvable instanceof ApprovalSyncable) {
+            $approval->approvable->syncApprovalStatus($data['decision']);
+        }
 
         return back()->with('status', 'Keputusan approval dicatat immutable.');
     }

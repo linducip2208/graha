@@ -3,20 +3,22 @@
 return [
     'visible' => array_values(array_filter(array_map('trim', explode(',', env('VISIBLE_MODULES', 'manufacturing,accounting'))))),
 
+    /*
+    | Workspace UX: Beranda · Komersial · Proyek · Supply Chain ·
+    | Workshop & Equipment · Keuangan · Quality & HSE · Dokumen & Approval ·
+    | Laporan · Pengaturan  (maksimal 10 workspace).
+    */
     'nav' => [
-        ['label' => 'Dashboard', 'items' => [
+        ['label' => '🏠 Beranda', 'items' => [
             ['label' => 'Executive Dashboard', 'href' => '/dashboard', 'icon' => 'dashboard'],
+            ['label' => 'My Work', 'href' => '/admin/my-work', 'icon' => 'check'],
+            ['label' => 'Semua Aplikasi', 'href' => '/apps', 'icon' => 'grid'],
         ]],
-        ['label' => 'Organisasi', 'items' => [
-            ['label' => 'Perusahaan & Role', 'href' => '/admin/organization', 'icon' => 'building', 'permission' => 'organization.view', 'children' => [
-                ['label' => 'Perusahaan & Cabang', 'href' => '/admin/organization'],
-                ['label' => 'Role & Permission', 'href' => '/admin/organization/roles'],
-            ]],
+        ['label' => '💼 Komersial', 'items' => [
+            ['label' => 'Tender & Pelanggan', 'href' => '/admin/tenders', 'icon' => 'flag', 'permission' => 'tender.view'],
+            ['label' => 'Administrasi Kontrak', 'href' => '/admin/contracts', 'icon' => 'document', 'permission' => 'contract.view'],
         ]],
-        ['label' => 'Marketing & Tender', 'items' => [
-            ['label' => 'Pelanggan, Tender & Kompetitor', 'href' => '/admin/tenders', 'icon' => 'flag', 'permission' => 'tender.view'],
-        ]],
-        ['label' => 'Project & Bored Pile', 'items' => [
+        ['label' => '🏗️ Proyek', 'items' => [
             ['label' => 'Proyek, Gantt & Kurva-S', 'href' => '/admin/projects', 'icon' => 'cube', 'permission' => 'project.view'],
             ['label' => 'Field Operations', 'href' => '/admin/projects/field-ops', 'icon' => 'wrench', 'permission' => 'project.view', 'children' => [
                 ['label' => 'Drilling Record & Bore Log', 'href' => '/admin/projects/field-ops#drilling'],
@@ -24,19 +26,19 @@ return [
                 ['label' => 'Pile Testing', 'href' => '/admin/projects/field-ops#testing'],
             ]],
         ]],
-        ['label' => 'Supply Chain', 'items' => [
+        ['label' => '📦 Supply Chain', 'items' => [
             ['label' => 'Inventory & Gudang', 'href' => '/admin/inventory', 'icon' => 'archive', 'permission' => 'inventory.view', 'children' => [
                 ['label' => 'Stok Kritis', 'href' => '/admin/inventory#stok-kritis'],
                 ['label' => 'Stock Opname', 'href' => '/admin/inventory/opname'],
                 ['label' => 'Permintaan Material Proyek', 'href' => '/admin/inventory/material-requests'],
                 ['label' => 'Tools Check-out', 'href' => '/admin/tools'],
             ]],
+            ['label' => 'Procurement', 'href' => '/admin/procurement', 'icon' => 'cart', 'permission' => 'procurement.view', 'children' => [
+                ['label' => 'Vendor, PO & Receipt', 'href' => '/admin/procurement'],
+                ['label' => 'RFQ & Perbandingan Harga', 'href' => '/admin/procurement/rfq'],
+            ]],
         ]],
-        ['label' => 'Procurement', 'items' => [
-            ['label' => 'Vendor, PO & Receipt', 'href' => '/admin/procurement', 'icon' => 'cart', 'permission' => 'procurement.view'],
-            ['label' => 'RFQ & Perbandingan Harga', 'href' => '/admin/procurement/rfq', 'icon' => 'swap', 'permission' => 'procurement.view'],
-        ]],
-        ['label' => 'Engineering & Workshop', 'items' => [
+        ['label' => '🏭 Workshop & Equipment', 'items' => [
             ['label' => 'Manufacturing Control', 'href' => '/admin/manufacturing', 'icon' => 'cog', 'permission' => 'manufacturing.view', 'children' => [
                 ['label' => 'Routing & Biaya Produksi', 'href' => '/admin/manufacturing/costing'],
                 ['label' => 'Quality Control Produksi', 'href' => '/admin/manufacturing/quality'],
@@ -49,7 +51,8 @@ return [
                 ['label' => 'Tangki BBM & Rekonsiliasi', 'href' => '/admin/fuel-tanks'],
             ]],
         ]],
-        ['label' => 'Finance & Accounting', 'items' => [
+        ['label' => '💰 Keuangan', 'items' => [
+            ['label' => 'Ikhtisar Keuangan', 'href' => '/admin/finance/overview', 'icon' => 'pie', 'permission' => 'finance.view'],
             ['label' => 'General Ledger & Periode', 'href' => '/admin/finance', 'icon' => 'banknote', 'permission' => 'finance.view', 'children' => [
                 ['label' => 'Chart of Accounts', 'href' => '/admin/finance/accounts'],
                 ['label' => 'Periode Fiskal', 'href' => '/admin/finance/periods'],
@@ -62,32 +65,34 @@ return [
                 ['label' => 'Pajak & Bukti Potong', 'href' => '/admin/taxes'],
             ]],
             ['label' => 'Kas, Bank & Rekonsiliasi', 'href' => '/admin/cash-bank', 'icon' => 'wallet', 'permission' => 'finance.view'],
-            ['label' => 'Project Costing & EAC', 'href' => '/admin/project-costing', 'icon' => 'pie', 'permission' => 'finance.view'],
+            ['label' => 'Project Costing & EAC', 'href' => '/admin/project-costing', 'icon' => 'chart', 'permission' => 'finance.view'],
             ['label' => 'Fixed Asset & Depresiasi', 'href' => '/admin/fixed-assets', 'icon' => 'briefcase', 'permission' => 'finance.view'],
             ['label' => 'Procurement Posting', 'href' => '/admin/procurement-accounting', 'icon' => 'calculator', 'permission' => 'accounting.post'],
         ]],
-        ['label' => 'Governance', 'items' => [
-            ['label' => 'Document Control', 'href' => '/admin/documents', 'icon' => 'document', 'permission' => 'document.view'],
-        ]],
-        ['label' => 'Approval & Signing', 'items' => [
-            ['label' => 'Inbox & Workflow', 'href' => '/admin/approvals', 'icon' => 'check', 'permission' => 'approval.view'],
-            ['label' => 'Digital Signing', 'href' => '/admin/signatures', 'icon' => 'pen', 'permission' => 'signature.view'],
-        ]],
-        ['label' => 'Quality, HSE & ISO', 'items' => [
+        ['label' => '✅ Quality & HSE', 'items' => [
             ['label' => 'Risiko, NCR & Audit Mutu', 'href' => '/admin/qms', 'icon' => 'shield', 'permission' => 'qms.view'],
             ['label' => 'HSE, JSA & Incident', 'href' => '/admin/hse', 'icon' => 'triangle-alert', 'permission' => 'hse.view'],
         ]],
-        ['label' => 'Administrasi', 'items' => [
-            ['label' => 'Notifikasi', 'href' => '/admin/notifications', 'icon' => 'bell'],
+        ['label' => '📄 Dokumen & Approval', 'items' => [
+            ['label' => 'Document Control', 'href' => '/admin/documents', 'icon' => 'document', 'permission' => 'document.view'],
+            ['label' => 'Approval Center', 'href' => '/admin/approvals', 'icon' => 'check', 'permission' => 'approval.view'],
+            ['label' => 'Digital Signing', 'href' => '/admin/signatures', 'icon' => 'pen', 'permission' => 'signature.view'],
             ['label' => 'Audit Trail', 'href' => '/admin/audit', 'icon' => 'search', 'permission' => 'audit.view'],
-            ['label' => 'Pengaturan Perusahaan', 'href' => '/admin/settings', 'icon' => 'cog'],
         ]],
-        ['label' => 'Laporan', 'items' => [
+        ['label' => '📊 Laporan', 'items' => [
             ['label' => 'Bisnis & Tender', 'href' => '/admin/reports/executive', 'icon' => 'chart', 'permission' => 'report.view'],
             ['label' => 'Keuangan', 'href' => '/admin/reports/finance', 'icon' => 'calculator', 'permission' => 'report.view'],
             ['label' => 'Operasional', 'href' => '/admin/reports/operations', 'icon' => 'dashboard', 'permission' => 'report.view'],
             ['label' => 'Manufaktur', 'href' => '/admin/reports/manufacturing', 'icon' => 'cog', 'permission' => 'report.view'],
             ['label' => 'AR/AP Aging', 'href' => '/admin/reports/aging', 'icon' => 'clock', 'permission' => 'report.view'],
+        ]],
+        ['label' => '⚙️ Pengaturan', 'items' => [
+            ['label' => 'Perusahaan & Role', 'href' => '/admin/organization', 'icon' => 'building', 'permission' => 'organization.view', 'children' => [
+                ['label' => 'Perusahaan & Cabang', 'href' => '/admin/organization'],
+                ['label' => 'Role & Permission', 'href' => '/admin/organization/roles'],
+            ]],
+            ['label' => 'Pengaturan Perusahaan', 'href' => '/admin/settings', 'icon' => 'cog'],
+            ['label' => 'Notifikasi', 'href' => '/admin/notifications', 'icon' => 'bell'],
         ]],
     ],
 ];

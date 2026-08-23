@@ -23,11 +23,11 @@ class Navigation
     private static function filterItems(Collection $items, User $user, ?int $companyId, Collection $visibleModules): Collection
     {
         return $items->map(function (array $item) use ($user, $companyId, $visibleModules) {
-            if (! empty($item['children'])) {
-                return $item;
-            }
             if (! empty($item['permission']) && ! $user->hasPermission($item['permission'], (int) $companyId)) {
                 return null;
+            }
+            if (! empty($item['children'])) {
+                return $item;
             }
             if (! self::isVisibleForModule((string) $item['href'], $visibleModules)) {
                 return null;

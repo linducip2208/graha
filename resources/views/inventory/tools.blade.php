@@ -30,7 +30,7 @@
 <input name="condition_note" placeholder="Catatan kondisi saat kembali" class="w-48 rounded-lg border p-1.5 text-xs">
 <button @disabled($tool->status !== 'checked_out') class="font-bold text-emerald-700 disabled:opacity-40">Check-in</button>
 </form>
-<form method="post" action="/admin/tools/{{ $tool->id }}/lost" class="inline-flex flex-wrap items-end gap-2 no-print">@csrf
+<form method="post" action="/admin/tools/{{ $tool->id }}/lost" data-confirm="Tandai alat {{ $tool->code }} sebagai HILANG? Tindakan tercatat di audit trail dan tidak dapat dibatalkan." class="inline-flex flex-wrap items-end gap-2 no-print">@csrf
 <input name="lost_note" required placeholder="Alasan hilang" class="w-36 rounded-lg border p-1.5 text-xs">
 <button onclick="return confirm('Laporkan alat ini HILANG? Status tidak dapat dikembalikan.')" @disabled($tool->status === 'lost') class="font-bold text-red-600 disabled:opacity-40">Hilang</button>
 </form>

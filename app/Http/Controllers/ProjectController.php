@@ -3,28 +3,150 @@
 namespace App\Http\Controllers;
 
 use App\Models\BoredPile;
+use App\Models\BoredPileDrilling;
+use App\Models\ConcreteDelivery;
+use App\Models\ContractChange;
+use App\Models\MaterialRequest;
+use App\Models\PileTest;
 use App\Models\ProgressBilling;
 use App\Models\Project;
+use App\Models\ProjectWbs;
 use App\Models\ProjectZone;
+use App\Models\PurchaseOrder;
+use App\Models\Rfq;
 use App\Services\BoredPileService;
+use App\Services\ProjectCostingService;
 use App\Support\Tenancy\CurrentCompany;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProjectController extends Controller
 {
     public function index(Request $request, CurrentCompany $current)
     {
         $companyId = $current->id();
-        $projects = Project::where('company_id', $companyId)->withCount('boredPiles')->latest()->get();
-        $selected = $projects->firstWhere('id', (int) $request->query('project')) ?? $projects->first();
+
+        // Saved view via query string: filter status + kata kunci dapat dibagikan sebagai URL.
+        $query = Project::where('company_id', $companyId)->withCount('boredPiles')->latest();
+        if ($status = $request->query('status')) {
+            $query->where('status', $status);
+        }
+        if ($term = trim((string) $request->query('q'))) {
+            $query->where(fn ($w) => $w->where('code', 'like', "%{$term}%")->orWhere('name', 'like', "%{$term}%"));
+        }
+        $projects = $query->get();
+        $allProjects = Project::where('company_id', $companyId)->withCount('boredPiles')->latest()->get();
+        $selected = $allProjects->firstWhere('id', (int) $request->query('project')) ?? $allProjects->first();
 
         return view('projects.index', [
             'projects' => $projects,
+            'allProjects' => $allProjects,
+            'statusCounts' => $allProjects->countBy('status'),
             'zones' => ProjectZone::whereHas('project', fn ($q) => $q->where('company_id', $companyId))->with('project')->get(),
             'piles' => BoredPile::whereHas('project', fn ($q) => $q->where('company_id', $companyId))->with(['project', 'zone'])->latest()->paginate(30),
             'schedule' => $selected ? $this->buildSchedule($selected) : null,
+            'kanban' => $request->query('view') === 'kanban' ? $this->kanban($projects) : null,
         ]);
+    }
+
+    /** Papan kanban portofolio proyek per status. */
+    private function kanban($projects): array
+    {
+        $columns = [];
+        foreach (['draft' => 'Direncanakan', 'in_progress' => 'Berjalan', 'active' => 'Aktif', 'closed' => 'Selesai'] as $status => $label) {
+            $columns[] = ['label' => $label, 'items' => $projects->where('status', $status)->map(fn ($p) => [
+                'title' => $p->code.' — '.$p->name,
+                'subtitle' => $p->location,
+                'meta' => $p->bored_piles_count.' pile',
+                'href' => '/admin/projects/'.$p->id,
+            ])->values()];
+        }
+
+        return $columns;
+    }
+
+    /** Workspace detail proyek: satu halaman bertab menggantikan navigasi tersebar. */
+    public function show(Request $request, Project $project, CurrentCompany $current)
+    {
+        abort_unless($project->company_id === $current->id(), 404);
+        $companyId = $current->id();
+        $user = $request->user();
+        $can = fn (string $permission): bool => $user->hasPermission($permission, $companyId);
+        $tab = $request->query('tab', 'overview');
+
+        $piles = BoredPile::where('project_id', $project->id)->with(['zone', 'activities'])->orderBy('pile_number')->get();
+
+        $data = ['project' => $project, 'piles' => $piles, 'activeTab' => $tab];
+
+        if ($tab === 'overview') {
+            $data['costing'] = $can('finance.view') ? app(ProjectCostingService::class)->summary($project) : null;
+            $contract = (float) ($project->contract_value ?: 0);
+            $data['physicalPercent'] = 0.0;
+            $data['plannedPercent'] = null;
+            if ($contract > 0 && $project->planned_start && $project->planned_end) {
+                $billed = ProgressBilling::where('project_id', $project->id)->where('status', 'posted')->sum('gross_amount');
+                $data['physicalPercent'] = round(min(100.0, (float) $billed * 100 / $contract), 1);
+                $totalDays = max(1, $project->planned_start->diffInDays($project->planned_end));
+                $elapsed = min($totalDays, max(0, $project->planned_start->diffInDays(now())));
+                $data['plannedPercent'] = round($elapsed * 100 / $totalDays, 1);
+            }
+        }
+
+        if ($tab === 'planning') {
+            $data['schedule'] = $this->buildSchedule($project);
+            $data['wbs'] = ProjectWbs::where('project_id', $project->id)->orderBy('code')->get();
+        }
+
+        if ($tab === 'fieldops' && $can('project.view')) {
+            $pileIds = $piles->pluck('id');
+            $drillings = BoredPileDrilling::whereIn('bored_pile_id', $pileIds)->get(['id']);
+            $deliveries = ConcreteDelivery::where('project_id', $project->id)->get(['id']);
+            $tests = PileTest::where('project_id', $project->id)->get(['id']);
+            $data['drillings'] = BoredPileDrilling::whereIn('bored_pile_id', $pileIds)->latest('drilling_started_at')->limit(20)->get();
+            $data['deliveries'] = ConcreteDelivery::where('project_id', $project->id)->latest('arrived_at')->limit(20)->get();
+            $data['tests'] = PileTest::where('project_id', $project->id)->orderByDesc('scheduled_date')->limit(20)->get();
+            $data['evidences'] = FieldEvidence::where(function ($q) use ($drillings, $deliveries, $tests): void {
+                $q->where(fn ($t) => $t->where('evidence_type', 'drilling')->whereIn('evidence_id', $drillings->pluck('id')))
+                    ->orWhere(fn ($t) => $t->where('evidence_type', 'delivery')->whereIn('evidence_id', $deliveries->pluck('id')))
+                    ->orWhere(fn ($t) => $t->where('evidence_type', 'test')->whereIn('evidence_id', $tests->pluck('id')));
+            })->latest()->limit(30)->get();
+        }
+
+        if ($tab === 'materials' && $can('inventory.view')) {
+            $data['materialRequests'] = MaterialRequest::with('lines.item')->where('project_id', $project->id)->latest()->get();
+        }
+
+        if ($tab === 'procurement' && $can('procurement.view')) {
+            $data['purchaseOrders'] = PurchaseOrder::whereHas('purchaseRequest', fn ($q) => $q->where('project_id', $project->id))->with('vendor:id,name')->latest()->limit(25)->get();
+            $data['rfqs'] = Rfq::where('project_id', $project->id)->withCount('vendors')->latest()->limit(15)->get();
+        }
+
+        if ($tab === 'contracts' && $can('contract.view')) {
+            $data['contractChanges'] = ContractChange::where('project_id', $project->id)->with('submitter:id,name')->latest()->get();
+        }
+
+        if ($tab === 'cost' && $can('finance.view')) {
+            $data['costByCode'] = DB::table('project_cost_ledger')->join('project_cost_codes', 'project_cost_codes.id', '=', 'project_cost_ledger.project_cost_code_id')
+                ->where('project_cost_ledger.project_id', $project->id)
+                ->selectRaw('project_cost_codes.code, project_cost_codes.name, project_cost_ledger.cost_type, SUM(project_cost_ledger.amount) as total')
+                ->groupBy('project_cost_codes.code', 'project_cost_codes.name', 'project_cost_ledger.cost_type')->get();
+            $data['costing'] = app(ProjectCostingService::class)->summary($project);
+        }
+
+        if ($tab === 'billing' && $can('finance.view')) {
+            $data['billings'] = ProgressBilling::where('project_id', $project->id)->with('journal')->latest('billing_date')->get();
+        }
+
+        if ($tab === 'quality' && $can('qms.view')) {
+            $data['ncrs'] = Nonconformity::where('project_id', $project->id)->with('actions')->latest()->get();
+        }
+
+        if ($tab === 'hse' && $can('hse.view')) {
+            $data['incidents'] = HseIncident::where('project_id', $project->id)->latest()->get();
+        }
+
+        return view('projects.show', $data);
     }
 
     private function buildSchedule(Project $project): array

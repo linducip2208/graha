@@ -6,12 +6,44 @@ use App\Models\Account;
 use App\Models\AccountingMapping;
 use App\Models\FiscalPeriod;
 use App\Models\Journal;
+use App\Models\ProgressBilling;
+use App\Models\VendorInvoice;
 use App\Services\AccountingService;
+use App\Services\ReceivablePayableAgingService;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class FinanceController extends Controller
 {
+    /** Ikhtisar keuangan: ringkasan posisi kas, AR/AP, billing, dan tautan modul. */
+    public function overview(CurrentCompany $current)
+    {
+        $companyId = $current->id();
+        $billing = ProgressBilling::where('company_id', $companyId)->where('status', 'posted');
+        $aging = null;
+
+        try {
+            $aging = app(ReceivablePayableAgingService::class)->generate($companyId, now());
+        } catch (\Throwable) {
+            $aging = null;
+        }
+
+        return view('finance.overview', [
+            'revenueMtd' => (float) (clone $billing)->whereBetween('billing_date', [now()->startOfMonth(), now()])->sum('gross_amount'),
+            'revenueYtd' => (float) (clone $billing)->whereBetween('billing_date', [now()->startOfYear(), now()])->sum('gross_amount'),
+            'arOutstanding' => $aging['ar_total'] ?? 0,
+            'apOutstanding' => $aging['ap_total'] ?? 0,
+            'cashBalance' => (float) DB::table('journal_entries')
+                ->join('bank_accounts', 'bank_accounts.account_id', '=', 'journal_entries.account_id')
+                ->where('bank_accounts.company_id', $companyId)
+                ->selectRaw('COALESCE(SUM(journal_entries.debit - journal_entries.credit), 0) as bal')->value('bal'),
+            'pendingBillings' => ProgressBilling::where('company_id', $companyId)->whereIn('status', ['draft', 'pending_approval'])->count(),
+            'openVendorInvoices' => VendorInvoice::where('company_id', $companyId)->whereNotIn('match_status', ['posted'])->count(),
+            'recentJournals' => Journal::where('company_id', $companyId)->with('entries')->latest('journal_date')->limit(8)->get(),
+        ]);
+    }
+
     public function index(CurrentCompany $current)
     {
         return view('finance.index', ['accounts' => Account::where('company_id', $current->id())->orderBy('code')->get(), 'mappings' => AccountingMapping::where('company_id', $current->id())->with('account')->orderBy('event_type')->get(), 'periods' => FiscalPeriod::where('company_id', $current->id())->latest('starts_at')->get(), 'journals' => Journal::where('company_id', $current->id())->with('entries')->latest('journal_date')->paginate(25)]);

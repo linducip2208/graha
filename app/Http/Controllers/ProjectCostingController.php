@@ -13,7 +13,7 @@ class ProjectCostingController extends Controller
     {
         $projects = Project::where('company_id', $current->id())->orderBy('code')->get();
 
-        return view('project-costing.index', ['projects' => $projects, 'summaries' => $projects->mapWithKeys(fn ($project) => [$project->id => $service->summary($project)])]);
+        return view('project-costing.index', ['projects' => $projects, 'summaries' => collect($service->summariesFor($projects))]);
     }
 
     public function forecast(Request $request, CurrentCompany $current, ProjectCostingService $service)

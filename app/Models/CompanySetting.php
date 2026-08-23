@@ -20,6 +20,8 @@ class CompanySetting extends Model
         'require_pile_test_pass' => '0',
         'require_cage_passed' => '0',
         'steel_variance_tolerance_percent' => '5',
+        'project_health_yellow_percent' => '10',
+        'project_health_red_percent' => '20',
         'invoice_footer_note' => 'Terima kasih atas kerja sama Anda.',
     ];
 
