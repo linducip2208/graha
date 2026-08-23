@@ -14,6 +14,7 @@ class CompanySetting extends Model
         'company_email' => '',
         'company_npwp' => '',
         'default_payment_term_days' => '30',
+        'default_vendor_payment_term_days' => '30',
         'default_retention_percent' => '5',
         'default_ppn_percent' => '11',
         'default_overbreak_tolerance_percent' => '8',

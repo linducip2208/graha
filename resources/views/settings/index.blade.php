@@ -20,6 +20,7 @@
 <p class="mt-1 text-sm text-slate-500">Nilai awal form operasional dan gate kualitas.</p>
 <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
 <label class="block text-sm font-semibold">Termin Pembayaran (hari)<input type="number" min="0" max="365" name="default_payment_term_days" value="{{ $values['default_payment_term_days'] }}" required class="mt-1 w-full rounded-xl border p-3"></label>
+<label class="block text-sm font-semibold">Termin Utang Vendor (hari)<input type="number" min="0" max="365" name="default_vendor_payment_term_days" value="{{ $values['default_vendor_payment_term_days'] }}" required class="mt-1 w-full rounded-xl border p-3" title="Jatuh tempo default invoice vendor tanpa due date — dipakai laporan aging AP"></label>
 <label class="block text-sm font-semibold">Retensi Default (%)<input type="number" step=".0001" min="0" max="100" name="default_retention_percent" value="{{ $values['default_retention_percent'] }}" required class="mt-1 w-full rounded-xl border p-3"></label>
 <label class="block text-sm font-semibold">PPN Default (%)<input type="number" step=".0001" min="0" max="100" name="default_ppn_percent" value="{{ $values['default_ppn_percent'] }}" required class="mt-1 w-full rounded-xl border p-3"></label>
 <label class="block text-sm font-semibold">Toleransi Overbreak (%)<input type="number" step=".001" min="0" max="100" name="default_overbreak_tolerance_percent" value="{{ $values['default_overbreak_tolerance_percent'] }}" required class="mt-1 w-full rounded-xl border p-3"></label>

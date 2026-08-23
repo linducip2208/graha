@@ -39,6 +39,7 @@ class SettingsController extends Controller
             'company_email' => ['nullable', 'email', 'max:120'],
             'company_npwp' => ['nullable', 'max:40'],
             'default_payment_term_days' => ['required', 'integer', 'between:0,365'],
+            'default_vendor_payment_term_days' => ['required', 'integer', 'between:0,365'],
             'default_retention_percent' => ['required', 'decimal:0,4', 'between:0,100'],
             'default_ppn_percent' => ['required', 'decimal:0,4', 'between:0,100'],
             'default_overbreak_tolerance_percent' => ['required', 'decimal:0,3', 'between:0,100'],

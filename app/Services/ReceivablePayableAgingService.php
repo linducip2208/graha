@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\CompanySetting;
 use App\Models\ProgressBilling;
 use App\Models\VendorInvoice;
 use Illuminate\Support\Carbon;
@@ -17,12 +18,12 @@ class ReceivablePayableAgingService
 
             return ['type' => 'AR', 'number' => $billing->number, 'party' => $billing->project?->customer?->name ?? 'Customer', 'date' => $billing->billing_date, 'due_date' => $billing->due_date ?? $billing->billing_date->copy()->addDays($billing->project?->customer?->payment_term_days ?? 30), 'amount' => (string) $billing->net_receivable, 'paid' => $paid, 'outstanding' => $outstanding];
         })->filter(fn (array $row) => bccomp($row['outstanding'], '0', 2) === 1)->values();
-        $payables = VendorInvoice::where('company_id', $companyId)->where('match_status', 'matched')->whereDate('invoice_date', '<=', $asOf)->with('vendor')->get()->map(function (VendorInvoice $invoice) use ($asOf): array {
+        $payables = VendorInvoice::where('company_id', $companyId)->where('match_status', 'matched')->whereDate('invoice_date', '<=', $asOf)->with('vendor')->get()->map(function (VendorInvoice $invoice) use ($asOf, $companyId): array {
             $payments = $invoice->vendorPayments()->where('status', 'posted')->whereDate('payment_date', '<=', $asOf);
             $paid = bcadd((string) $payments->sum('amount'), (string) $payments->sum('withholding_amount'), 2);
             $outstanding = bcsub((string) $invoice->total, $paid, 2);
 
-            return ['type' => 'AP', 'number' => $invoice->number, 'party' => $invoice->vendor?->name ?? 'Vendor', 'date' => $invoice->invoice_date, 'due_date' => $invoice->invoice_date->copy()->addDays(30), 'amount' => (string) $invoice->total, 'paid' => $paid, 'outstanding' => $outstanding];
+            return ['type' => 'AP', 'number' => $invoice->number, 'party' => $invoice->vendor?->name ?? 'Vendor', 'date' => $invoice->invoice_date, 'due_date' => $invoice->invoice_date->copy()->addDays((int) CompanySetting::val($companyId, 'default_vendor_payment_term_days')), 'amount' => (string) $invoice->total, 'paid' => $paid, 'outstanding' => $outstanding];
         })->filter(fn (array $row) => bccomp($row['outstanding'], '0', 2) === 1)->values();
 
         $rows = $receivables->concat($payables)->map(function (array $row) use ($asOf): array {

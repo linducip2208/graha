@@ -280,3 +280,11 @@ Item Pending yang tersisa (di luar scope penutupan ini):
 Backlog sebelumnya dari commit workspace UX yang ikut diselesaikan/terverifikasi: badge batas nominal workflow config (sudah ada), saved view projects+tenders (lengkap), anti-N+1 `summariesFor()` (sudah ada). Test audit completeness diperluas (`AuditCompletenessTest::test_operational_and_fx_flows_leave_audit_trail`) mencakup event MWO/CAPA; smoke halaman tools/casings/cages/operations + saved view tender ditambahkan di `WorkspaceNavigationTest`. Unrealized FX revaluation sengaja tidak dikerjakan (ADR-040).
 
 Verifikasi penutupan sesi: 119 tests / 420 assertions lulus, pint bersih, semua Blade terkompilasi (bug berdempet `@empty@endforelse` di 3 view diperbaiki sesuai ADR-037).
+
+# Pembaruan 2026-08-24 - Termin Utang Vendor Configurable (ADR-043)
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| FIN-TERM-001 | Accounting | Jatuh tempo default invoice vendor dari company setting `default_vendor_payment_term_days` (bukan hardcoded 30 hari) | Tested | ReceivablePayableAgingTest | Setting editable di /admin/settings; dipakai aging AP |
+
+Item "Decision required" ADR-027 selesai. Sisa terbuka hanya BPM-001 (menunggu workbook eksternal) dan unrealized FX (sengaja tidak dikerjakan per ADR-040).
