@@ -79,6 +79,9 @@ class BillingController extends Controller
             'company' => $company,
             'customerName' => $billing->project?->customer?->name ?? 'Pelanggan',
             'signer' => $request->user()->name,
+            'signerSignature' => $request->user()->signature_image && \Storage::disk('local')->exists($request->user()->signature_image)
+                ? 'data:image/png;base64,'.base64_encode(\Storage::disk('local')->get($request->user()->signature_image))
+                : null,
         ];
         if ($request->query('format') === 'thermal') {
             return view('pdf.billing-thermal', $payload);

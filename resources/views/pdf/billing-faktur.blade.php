@@ -38,7 +38,7 @@ table.detail th{background:#f1f5f9;text-align:left;font-size:10px;text-transform
 <div class="terbilang"><strong>Terbilang:</strong> {{ \App\Support\Terbilang::rupiah((string) $billing->net_receivable) }}</div>
 <p style="font-size:10px;color:#64748b">Pembayaran mohon ditransfer ke rekening yang tercantum pada penawaran. Mohon lampirkan bukti potong PPh (bila dikenakan pemotongan) bersama dokumen pembayaran.</p>
 <div class="ttd">
-<div class="box"><p>Hormat kami,</p><div class="sign">{{ $signer }}</div></div>
+<div class="box">@if(!empty($signerSignature))<img src="{{ $signerSignature }}" style="height:44px;margin:0 auto 2px;display:block">@endif<p>Hormat kami,</p><div class="sign">{{ $signer }}</div></div>
 <div class="box"><p>Diterima oleh,</p><div class="sign">&nbsp;</div></div>
 </div>
 <div class="footer">Dokumen ini dihasilkan otomatis oleh {{ config('app.name') }} · Status jurnal: {{ strtoupper($billing->status) }}</div>

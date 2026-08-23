@@ -26,6 +26,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RfqController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SignatureController;
+use App\Http\Controllers\SignatureImageController;
 use App\Http\Controllers\StockOpnameController;
 use App\Http\Controllers\TaxController;
 use App\Http\Controllers\TenderController;
@@ -253,6 +254,8 @@ Route::get('/admin/fuel-tanks', [FuelTankController::class, 'index'])->middlewar
 Route::post('/admin/fuel-tanks', [FuelTankController::class, 'store'])->middleware(['auth', 'company', 'permission:equipment.manage']);
 Route::post('/admin/fuel-tanks/{tank}/record', [FuelTankController::class, 'record'])->middleware(['auth', 'company', 'permission:equipment.manage']);
 Route::post('/admin/fuel-tanks/{tank}/reconcile', [FuelTankController::class, 'reconcile'])->middleware(['auth', 'company', 'permission:equipment.manage']);
+Route::get('/admin/my-signature', [SignatureImageController::class, 'download'])->middleware(['auth'])->name('signature-image.download');
+Route::post('/admin/my-signature', [SignatureImageController::class, 'upload'])->middleware(['auth'])->name('signature-image.upload');
 Route::get('/admin/casings', [CasingController::class, 'index'])->middleware(['auth', 'company', 'permission:equipment.view'])->name('casings.index');
 Route::post('/admin/casings', [CasingController::class, 'store'])->middleware(['auth', 'company', 'permission:equipment.manage']);
 Route::post('/admin/casings/{casing}/move', [CasingController::class, 'move'])->middleware(['auth', 'company', 'permission:equipment.manage']);
