@@ -24,6 +24,16 @@ use Illuminate\Validation\ValidationException;
 
 class ProcurementController extends Controller
 {
+    /** Vendor lifecycle (ADR-054): suspend/blacklist wajib alasan; audit penuh. */
+    public function setVendorStatus(Request $request, Vendor $vendor, CurrentCompany $current, PlanningSupportService $service)
+    {
+        abort_unless($vendor->company_id === $current->id(), 404);
+        $data = $request->validate(['status' => ['required', 'in:approved,suspended,blacklisted'], 'note' => ['nullable', 'max:300']]);
+        $service->setVendorStatus($current->id(), $vendor->id, $data['status'], $data['note'] ?? null, $request->user());
+
+        return back()->with('status', "Vendor {$vendor->name} → {$data['status']}.");
+    }
+
     public function index(CurrentCompany $current)
     {
         $id = $current->id();
@@ -57,7 +67,7 @@ class ProcurementController extends Controller
     public function order(Request $request, CurrentCompany $current, PurchaseOrderService $service)
     {
         $data = $request->validate(['number' => ['required', 'max:80', 'unique:purchase_orders,number,NULL,id,company_id,'.$current->id()], 'vendor_id' => ['required', 'exists:vendors,id'], 'order_date' => ['required', 'date'], 'currency' => ['required', 'size:3'], 'item_id' => ['required', 'exists:items,id'], 'quantity' => ['required', 'decimal:0,4', 'gt:0'], 'unit_price' => ['required', 'decimal:0,2', 'gt:0']]);
-        abort_unless(Vendor::where('company_id', $current->id())->whereKey($data['vendor_id'])->exists() && Item::where('company_id', $current->id())->whereKey($data['item_id'])->exists(), 422);
+        abort_unless(Vendor::where('company_id', $current->id())->whereKey($data['vendor_id'])->where('status', 'approved')->exists() && Item::where('company_id', $current->id())->whereKey($data['item_id'])->exists(), 422);
         $order = DB::transaction(function () use ($data, $current, $request) {
             $order = PurchaseOrder::create(['company_id' => $current->id(), 'vendor_id' => $data['vendor_id'], 'number' => $data['number'], 'order_date' => $data['order_date'], 'currency' => strtoupper($data['currency']), 'created_by' => $request->user()->id]);
             $order->items()->create(['item_id' => $data['item_id'], 'quantity' => $data['quantity'], 'unit_price' => $data['unit_price']]);

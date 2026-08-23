@@ -131,6 +131,7 @@ Route::middleware(['auth', 'company', 'permission:project.view'])->prefix('admin
     Route::post('/bored-piles/{pile}/concrete', [ProjectController::class, 'concrete'])->middleware('permission:project.manage');
     Route::post('/projects/{project}/constraints', [ProjectController::class, 'storeConstraint'])->middleware('permission:project.manage');
     Route::post('/constraints/{constraint}/status', [ProjectController::class, 'updateConstraintStatus'])->middleware('permission:project.manage');
+    Route::post('/projects/{project}/wbs', [ProjectController::class, 'storeWbs'])->middleware('permission:project.manage');
     Route::post('/projects/{project}/procurement-plans', [ProjectController::class, 'storePlan'])->middleware('permission:procurement.manage');
     Route::post('/procurement-plans/{plan}/link', [ProjectController::class, 'linkPlanDocument'])->middleware('permission:procurement.manage');
 });
@@ -212,6 +213,7 @@ Route::middleware(['auth', 'company', 'permission:procurement.view'])->prefix('a
     Route::post('/orders/{order}/receive', [ProcurementController::class, 'receive'])->middleware('permission:inventory.manage');
     Route::post('/orders/{order}/invoice', [ProcurementController::class, 'invoice'])->middleware('permission:finance.manage');
     Route::post('/vendor-evaluations', [ProcurementController::class, 'storeEvaluation'])->middleware('permission:procurement.manage')->name('procurement.evaluations.store');
+    Route::post('/vendors/{vendor}/status', [ProcurementController::class, 'setVendorStatus'])->middleware('permission:procurement.manage');
 });
 Route::get('/admin/procurement-accounting', [ProcurementController::class, 'accountingIndex'])->middleware(['auth', 'company', 'permission:accounting.post'])->name('procurement.accounting');
 Route::post('/admin/procurement/receipts/{receipt}/post-accounting', [ProcurementController::class, 'postReceipt'])->middleware(['auth', 'company', 'permission:accounting.post']);

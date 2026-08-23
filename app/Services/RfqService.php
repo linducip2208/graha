@@ -44,6 +44,7 @@ class RfqService
             foreach ($vendorIds as $vendorId) {
                 $vendor = Vendor::where('company_id', $rfq->company_id)->find($vendorId);
                 throw_unless($vendor, ValidationException::withMessages(['vendors' => "Vendor #{$vendorId} tidak ditemukan di perusahaan ini."]));
+                throw_unless($vendor->status === 'approved', ValidationException::withMessages(['vendors' => "Vendor {$vendor->name} berstatus {$vendor->status} — hanya vendor approved yang dapat diundang."]));
                 if (RfqVendor::where('rfq_id', $rfq->id)->where('vendor_id', $vendorId)->exists()) {
                     continue;
                 }

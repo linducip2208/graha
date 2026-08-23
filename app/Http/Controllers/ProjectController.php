@@ -26,6 +26,7 @@ use App\Support\Tenancy\CurrentCompany;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class ProjectController extends Controller
 {
@@ -112,7 +113,7 @@ class ProjectController extends Controller
 
         if ($tab === 'planning') {
             $data['schedule'] = $this->buildSchedule($project);
-            $data['wbs'] = ProjectWbs::where('project_id', $project->id)->orderBy('code')->get();
+            $data['wbsTree'] = PlanningSupportService::wbsTree($project->id);
             $data['constraints'] = ConstraintLog::where('project_id', $project->id)->with(['pile:id,pile_number', 'recorder:id,name'])->orderByRaw("FIELD(status,'open','in_progress','resolved')")->orderBy('raised_at')->limit(50)->get();
         }
 
@@ -338,5 +339,25 @@ class ProjectController extends Controller
         $plan = $service->linkDocument($plan, $d['kind'], (int) $d['document_id'], $r->user());
 
         return back()->with('status', 'Rencana tertaut ke '.strtoupper($d['kind']).' #'.$plan->{ $d['kind'] === 'pr' ? 'purchase_request_id' : 'purchase_order_id' }.'.');
+    }
+
+    /** WBS hierarki (ADR-055): parent satu proyek, kedalaman maksimum 4 level. */
+    public function storeWbs(Request $r, Project $project, CurrentCompany $current, PlanningSupportService $service)
+    {
+        abort_unless($project->company_id === $current->id(), 404);
+        $d = $r->validate([
+            'code' => ['required', 'max:50'],
+            'name' => ['required', 'max:180'],
+            'budget' => ['nullable', 'decimal:0,2', 'min:0'],
+            'parent_id' => ['nullable', 'integer'],
+        ]);
+        $d['budget'] ??= '0';
+        try {
+            $service->createWbs($project->id, $d + ['company_id' => $project->company_id], $r->user());
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+        }
+
+        return back()->with('status', "WBS {$d['code']} — {$d['name']} ditambahkan.");
     }
 }
