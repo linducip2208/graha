@@ -3,9 +3,11 @@
 namespace Tests\Feature\Equipment;
 
 use App\Models\Company;
+use App\Models\Equipment;
 use App\Models\FuelTank;
 use App\Models\FuelTankTransaction;
 use App\Models\User;
+use App\Services\EquipmentService;
 use App\Services\FuelTankService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
@@ -46,6 +48,29 @@ class FuelTankTest extends TestCase
 
         $this->expectException(ValidationException::class);
         app(FuelTankService::class)->record($tankA, ['type' => 'receipt', 'liters' => '100', 'occurred_at' => now(), 'idempotency_key' => 'x1'], $userB);
+    }
+
+    public function test_record_fuel_with_tank_deducts_balance_and_guards_shortage(): void
+    {
+        // ADR-044: pemakaian BBM equipment otomatis memotong tangki terpilih.
+        [$company, $user, $tank] = $this->fixture();
+        $service = app(FuelTankService::class);
+        $service->record($tank, ['type' => 'receipt', 'liters' => '500', 'occurred_at' => now(), 'reference' => 'DO-SOLAR', 'idempotency_key' => 'r-link', 'project_id' => null, 'equipment_id' => null], $user);
+        $equipment = Equipment::create(['company_id' => $company->id, 'code' => 'EX-FT', 'name' => 'Excavator', 'ownership' => 'owned', 'category' => 'excavator', 'current_hour_meter' => '100']);
+
+        app(EquipmentService::class)->recordFuel($equipment, '80', '100', '105', 'DO-FUEL-1', $user, null, $tank->id);
+
+        $this->assertSame('420.00', number_format((float) $service->balance($tank), 2, '.', ''));
+        $issue = FuelTankTransaction::where('fuel_tank_id', $tank->id)->where('type', 'issue_to_equipment')->first();
+        $this->assertSame('-80.00', (string) $issue->liters);
+        $this->assertSame($equipment->id, (int) $issue->equipment_id);
+
+        try {
+            app(EquipmentService::class)->recordFuel($equipment, '9999', '105', '110', 'DO-FUEL-2', $user, null, $tank->id);
+            $this->fail('Pemakaian melebihi saldo tangki harus ditolak.');
+        } catch (ValidationException) {
+            $this->assertSame('420.00', number_format((float) $service->balance($tank), 2, '.', ''));
+        }
     }
 
     private function fixture(string $code = 'FT'): array

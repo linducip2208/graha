@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AccountingMapping;
 use App\Models\CasingMovement;
 use App\Models\CasingUnit;
 use App\Models\User;
@@ -21,7 +22,7 @@ class CasingService
         'lost' => ['in_stock', 'installed', 'extracted', 'damage_reported'],
     ];
 
-    public function __construct(private AuditTrail $audit) {}
+    public function __construct(private AuditTrail $audit, private AccountingService $accounting) {}
 
     public function create(int $companyId, array $data, User $actor): CasingUnit
     {
@@ -57,6 +58,18 @@ class CasingService
             }
             $movement = CasingMovement::create(['casing_unit_id' => $unit->id, 'type' => $type, 'bored_pile_id' => $pileId, 'occurred_at' => $occurredAt, 'notes' => $notes, 'cost' => (string) $cost, 'recorded_by' => $actor->id]);
             $unit->update($update);
+            // Biaya sewa casing tercatat otomatis ke GL (ADR-046) via mapping
+            // configurable: debit biaya sewa / kredit utang sewa.
+            if (bccomp((string) $cost, '0', 2) === 1) {
+                $maps = AccountingMapping::where('company_id', $unit->company_id)->where('event_type', 'casing_rental_cost')->get()->keyBy('entry_side');
+                foreach (['expense_debit', 'payable_credit'] as $side) {
+                    throw_unless($maps->has($side), ValidationException::withMessages(['cost' => "Mapping casing_rental_cost/{$side} belum tersedia — isi biaya 0 atau lengkapi mapping."]));
+                }
+                $this->accounting->post($unit->company_id, $occurredAt->toDateString(), 'casing_rental_cost', (string) $movement->id, 'Sewa casing '.$unit->code.' ('.$type.')', [
+                    ['account_id' => $maps['expense_debit']->account_id, 'debit' => (string) $cost, 'credit' => '0'],
+                    ['account_id' => $maps['payable_credit']->account_id, 'debit' => '0', 'credit' => (string) $cost],
+                ], 'casing-rental:'.$movement->id, $actor);
+            }
             $this->audit->record($unit->company_id, $actor->id, 'equipment.casing_moved', $movement);
 
             return $unit->refresh();

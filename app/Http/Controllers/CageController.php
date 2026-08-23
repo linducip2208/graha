@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\BoredPile;
 use App\Models\CompanySetting;
 use App\Models\FieldEvidence;
+use App\Models\Item;
 use App\Models\ReinforcementCage;
+use App\Models\Warehouse;
+use App\Models\WarehouseBin;
 use App\Services\FieldOpsService;
 use App\Services\ReinforcementCageService;
 use App\Support\Tenancy\CurrentCompany;
@@ -22,6 +25,8 @@ class CageController extends Controller
             'cages' => $cages,
             'piles' => BoredPile::whereHas('project', fn ($q) => $q->where('company_id', $companyId))->whereIn('status', ['cleaning', 'inspection', 'cage_installation'])->with(['project', 'zone'])->get(),
             'tolerance' => CompanySetting::val($companyId, 'steel_variance_tolerance_percent'),
+            'items' => Item::where('company_id', $companyId)->orderBy('name')->get(),
+            'warehouses' => Warehouse::where('company_id', $companyId)->with('bins')->orderBy('code')->get(),
             'evidences' => FieldEvidence::where('company_id', $companyId)->where('evidence_type', 'cage')
                 ->whereIn('evidence_id', ReinforcementCage::where('company_id', $companyId)->select('id'))
                 ->with('uploader')->latest()->get()->groupBy(fn ($e) => $e->evidence_id),
@@ -87,5 +92,25 @@ class CageController extends Controller
         $evidence = $service->storeEvidence('cage', $cage->id, $data['file'], $request->user());
 
         return back()->with('status', "Foto cage terlampir (#{$evidence->id}).");
+    }
+
+    /** Bebankan material baja fabrikasi ke cage: stock ledger + jurnal otomatis. */
+    public function consumeMaterial(Request $request, ReinforcementCage $cage, CurrentCompany $current, ReinforcementCageService $service)
+    {
+        abort_unless($cage->company_id === $current->id(), 404);
+        $data = $request->validate([
+            'item_id' => ['required', 'integer'],
+            'warehouse_bin_id' => ['required', 'integer'],
+            'quantity_kg' => ['required', 'decimal:0,4', 'gt:0'],
+            'lot_number' => ['nullable', 'max:80'],
+            'unit_cost' => ['nullable', 'decimal:0,4', 'min:0'],
+            'idempotency_key' => ['required', 'max:120'],
+        ]);
+        abort_unless(Item::where('company_id', $current->id())->whereKey($data['item_id'])->exists(), 422);
+        $bin = WarehouseBin::whereHas('warehouse', fn ($q) => $q->where('company_id', $current->id()))->findOrFail($data['warehouse_bin_id']);
+        $data['warehouse_id'] = $bin->warehouse_id;
+        $service->consumeMaterial($cage->refresh(), $data, $request->user());
+
+        return back()->with('status', "Material {$data['quantity_kg']} kg dibebankan ke cage {$cage->number}: stok dan jurnal tercatat.");
     }
 }

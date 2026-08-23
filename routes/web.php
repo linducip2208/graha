@@ -171,6 +171,7 @@ Route::middleware(['auth', 'company', 'permission:manufacturing.view'])->prefix(
     Route::post('/manufacturing/cages/{cage}/qc', [CageController::class, 'qc'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/cages/{cage}/deliver', [CageController::class, 'deliver'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/cages/{cage}/evidence', [CageController::class, 'uploadEvidence'])->middleware('permission:manufacturing.manage');
+    Route::post('/manufacturing/cages/{cage}/material', [CageController::class, 'consumeMaterial'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/work-centers', [ManufacturingController::class, 'workCenter'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/boms/{bom}/routing-operations', [ManufacturingController::class, 'routingOperation'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/orders/{order}/operations/{operation}', [ManufacturingController::class, 'recordOperation'])->middleware('permission:manufacturing.manage');

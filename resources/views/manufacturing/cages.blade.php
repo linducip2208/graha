@@ -67,6 +67,17 @@
 <button onclick="return confirm('Catat pengiriman cage ke titik ini?')" class="font-bold text-sky-700">Catat pengiriman</button></form>
 @endif
 @endif
+<form method="post" action="/admin/manufacturing/cages/{{ $cage->id }}/material" class="mt-2 flex flex-wrap items-center gap-2 no-print">@csrf
+<select name="item_id" required class="rounded-lg border p-1.5 text-xs"><option value="">Material baja</option>@foreach($items as $item)<option value="{{ $item->id }}">{{ $item->name }}</option>@endforeach</select>
+<select name="warehouse_bin_id" required class="rounded-lg border p-1.5 text-xs"><option value="">Gudang / Bin</option>@foreach($warehouses as $wh)@foreach($wh->bins as $bin)
+<option value="{{ $bin->id }}">{{ $wh->code }} / {{ $bin->code }}</option>
+@endforeach
+@endforeach</select>
+<input type="number" step=".0001" min="0.0001" name="quantity_kg" required placeholder="Qty (kg)" class="w-24 rounded-lg border p-1.5 text-xs">
+<input name="lot_number" placeholder="Heat/lot (ops.)" class="w-28 rounded-lg border p-1.5 text-xs">
+<input type="hidden" name="idempotency_key" value="{{ Str::uuid() }}">
+<button onclick="return confirm('Bebankan material ini ke cage? Stok berkurang dan jurnal biaya diposting.')" class="font-bold text-amber-700">Bebankan material</button>
+</form>
 <form method="post" action="/admin/manufacturing/cages/{{ $cage->id }}/evidence" enctype="multipart/form-data" class="mt-2 flex flex-wrap items-center gap-2 no-print">@csrf
 <input type="file" name="file" accept="image/jpeg,image/png,image/webp" required class="rounded-lg border p-1.5 text-xs">
 <button class="font-bold text-violet-700">Lampirkan foto</button>

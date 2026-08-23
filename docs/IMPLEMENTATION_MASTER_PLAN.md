@@ -288,3 +288,14 @@ Verifikasi penutupan sesi: 119 tests / 420 assertions lulus, pint bersih, semua 
 | FIN-TERM-001 | Accounting | Jatuh tempo default invoice vendor dari company setting `default_vendor_payment_term_days` (bukan hardcoded 30 hari) | Tested | ReceivablePayableAgingTest | Setting editable di /admin/settings; dipakai aging AP |
 
 Item "Decision required" ADR-027 selesai. Sisa terbuka hanya BPM-001 (menunggu workbook eksternal) dan unrealized FX (sengaja tidak dikerjakan per ADR-040).
+
+# Pembaruan 2026-08-24 (2) - Integrasi Lintas Modul: BBM, Material Cage, Sewa Casing
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| INT-FUEL-001 | Equipment | Fuel usage equipment dapat memotong tangki BBM terpilih (issue_to_equipment, guard saldo) | Tested | FuelTankTest | Opsional — tanpa tangki perilaku lama; equipment_id/project_id tercatat di transaksi tangki |
+| INV-CAGE-001 | Inventory | Konsumsi material baja fabrikasi cage: stock ledger immutable + jurnal material_issue | Tested | CageMaterialConsumptionTest | FIFO cost otomatis; ditolak setelah terkirim / nilai nihil; idempotent per cage+key |
+| ACC-CAS-001 | Accounting | Pergerakan casing berbiaya → jurnal sewa (expense_debit/payable_credit configurable), idempotent per movement | Tested | CasingRentalCostTest | Biaya 0 tanpa jurnal; mapping kurang = ditolak eksplisit |
+| UI-006 | UI | Form potong tangki di fuel equipment + form bebankan material di kartu cage | Tested | WorkspaceNavigationTest | Halaman cages/operations render OK |
+
+Bug berdempet `@endforeach@endforeach` pada cages.blade.php diperbaiki (ADR-037). Verifikasi: 125 tests / 441 assertions lulus, pint bersih.

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BillOfMaterial;
 use App\Models\Equipment;
+use App\Models\FuelTank;
 use App\Models\FuelUsage;
 use App\Models\Item;
 use App\Models\MaintenanceWorkOrder;
@@ -21,7 +22,7 @@ class OperationsController extends Controller
     {
         $id = $current->id();
 
-        return view('operations.index', ['items' => Item::where('company_id', $id)->orderBy('name')->get(), 'warehouses' => Warehouse::where('company_id', $id)->with('bins')->get(), 'boms' => BillOfMaterial::where('company_id', $id)->with('items')->latest()->get(), 'orders' => ProductionOrder::where('company_id', $id)->with('bom')->latest()->get(), 'equipment' => Equipment::where('company_id', $id)->orderBy('code')->get(), 'workOrders' => MaintenanceWorkOrder::where('company_id', $id)->latest()->limit(50)->get(), 'fuelUsages' => FuelUsage::where('company_id', $id)->with('equipment')->latest('used_at')->limit(50)->get()]);
+        return view('operations.index', ['items' => Item::where('company_id', $id)->orderBy('name')->get(), 'warehouses' => Warehouse::where('company_id', $id)->with('bins')->get(), 'boms' => BillOfMaterial::where('company_id', $id)->with('items')->latest()->get(), 'orders' => ProductionOrder::where('company_id', $id)->with('bom')->latest()->get(), 'equipment' => Equipment::where('company_id', $id)->orderBy('code')->get(), 'workOrders' => MaintenanceWorkOrder::where('company_id', $id)->latest()->limit(50)->get(), 'fuelUsages' => FuelUsage::where('company_id', $id)->with('equipment')->latest('used_at')->limit(50)->get(), 'fuelTanks' => FuelTank::where('company_id', $id)->where('is_active', true)->orderBy('code')->get()]);
     }
 
     public function bom(Request $request, CurrentCompany $current)
@@ -73,8 +74,13 @@ class OperationsController extends Controller
     public function fuel(Request $request, Equipment $equipment, CurrentCompany $current, EquipmentService $service)
     {
         abort_unless($equipment->company_id === $current->id(), 404);
-        $data = $request->validate(['liters' => ['required', 'decimal:0,4', 'gt:0'], 'start_meter' => ['required', 'decimal:0,2'], 'end_meter' => ['required', 'decimal:0,2', 'gt:start_meter'], 'reference' => ['required', 'max:80']]);
-        $service->recordFuel($equipment, $data['liters'], $data['start_meter'], $data['end_meter'], $data['reference'], $request->user());
+        $data = $request->validate(['liters' => ['required', 'decimal:0,4', 'gt:0'], 'start_meter' => ['required', 'decimal:0,2'], 'end_meter' => ['required', 'decimal:0,2', 'gt:start_meter'], 'reference' => ['required', 'max:80'], 'fuel_tank_id' => ['nullable', 'integer']]);
+        if (! empty($data['fuel_tank_id'])) {
+            abort_unless(FuelTank::where('company_id', $current->id())->where('is_active', true)->whereKey($data['fuel_tank_id'])->exists(), 422);
+        } else {
+            unset($data['fuel_tank_id']);
+        }
+        $service->recordFuel($equipment, $data['liters'], $data['start_meter'], $data['end_meter'], $data['reference'], $request->user(), null, $data['fuel_tank_id'] ?? null);
 
         return back()->with('status', 'Fuel dan rasio LPH dicatat.');
     }
