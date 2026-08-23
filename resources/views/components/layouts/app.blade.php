@@ -16,8 +16,8 @@
 @if(auth()->check())
 @php($cid = session('company_id'))
 @php($navGroups = \App\Support\Navigation::groups(auth()->user(), $cid))
-<div class="min-h-screen lg:grid lg:grid-cols-[272px_1fr] print:block">
-<aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-40 w-[280px] -translate-x-full overflow-y-auto bg-slate-950 text-slate-200 shadow-2xl transition-transform lg:sticky lg:top-0 lg:h-screen lg:w-auto lg:translate-x-0 print:hidden">
+<div class="min-h-screen lg:grid lg:grid-cols-[236px_1fr] print:block">
+<aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-40 w-[248px] -translate-x-full overflow-y-auto bg-slate-950 text-slate-200 shadow-2xl transition-transform lg:sticky lg:top-0 lg:h-screen lg:w-auto lg:translate-x-0 print:hidden">
  <div class="flex items-center justify-between border-b border-white/10 px-5 py-5"><a href="/dashboard" class="flex items-center gap-2 font-black text-white"><span class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-sky-500 to-cyan-600 text-sm">ðŸ—ï¸</span>Graha Pondasi ERP</a><button data-sidebar-close class="rounded-lg p-2 lg:hidden" aria-label="Tutup menu">âœ•</button></div>
  <nav id="admin-navigation" class="space-y-4 p-4 text-sm">
   @foreach($navGroups as $group)
@@ -47,7 +47,7 @@
  </nav>
 </aside>
 <div id="sidebar-overlay" data-sidebar-close class="fixed inset-0 z-30 hidden bg-slate-950/60 lg:hidden"></div>
-<div class="min-w-0"><header class="sticky top-0 z-20 flex items-center justify-between border-b bg-white/90 px-4 py-3 backdrop-blur lg:px-8 print:hidden"><div class="flex items-center gap-3"><button data-sidebar-open class="rounded-xl border p-2 lg:hidden" aria-label="Buka menu">â˜°</button><div><p class="text-xs text-slate-500">{{ $cid ? \App\Models\Company::find($cid)?->name : '' }}</p><strong>{{ $title ?? 'Dashboard' }}</strong></div></div><div class="flex items-center gap-3 sm:gap-4">
+<div class="min-w-0"><header class="sticky top-0 z-20 flex items-center justify-between border-b bg-white/90 px-3 py-1.5 backdrop-blur lg:px-6 print:hidden"><div class="flex items-center gap-2.5"><button data-sidebar-open class="rounded-xl border p-2 lg:hidden" aria-label="Buka menu">â˜°</button><div><p class="text-xs text-slate-500">{{ $cid ? \App\Models\Company::find($cid)?->name : '' }}</p><strong>{{ $title ?? 'Dashboard' }}</strong></div></div><div class="flex items-center gap-3 sm:gap-4">
 <button id="global-search-trigger" class="hidden items-center gap-2 rounded-xl border px-3 py-2 text-sm text-slate-500 hover:border-sky-500 hover:text-sky-700 md:flex" title="Cari dokumen (Ctrl+K)" aria-label="Cari (Ctrl+K)">🔍<span class="hidden lg:inline">Cari apa saja…</span><kbd class="ml-2 hidden rounded border bg-slate-50 px-1.5 py-0.5 font-mono text-[10px] lg:inline">Ctrl K</kbd></button>
 <button id="quick-create-trigger" class="rounded-xl bg-sky-700 px-3 py-2 text-sm font-semibold text-white shadow hover:bg-sky-800 no-print" title="Buat baru" aria-label="Buat baru">＋ <span class="hidden sm:inline">Buat</span></button>
 <div id="quick-create-menu" hidden class="absolute right-4 top-full z-30 mt-2 w-64 overflow-hidden rounded-2xl border bg-white shadow-xl"><p class="border-b bg-slate-50 px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-slate-500">Buat Cepat</p><div class="py-1">@foreach(\App\Support\QuickCreate::items(auth()->user(), $cid) as $quick)<a href="{{ $quick['href'] }}" class="flex items-center gap-2 px-4 py-2 text-sm hover:bg-sky-50"><x-ui.icon :name="$quick['icon'] ?? 'plus'" class="h-4 w-4 text-sky-700" />{{ $quick['label'] }}</a>@endforeach</div></div>
