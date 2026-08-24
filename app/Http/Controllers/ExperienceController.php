@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\CompanyExperience;
 use App\Models\ExperienceVersion;
-use App\Services\AuditTrail;
 use App\Services\ExperienceVersionService;
 use App\Services\ThemeService;
 use App\Support\Experience\ThemePresets;
 use App\Support\Tenancy\CurrentCompany;
+use App\Support\Term;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -27,6 +27,9 @@ class ExperienceController extends Controller
             'resolved' => $service->resolve($companyId),
             'row' => CompanyExperience::find($companyId),
             'presets' => collect(ThemePresets::all())->map(fn ($p, $k) => ['key' => $k, 'label' => $p['label']]),
+            'navGroupsCfg' => config('modules.nav'),
+            'navConfig' => (array) (CompanyExperience::find($companyId)?->nav_config ?? []),
+            'terminologyMap' => (array) (CompanyExperience::find($companyId)?->terminology ?? []),
         ]);
     }
 
@@ -51,6 +54,10 @@ class ExperienceController extends Controller
             'footer_text' => ['nullable', 'max:200'],
             'support_email' => ['nullable', 'email', 'max:120'],
             'login_headline' => ['nullable', 'max:150'],
+            'nav_hidden' => ['nullable', 'array'],
+            'nav_labels' => ['nullable', 'array'],
+            'nav_labels.*' => ['nullable', 'max:60'],
+            'terminology' => ['nullable', 'array'],
         ]);
         foreach (['primary_color', 'secondary_color', 'accent_color'] as $f) {
             if (isset($data[$f])) {
@@ -60,14 +67,22 @@ class ExperienceController extends Controller
                 }
             }
         }
+        $navConfig = [
+            'hidden' => array_values(array_map('intval', array_keys($request->input('nav_hidden', []) ?? []))),
+            'labels' => collect($request->input('nav_labels', []))->filter(fn ($v) => filled($v))->all(),
+        ];
+        $terminology = collect($request->input('terminology', []))->filter(fn ($v) => filled($v))->map(fn ($v) => mb_substr((string) $v, 0, 60))->all();
+
         $row = CompanyExperience::updateOrCreate(['company_id' => $current->id()], [
             ...collect($data)->filter(fn ($v) => filled($v))->all(),
+            'nav_config' => $navConfig,
+            'terminology' => $terminology,
             'is_published' => true,
             'published_by' => $request->user()->id,
             'published_at' => now(),
         ]);
         ThemeService::flush($current->id());
-        app(AuditTrail::class)->record($current->id(), $request->user()->id, 'experience.updated', $row);
+        Term::flush();
 
         return back()->with('status', 'Tampilan & white label diterbitkan — berlaku untuk semua user company ini.');
     }

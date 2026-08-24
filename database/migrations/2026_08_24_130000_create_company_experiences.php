@@ -29,6 +29,8 @@ return new class extends Migration
             $t->string('footer_text', 200)->nullable();
             $t->string('support_email', 120)->nullable();
             $t->string('login_headline', 150)->nullable();
+            $t->json('nav_config')->nullable(); // {hidden:[idx],labels:{idx:str},order:[idx]}
+            $t->json('terminology')->nullable(); // {'Customer':'Client', ...}
             $t->boolean('is_published')->default(true);
             $t->foreignId('published_by')->nullable()->constrained('users')->nullOnDelete();
             $t->timestamp('published_at')->nullable();
