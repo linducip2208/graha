@@ -71,6 +71,7 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['au
 Route::get('/apps', [WorkspaceController::class, 'apps'])->middleware(['auth', 'company'])->name('apps');
 Route::get('/admin/my-work', [MyWorkController::class, 'index'])->middleware(['auth', 'company'])->name('my-work.index');
 Route::post('/admin/preferences/favorites', [WorkspaceController::class, 'toggleFavorite'])->middleware(['auth', 'company'])->name('preferences.favorites.toggle');
+Route::post('/admin/company/switch', [WorkspaceController::class, 'switchCompany'])->middleware(['auth'])->name('company.switch');
 Route::post('/admin/preferences/recent', [WorkspaceController::class, 'recordRecent'])->middleware(['auth', 'company'])->withoutMiddleware(VerifyCsrfToken::class)->name('preferences.recent.record');
 Route::get('/admin/search', [GlobalSearchController::class, 'query'])->middleware(['auth', 'company'])->name('global-search.query');
 Route::middleware(['auth', 'company', 'permission:contract.view'])->prefix('admin/contracts')->group(function () {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ApprovalRequest;
+use App\Models\AuditLog;
 use App\Models\BoredPile;
 use App\Models\CompanyExperience;
 use App\Models\CompanySetting;
@@ -11,6 +12,7 @@ use App\Models\HseIncident;
 use App\Models\JobSafetyAnalysis;
 use App\Models\Journal;
 use App\Models\Nonconformity;
+use App\Models\ProcurementPlan;
 use App\Models\ProductionOrder;
 use App\Models\ProgressBilling;
 use App\Models\Project;
@@ -129,11 +131,44 @@ class DashboardController extends Controller
             }
         }
 
+        // Attention Required (komposisi ulang metrik existing — tanpa fitur baru).
+        $attention = collect();
+        if ($can('approval.view')) {
+            $attention->push(['label' => 'Menunggu Persetujuan', 'count' => $approvals?->count() ?? 0, 'icon' => 'check', 'tone' => 'warning', 'href' => '/admin/approvals']);
+        }
+        if ($can('qms.view')) {
+            $capaOverdue = CorrectiveAction::where('status', 'open')->whereDate('due_at', '<', now())->count();
+            $attention->push(['label' => 'NCR Terbuka', 'count' => Nonconformity::where('company_id', $companyId)->whereIn('status', ['open', 'containment'])->count(), 'icon' => 'shield', 'tone' => 'danger', 'href' => '/admin/qms']);
+            if ($capaOverdue > 0) {
+                $attention->push(['label' => 'CAPA Lewat Tenggat', 'count' => $capaOverdue, 'icon' => 'clock', 'tone' => 'danger', 'href' => '/admin/qms']);
+            }
+        }
+        if ($can('procurement.view')) {
+            $poLate = ProcurementPlan::where('company_id', $companyId)
+                ->whereNull('purchase_request_id')->whereNull('purchase_order_id')
+                ->whereNotNull('planned_po_date')->where('planned_po_date', '<', now()->toDateString())->count();
+            if ($poLate > 0) {
+                $attention->push(['label' => 'Pengadaan Terlambat', 'count' => $poLate, 'icon' => 'cart', 'tone' => 'warning', 'href' => '/admin/projects']);
+            }
+        }
+        $critical = $projectHealth->where('health', 'red')->count();
+        if ($can('project.view') && $critical > 0) {
+            $attention->push(['label' => 'Proyek Kritis', 'count' => $critical, 'icon' => 'triangle-alert', 'tone' => 'danger', 'href' => '/admin/projects']);
+        }
+        if ($attention->isEmpty()) {
+            $attention->push(['label' => 'Semua dalam kendali', 'count' => 0, 'icon' => 'check', 'tone' => 'success', 'href' => null]);
+        }
+
+        // Recent activity dari audit trail existing.
+        $activity = $can('audit.view')
+            ? AuditLog::where('company_id', $companyId)->with('actor:id,name')->latest('created_at')->limit(7)->get()
+            : collect();
+
         return view('dashboard', [
             'company' => $current->get(), 'stats' => $stats, 'revenueTrend' => $revenueTrend, 'pileStatus' => $pileStatus,
             'approvals' => $approvals, 'journals' => $journals, 'aging' => $aging,
             'executive' => $executive, 'projectHealth' => $projectHealth, 'procurementQueue' => $procurementQueue,
-            'widths' => $widths,
+            'widths' => $widths, 'attention' => $attention, 'activity' => $activity,
         ]);
     }
 

@@ -26,6 +26,16 @@ class WorkspaceController extends Controller
         ]);
     }
 
+    /** Ganti company aktif (hanya membership aktif milik user; validasi ulang oleh ResolveCompany). */
+    public function switchCompany(Request $request)
+    {
+        $data = $request->validate(['company_id' => ['required', 'integer']]);
+        abort_unless($request->user()->companies()->where('companies.id', $data['company_id'])->where('company_user.is_active', true)->exists(), 403);
+        session(['company_id' => (int) $data['company_id']]);
+
+        return back()->with('status', 'Perusahaan aktif diganti.');
+    }
+
     public function toggleFavorite(Request $request)
     {
         $data = $request->validate(['label' => ['required', 'max:160'], 'href' => ['required', 'max:500']]);

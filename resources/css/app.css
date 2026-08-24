@@ -63,16 +63,50 @@ table th,table td{padding:.8rem 1rem;text-align:left;border-bottom:1px solid #e2
 :root{--brand-primary:#0369a1;--brand-primary-hover:#075985;--brand-secondary:#0e7490;--brand-accent:#38bdf8}
 .btn-brand{background:var(--brand-primary)!important;color:#fff!important}.btn-brand:hover{background:var(--brand-primary-hover)!important}
 .btn-danger{background:#b91c1c;color:#fff}.btn-danger:hover{background:#991b1b}
-.admin-link.active{background:linear-gradient(90deg,var(--brand-primary),var(--brand-primary-hover));box-shadow:none}
+.admin-link.active{background:color-mix(in srgb,var(--brand-primary) 12%,transparent);color:var(--brand-primary);font-weight:700}
 .tab-link.active{background:var(--brand-primary);color:#fff}
 
+/* ===== Semantic design tokens (Admin UI V2) ===== */
+:root{
+  --surface-page:#f6f8fb;--surface-card:#ffffff;--surface-muted:#eef2f7;--surface-input:#ffffff;--surface-table-header:#f8fafc;
+  --text-primary:#0f172a;--text-secondary:#3f4c63;--text-muted:#8292a8;
+  --border-subtle:#e8edf4;--border-default:#dbe3ec;
+  --focus-ring:color-mix(in srgb,var(--brand-primary) 35%,transparent);
+  --radius-sm:.5rem;--radius-control:.65rem;--radius-card:.9rem;--radius-modal:1rem;
+  --shadow-xs:0 1px 2px rgba(15,23,42,.05);
+  --shadow-card:0 1px 2px rgba(15,23,42,.04),0 8px 24px -18px rgba(15,23,42,.16);
+  --shadow-card-hover:0 2px 4px rgba(15,23,42,.05),0 12px 28px -16px rgba(15,23,42,.22);
+  --shadow-dropdown:0 12px 32px -12px rgba(15,23,42,.22);
+  --shadow-modal:0 24px 64px -16px rgba(15,23,42,.35);
+  --tone-success:#059669;--tone-warning:#d97706;--tone-danger:#dc2626;--tone-info:#0284c7;--tone-violet:#7c3aed;
+  --text-sidebar:#334155;--text-sidebar-muted:#7c8ba1;--surface-sidebar-active:color-mix(in srgb,var(--brand-primary) 11%,transparent);
+}
+.dark{
+  --surface-page:#0b1220;--surface-card:#101a2c;--surface-muted:#16233c;--surface-input:#0e1728;--surface-table-header:#0f1930;
+  --text-primary:#e2e8f0;--text-secondary:#c3cfe0;--text-muted:#7e90aa;
+  --border-subtle:#1d2a44;--border-default:#22304d;
+  --shadow-card:0 1px 2px rgba(0,0,0,.3),0 8px 24px -16px rgba(0,0,0,.5);
+  --shadow-card-hover:0 2px 6px rgba(0,0,0,.35),0 12px 28px -14px rgba(0,0,0,.55);
+  --tone-success:#34d399;--tone-warning:#fbbf24;--tone-danger:#f87171;--tone-info:#38bdf8;--tone-violet:#a78bfa;
+}
+/* Preset Graphite Dark: sidebar/topbar gelap permanen via token preset; halaman tetap mengikuti mode. */
+
+/* ===== Sidebar V2 (token-driven, light default) ===== */
+#admin-sidebar{background:var(--surface-sidebar);border-color:var(--border-subtle)}
+#admin-sidebar .shell-link{display:flex;align-items:center;gap:.65rem;border-radius:var(--radius-control);padding:.55rem .7rem;font-size:.83rem;font-weight:600;color:var(--text-sidebar);transition:background .15s,color .15s}
+#admin-sidebar .shell-link:hover{background:color-mix(in srgb,var(--brand-primary) 7%,transparent);color:var(--brand-primary)}
+#admin-sidebar .shell-link.active{background:var(--surface-sidebar-active);color:var(--brand-primary);font-weight:700}
+#admin-sidebar .shell-section{margin:1.1rem .5rem .35rem;font-size:.62rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--text-sidebar-muted)}
+.dark #admin-sidebar .shell-link{color:var(--text-sidebar,#cbd5e1)}
+.dark #admin-sidebar .shell-link:hover{color:#fff}
+.dark #admin-sidebar .shell-link.active{color:#fff;background:color-mix(in srgb,var(--brand-primary) 30%,transparent)}
+#admin-sidebar .shell-link svg{flex-shrink:0}
+
 /* ===== Premium table polish (fasa 2) ===== */
-table th{font-weight:700;background:#f8fafc}
+table th{font-weight:700;background:var(--surface-table-header)}
 table tbody tr{transition:background-color .15s}
-table tbody tr:hover{background:#f8fafc}
-.dark table tbody tr:hover{background:#131f36}
+table tbody tr:hover{background:color-mix(in srgb,var(--brand-primary) 4%,transparent)}
 table td{font-variant-numeric:tabular-nums}
-.dark table th{font-weight:700}
 
 /* Focus ring konsisten untuk keyboard nav (a11y) */
 a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--brand-primary);outline-offset:2px;border-radius:.5rem}

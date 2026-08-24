@@ -1,4 +1,5 @@
 @php($errors = $errors ?? new \Illuminate\Support\ViewErrorBag)
+@php($expCfg = $experience["config"] ?? [])
 <!doctype html>
 <html lang="id"><head>
 <meta charset="utf-8">
@@ -8,66 +9,127 @@
 <meta property="og:title" content="{{ $title ?? config('app.name') }}">
 <meta property="og:description" content="ERP multi-company untuk kontraktor pondasi: approval berjenjang, jurnal otomatis, audit hash-chain.">
 <meta property="og:type" content="website">
-@php($expCfg = $experience["config"] ?? [])
 <link rel="icon" href="{{ $expCfg['favicon_url'] ?? asset('favicon-default.svg') }}">
 <title>{{ ($expCfg['system_name'] ?? null) ? $expCfg['system_name'].' — '.config('app.name') : ($title ?? config('app.name')) }}</title>
-<style>:root{@foreach(($experience["tokens"] ?? []) as $tk => $tv){{ $tk }}:{{ $tv }};@endforeach}}</style>
 @vite(['resources/css/app.css','resources/js/app.js'])
+<style>:root{@foreach(($experience["tokens"] ?? []) as $tk => $tv){{ $tk }}:{{ $tv }};@endforeach}}</style>
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-900"
-@if(!empty($experience["config"]["previewing_version"]))
-<div class="bg-violet-700 px-4 py-1.5 text-center text-xs font-bold text-white no-print">MODE PRATINJAU v{{ $experience["config"]["previewing_version"] }} — hanya terlihat oleh Anda
+<body class="min-h-screen bg-[var(--surface-page)] text-[var(--text-primary)]" data-flash="{{ session('status') }}" data-flash-error="{{ $errors->any() ? $errors->first() : '' }}" data-authed="{{ auth()->check() ? '1' : '0' }}">
+@if(auth()->check() && !empty($expCfg['previewing_version']))
+<div class="bg-violet-700 px-4 py-1.5 text-center text-xs font-bold text-white no-print">MODE PRATINJAU v{{ $expCfg['previewing_version'] }} — hanya terlihat oleh Anda
 <form method="post" action="/admin/experience/preview/stop" class="inline ml-2">@csrf<button class="underline">Matikan</button></form></div>
-@endif data-flash="{{ session('status') }}" data-flash-error="{{ $errors->any() ? $errors->first() : '' }}" data-authed="{{ auth()->check() ? '1' : '0' }}">
+@endif
 @if(auth()->check())
 @php($cid = session('company_id'))
 @php($navGroups = \App\Support\Navigation::groups(auth()->user(), $cid))
-<div class="min-h-screen lg:grid lg:grid-cols-[236px_1fr] print:block">
-<aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-40 w-[248px] -translate-x-full overflow-y-auto bg-slate-950 text-slate-200 shadow-2xl transition-transform lg:sticky lg:top-0 lg:h-screen lg:w-auto lg:translate-x-0 print:hidden">
-<div class="flex items-center justify-between border-b border-white/10 px-4 py-3"><a href="/dashboard" class="flex items-center gap-2 font-black text-white">@if(!empty($expCfg['logo_url']))<img src="{{ $expCfg['logo_url'] }}" alt="logo" class="h-7 max-w-[150px] object-contain">@else<span class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-sky-500 to-cyan-600 text-sm">🏗️</span><span>{{ $expCfg['system_name'] ?? 'Graha Pondasi ERP' }}</span>@endif</a><button data-sidebar-close class="rounded-lg p-2 lg:hidden" aria-label="Tutup menu">✕</button></div>
- <nav id="admin-navigation" class="space-y-4 p-4 text-sm">
-  @foreach($navGroups as $group)
-  <details class="nav-group" data-group="{{ $group['label'] }}" open>
-   <summary class="flex cursor-pointer select-none items-center justify-between px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-300">
-    <span>{{ $group['label'] }}</span><span class="nav-chevron text-[9px] opacity-60">&#9660;</span>
-   </summary>
-   <div class="space-y-0.5 pt-0.5">
-   @foreach($group['items'] as $item)
-    @if(! empty($item['children']))
-    <details class="nav-details" {{ url()->current() === url($item['href']) ? 'open' : '' }}>
-     <summary class="admin-link cursor-pointer list-none"><x-ui.icon :name="$item['icon'] ?? 'dashboard'" class="h-[18px] w-[18px]" /><span>{{ $item['label'] }}</span><span class="nav-chevron ml-auto text-[10px] opacity-60">&#9660;</span></summary>
-     <div class="ml-6 mt-1 space-y-1 border-l border-white/10 pl-3">
-      @foreach($item['children'] as $child)
-      <a href="{{ $child['href'] }}" class="admin-link !py-2 text-[13px]">{{ $child['label'] }}</a>
-      @endforeach
-     </div>
-    </details>
-    @endif
-    @if(empty($item['children']))
-    <a href="{{ $item['href'] }}" class="admin-link"><x-ui.icon :name="$item['icon'] ?? 'dashboard'" class="h-[18px] w-[18px]" /><span>{{ $item['label'] }}</span></a>
-    @endif
-   @endforeach
-   </div>
-  </details>
-  @endforeach
- </nav>
+@php($berandaGroup = $navGroups->firstWhere('key', 'beranda'))
+@php($appGroups = $navGroups->filter(fn ($g) => $g['key'] !== 'beranda' && $g['key'] !== 'pengaturan' && $g['items']->isNotEmpty()))
+@php($sistemItems = $navGroups->firstWhere('key', 'pengaturan')?->items ?? collect())
+@php($path = request()->getPathInfo())
+@php($initials = collect(explode(' ', trim(auth()->user()->name)))->filter()->take(2)->map(fn ($w) => mb_strtoupper(mb_substr($w, 0, 1)))->implode(''))
+<div class="min-h-screen lg:grid lg:grid-cols-[232px_1fr] print:block">
+<aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-40 flex w-[256px] -translate-x-full flex-col overflow-y-auto border-r transition-transform lg:sticky lg:top-0 lg:h-screen lg:w-auto lg:translate-x-0 print:hidden">
+<div class="flex h-14 shrink-0 items-center justify-between border-b px-4" style="border-color:var(--border-subtle)">
+<a href="/dashboard" class="flex min-w-0 items-center gap-2.5">
+@if(!empty($expCfg['logo_url']))<img src="{{ $expCfg['logo_url'] }}" alt="logo" class="h-7 max-w-[140px] object-contain">@else
+<span class="grid h-8 w-8 shrink-0 place-items-center rounded-[10px] text-[13px] font-black text-white" style="background:linear-gradient(135deg,var(--brand-primary),var(--brand-accent))">{{ mb_substr($expCfg['system_name'] ?? config('app.name'), 0, 1) }}</span>
+<span class="min-w-0 truncate text-[13px] font-extrabold tracking-tight" style="color:var(--text-sidebar)">{{ $expCfg['system_name'] ?? config('app.name') }}</span>
+@endif
+</a>
+<button data-sidebar-close class="rounded-lg p-2 hover:bg-[var(--surface-muted)] lg:hidden" aria-label="Tutup menu">✕</button>
+</div>
+<nav class="flex-1 space-y-0.5 px-3 pb-4 text-sm">
+<p class="shell-section">Beranda</p>
+@foreach(($berandaGroup?->items ?? collect()) as $item)
+<a href="{{ $item['href'] }}" class="shell-link {{ str_starts_with($path, $item['href']) ? 'active' : '' }}"><x-ui.icon :name="$item['icon'] ?? 'dashboard'" class="h-[18px] w-[18px]" /><span class="truncate">{{ $item['label'] }}</span></a>
+@endforeach
+@if($shellFavorites->isNotEmpty())
+<p class="shell-section">Favorit</p>
+@foreach($shellFavorites as $fav)
+<a href="{{ $fav->href }}" class="shell-link"><x-ui.icon name="star" class="h-[18px] w-[18px]" /><span class="truncate">{{ $fav->label }}</span></a>
+@endforeach
+@endif
+<p class="shell-section">Aplikasi</p>
+@foreach($appGroups as $group)
+@php($base = $group['items']->first()['href'])
+@php($active = $base !== '/dashboard' && str_starts_with($path, $base) || ($base === '/dashboard' && $path === '/dashboard'))
+<a href="{{ $base }}" class="shell-link {{ $active ? 'active' : '' }}"><x-ui.icon :name="$group['items']->first()['icon'] ?? 'grid'" class="h-[18px] w-[18px]" /><span class="min-w-0"><span class="block truncate leading-tight">{{ preg_replace('/^[^\p{L}\d]+/u', '', $group['label']) }}</span><span class="block truncate text-[10px] font-medium leading-tight text-[var(--text-sidebar-muted)]">{{ $group['items']->first()['label'] }}</span></span></a>
+@endforeach
+@if($sistemItems->isNotEmpty())
+<p class="shell-section">Sistem</p>
+@foreach($sistemItems as $item)
+<a href="{{ $item['href'] }}" class="shell-link {{ str_starts_with($path, $item['href']) ? 'active' : '' }}"><x-ui.icon :name="$item['icon'] ?? 'cog'" class="h-[18px] w-[18px]" /><span class="truncate">{{ $item['label'] }}</span></a>
+@endforeach
+@endif
+</nav>
+<div class="sticky bottom-0 mt-auto border-t p-3" style="border-color:var(--border-subtle)">
+@if($shellMemberships->count() > 1)
+<details class="dropdown">
+<summary class="flex cursor-pointer list-none items-center gap-2.5 rounded-xl p-2 transition hover:bg-[var(--surface-muted)]">
+<span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[11px] font-black text-white" style="background:var(--brand-secondary)">{{ ($company = $shellMemberships->firstWhere('id', (int) $cid))?->code ?? 'PT' }}</span>
+<span class="min-w-0 flex-1"><span class="block truncate text-xs font-extrabold" style="color:var(--text-sidebar)">{{ $company?->name ?? 'Perusahaan' }}</span><span class="block text-[10px]" style="color:var(--text-sidebar-muted)">Ganti perusahaan</span></span>
+<x-ui.icon name="chevron-down" class="h-4 w-4 text-[var(--text-muted)]" />
+</summary>
+<div class="absolute bottom-full left-0 right-0 z-30 mb-2 overflow-hidden rounded-xl border bg-[var(--surface-card)] shadow-[var(--shadow-dropdown)]">
+@foreach($shellMemberships as $m)
+<form method="post" action="{{ route('company.switch') }}">@csrf
+<button type="submit" name="company_id" value="{{ $m->id }}" class="flex w-full items-center gap-2 px-3 py-2.5 text-left text-xs font-semibold transition hover:bg-[var(--surface-muted)] {{ $m->id === (int) $cid ? 'text-[var(--brand-primary)]' : '' }}">{{ $m->name }}</button>
+</form>
+@endforeach
+</div>
+</details>
+@else
+@php($activeCompany = $shellMemberships->firstWhere('id', (int) $cid))
+<div class="flex items-center gap-2.5 rounded-xl p-2">
+<span class="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[11px] font-black text-white" style="background:var(--brand-secondary)">{{ $activeCompany?->code ?? 'PT' }}</span>
+<span class="min-w-0"><span class="block truncate text-xs font-extrabold" style="color:var(--text-sidebar)">{{ $activeCompany?->name ?? 'Perusahaan' }}</span><span class="block text-[10px]" style="color:var(--text-sidebar-muted)">{{ $activeCompany?->code }}</span></span>
+</div>
+@endif
+</div>
 </aside>
-<div id="sidebar-overlay" data-sidebar-close class="fixed inset-0 z-30 hidden bg-slate-950/60 lg:hidden"></div>
-<div class="min-w-0"><header class="sticky top-0 z-20 flex items-center justify-between border-b bg-white/90 px-3 py-1.5 backdrop-blur lg:px-6 print:hidden"><div class="flex items-center gap-2.5"><button data-sidebar-open class="rounded-xl border p-2 lg:hidden" aria-label="Buka menu">&#9776;</button><div><p class="text-xs text-slate-500">{{ $cid ? \App\Models\Company::find($cid)?->name : '' }}</p><strong>{{ $title ?? 'Dashboard' }}</strong></div></div><div class="flex items-center gap-3 sm:gap-4">
-<button id="global-search-trigger" class="hidden items-center gap-2 rounded-xl border px-3 py-2 text-sm text-slate-500 hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] md:flex" title="Cari dokumen (Ctrl+K)" aria-label="Cari (Ctrl+K)">🔍<span class="hidden lg:inline">Cari apa saja…</span><kbd class="ml-2 hidden rounded border bg-slate-50 px-1.5 py-0.5 font-mono text-[10px] lg:inline">Ctrl K</kbd></button>
-<button id="quick-create-trigger" class="rounded-xl bg-[var(--brand-primary)] px-3 py-2 text-sm font-semibold text-white shadow hover:bg-[var(--brand-primary-hover)] no-print" title="Buat baru" aria-label="Buat baru">＋ <span class="hidden sm:inline">Buat</span></button>
-<div id="quick-create-menu" hidden class="absolute right-4 top-full z-30 mt-2 w-64 overflow-hidden rounded-2xl border bg-white shadow-xl"><p class="border-b bg-slate-50 px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-slate-500">Buat Cepat</p><div class="py-1">@foreach(\App\Support\QuickCreate::items(auth()->user(), $cid) as $quick)<a href="{{ $quick['href'] }}" class="flex items-center gap-2 px-4 py-2 text-sm hover:bg-sky-50"><x-ui.icon :name="$quick['icon'] ?? 'plus'" class="h-4 w-4 text-[var(--brand-primary)]" />{{ $quick['label'] }}</a>@endforeach</div></div>
-<a href="/admin/apps" class="rounded-xl border px-3 py-2 text-sm no-print" title="Semua Aplikasi" aria-label="Semua aplikasi">▦</a><a href="/admin/my-work" class="rounded-xl border px-3 py-2 text-sm no-print" title="Pekerjaan Saya" aria-label="Pekerjaan saya">📋</a><button id="theme-toggle" class="rounded-xl border px-3 py-2 text-sm no-print" title="Ganti tema terang/gelap" aria-label="Ganti tema">🌙</button><a href="/admin/notifications" class="relative rounded-xl border px-3 py-2 text-sm no-print" title="Notifikasi" aria-label="Notifikasi">🔔@php($unread = auth()->user()->unreadNotifications->count())@if($unread > 0)<span class="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">{{ $unread > 99 ? '99+' : $unread }}</span>@endif</a><a href="/admin/my-signature" class="rounded-xl border px-3 py-2 text-sm no-print" title="Tanda Tangan Saya" aria-label="Tanda tangan saya">✍️</a><a href="/docs" class="hidden text-sm no-print xl:inline">Dokumentasi</a><form method="post" action="/logout">@csrf<button class="rounded-xl border px-4 py-2 text-sm font-semibold">Keluar</button></form></div></header>
-<div id="breadcrumb-bar" class="flex flex-wrap items-center gap-1 border-b bg-slate-50/80 px-4 py-2 text-xs text-slate-500 backdrop-blur lg:px-8 print:hidden"><a href="/dashboard" class="hover:text-[var(--brand-primary)]">Beranda</a>@isset($breadcrumbs)@foreach($breadcrumbs as $crumb)<span>›</span>@if(isset($crumb['href']) && !$loop->last)<a href="{{ $crumb['href'] }}" class="hover:text-[var(--brand-primary)]">{{ $crumb['label'] }}</a>@else<span class="font-semibold text-slate-700">{{ $crumb['label'] }}</span>@endif @endforeach @endisset </div>
-<div id="search-palette" hidden class="fixed inset-0 z-50 flex items-start justify-center bg-slate-950/60 p-4 pt-24 print:hidden"><div class="w-full max-w-2xl overflow-hidden rounded-2xl border bg-white shadow-2xl"><input id="search-input" type="search" placeholder="Cari proyek, tender, PO, billing, NCR, dokumen…" autocomplete="off" class="w-full border-b p-4 text-base outline-none"><div id="search-results" class="max-h-96 overflow-y-auto p-2 text-sm"></div><p class="border-t bg-slate-50 px-4 py-2 text-[11px] text-slate-400">Hasil dibatasi sesuai kewenangan perusahaan Anda · Esc untuk menutup</p></div></div>
+<div id="sidebar-overlay" data-sidebar-close class="fixed inset-0 z-30 hidden bg-slate-950/50 lg:hidden"></div>
+<div class="min-w-0">
+<header class="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b bg-[var(--surface-card)]/90 px-3 backdrop-blur lg:px-6 print:hidden" style="border-color:var(--border-subtle)">
+<div class="flex min-w-0 flex-1 items-center gap-2">
+<button data-sidebar-open class="rounded-xl border p-2 hover:bg-[var(--surface-muted)] lg:hidden" aria-label="Buka menu"><x-ui.icon name="menu" class="h-5 w-5" /></button>
+<button id="global-search-trigger" class="flex h-10 w-10 items-center justify-center rounded-xl border text-[var(--text-muted)] transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] md:h-9 md:w-72 md:justify-start md:gap-2 md:px-3 md:text-sm" aria-label="Cari (Ctrl+K)"><x-ui.icon name="search" class="h-4 w-4" /><span class="hidden md:inline">Cari apa saja…</span><kbd class="ml-auto hidden rounded border bg-[var(--surface-muted)] px-1.5 py-0.5 font-mono text-[10px] md:inline">Ctrl K</kbd></button>
+</div>
+<div class="flex shrink-0 items-center gap-1.5 sm:gap-2">
+<div class="relative">
+<button id="quick-create-trigger" class="flex h-9 items-center gap-1.5 rounded-xl px-3 text-sm font-bold text-white shadow-sm transition hover:opacity-90" style="background:var(--brand-primary)" aria-label="Buat baru" aria-haspopup="true"><x-ui.icon name="plus" class="h-4 w-4" /><span class="hidden sm:inline">Buat</span></button>
+<div id="quick-create-menu" hidden class="absolute right-0 top-full z-30 mt-2 w-64 overflow-hidden rounded-xl border bg-[var(--surface-card)] shadow-[var(--shadow-dropdown)]"><p class="border-b bg-[var(--surface-muted)] px-4 py-2 text-[10px] font-extrabold uppercase tracking-widest text-[var(--text-muted)]">Buat Cepat</p><div class="py-1">@foreach(\App\Support\QuickCreate::items(auth()->user(), $cid) as $quick)<a href="{{ $quick['href'] }}" class="flex items-center gap-2 px-4 py-2 text-sm hover:bg-[var(--surface-muted)]"><x-ui.icon :name="$quick['icon'] ?? 'plus'" class="h-4 w-4 text-[var(--brand-primary)]" />{{ $quick['label'] }}</a>@endforeach</div></div>
+</div>
+<a href="/admin/notifications" class="relative grid h-9 w-9 place-items-center rounded-xl border transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]" title="Notifikasi" aria-label="Notifikasi"><x-ui.icon name="bell" class="h-[18px] w-[18px]" />@php($unread = auth()->user()->unreadNotifications->count())@if($unread > 0)<span class="absolute -top-1 -right-1 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-red-600 px-1 text-[9px] font-black text-white">{{ $unread > 99 ? '99+' : $unread }}</span>@endif</a>
+<details class="dropdown relative">
+<summary class="flex cursor-pointer list-none items-center gap-2.5 rounded-xl border p-1 pr-2 transition hover:border-[var(--brand-primary)]">
+<span class="grid h-7 w-7 place-items-center rounded-full text-[10px] font-black text-white" style="background:var(--brand-primary)">{{ $initials }}</span>
+<span class="hidden text-left sm:block"><span class="block max-w-32 truncate text-xs font-extrabold leading-tight">{{ auth()->user()->name }}</span><span class="block text-[10px] leading-tight text-[var(--text-muted)]">{{ $shellRole ?: 'Anggota' }}</span></span>
+<x-ui.icon name="chevron-down" class="h-4 w-4 text-[var(--text-muted)]" />
+</summary>
+<div class="dropdown-panel absolute right-0 top-full z-30 mt-2 w-56 overflow-hidden rounded-xl border bg-[var(--surface-card)] py-1 shadow-[var(--shadow-dropdown)]">
+<a href="/admin/my-work" class="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-[var(--surface-muted)]"><x-ui.icon name="check" class="h-4 w-4 text-[var(--text-muted)]" />My Work</a>
+<a href="{{ route('apps') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-[var(--surface-muted)]"><x-ui.icon name="grid" class="h-4 w-4 text-[var(--text-muted)]" />Semua Aplikasi</a>
+<a href="/admin/my-signature" class="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-[var(--surface-muted)]"><x-ui.icon name="pen" class="h-4 w-4 text-[var(--text-muted)]" />Tanda Tangan Saya</a>
+<button type="button" id="theme-toggle" class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm hover:bg-[var(--surface-muted)]"><x-ui.icon name="moon" class="h-4 w-4 text-[var(--text-muted)]" />Ganti Tema</button>
+<a href="/docs" class="flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-[var(--surface-muted)]"><x-ui.icon name="document" class="h-4 w-4 text-[var(--text-muted)]" />Dokumentasi</a>
+<div class="my-1 border-t" style="border-color:var(--border-subtle)"></div>
+<form method="post" action="/logout">@csrf
+<button class="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-sm font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40"><x-ui.icon name="logout" class="h-4 w-4" />Keluar</button>
+</form>
+</div>
+</details>
+</div>
+</header>
+<div id="breadcrumb-bar" class="flex flex-wrap items-center gap-1 border-b bg-[var(--surface-card)]/60 px-4 py-2 text-xs text-[var(--text-muted)] backdrop-blur lg:px-8 print:hidden" style="border-color:var(--border-subtle)"><a href="/dashboard" class="hover:text-[var(--brand-primary)]">Beranda</a>@isset($breadcrumbs)@foreach($breadcrumbs as $crumb)<span>›</span>@if(isset($crumb['href']) && !$loop->last)<a href="{{ $crumb['href'] }}" class="hover:text-[var(--brand-primary)]">{{ $crumb['label'] }}</a>@else<span class="font-semibold text-[var(--text-secondary)]">{{ $crumb['label'] }}</span>@endif @endforeach @endisset</div>
+<div id="search-palette" hidden class="fixed inset-0 z-50 flex items-start justify-center bg-slate-950/60 p-4 pt-24 print:hidden"><div class="w-full max-w-2xl overflow-hidden rounded-2xl border bg-[var(--surface-card)] shadow-2xl"><input id="search-input" type="search" placeholder="Cari proyek, tender, PO, billing, NCR, dokumen…" autocomplete="off" class="w-full border-b p-4 text-base outline-none"><div id="search-results" class="max-h-96 overflow-y-auto p-2 text-sm"></div><p class="border-t bg-[var(--surface-muted)] px-4 py-2 text-[11px] text-[var(--text-muted)]">Hasil dibatasi sesuai kewenangan perusahaan Anda · Esc untuk menutup</p></div></div>
 <main>{{ $slot }}</main></div>
 </div>
 @else
-<header class="sticky top-0 z-20 border-b bg-white/90 backdrop-blur"><nav class="mx-auto flex max-w-7xl justify-between px-5 py-4"><a href="/" class="flex items-center gap-2 font-black text-sky-800"><span class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-sky-500 to-cyan-600 text-sm">ðŸ—ï¸</span>Graha Pondasi ERP</a><div class="flex gap-4"><a href="/docs">Dokumentasi</a><a href="/login">Masuk</a></div></nav></header><main>{{ $slot }}</main>
+<header class="sticky top-0 z-20 border-b bg-[var(--surface-card)]/90 backdrop-blur"><nav class="mx-auto flex max-w-7xl justify-between px-5 py-4"><a href="/" class="flex items-center gap-2 font-black text-[var(--brand-primary)]">@if(!empty($expCfg['logo_url']))<img src="{{ $expCfg['logo_url'] }}" alt="logo" class="h-7 max-w-[150px] object-contain">@else<span class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-sky-500 to-cyan-600 text-sm">🏗️</span><span>{{ $expCfg['system_name'] ?? 'Graha Pondasi ERP' }}</span>@endif</a><div class="flex gap-4"><a href="/docs">Dokumentasi</a><a href="/login">Masuk</a></div></nav></header><main>{{ $slot }}</main>
 @endif
 <x-ui.toast />
 <div id="confirm-modal" hidden class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/60 p-4 print:hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
-<div class="w-full max-w-md rounded-2xl border bg-white p-6 shadow-2xl">
+<div class="w-full max-w-md rounded-2xl border bg-[var(--surface-card)] p-6 shadow-[var(--shadow-modal)]">
 <div class="flex items-start gap-4">
 <span class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-red-50 text-red-600"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg></span>
 <div class="min-w-0"><h2 id="confirm-modal-title" class="text-base font-black tracking-tight">Konfirmasi</h2><p id="confirm-modal-message" class="mt-1 text-sm leading-relaxed text-slate-500"></p></div>
@@ -123,6 +185,12 @@
   document.addEventListener('keydown', function (e) {
     if (modal.hidden) return;
     if (e.key === 'Escape') { e.preventDefault(); close(); }
+  });
+  // Dropdown (details.dropdown): tutup saat klik di luar.
+  document.addEventListener('click', function (e) {
+    document.querySelectorAll('details.dropdown[open]').forEach(function (d) {
+      if (! d.contains(e.target)) d.removeAttribute('open');
+    });
   });
 })();
 </script>

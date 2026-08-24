@@ -1,9 +1,6 @@
 @php
     $hour = (int) now()->format('G');
     $greeting = $hour < 11 ? 'Selamat pagi' : ($hour < 15 ? 'Selamat siang' : ($hour < 19 ? 'Selamat sore' : 'Selamat malam'));
-    $days = ['Sunday' => 'Minggu', 'Monday' => 'Senin', 'Tuesday' => 'Selasa', 'Wednesday' => 'Rabu', 'Thursday' => 'Kamis', 'Friday' => 'Jumat', 'Saturday' => 'Sabtu'];
-    $months = ['January' => 'Januari', 'February' => 'Februari', 'March' => 'Maret', 'April' => 'April', 'May' => 'Mei', 'June' => 'Juni', 'July' => 'Juli', 'August' => 'Agustus', 'September' => 'September', 'October' => 'Oktober', 'November' => 'November', 'December' => 'Desember'];
-    $dateLabel = str_replace(array_keys($days), $days, now()->format('l')).', '.now()->format('d').' '.str_replace(array_keys($months), $months, now()->format('F')).' '.now()->format('Y');
     $statMeta = [
         'Tender Aktif' => ['icon' => 'flag', 'tone' => 'info'],
         'Proyek Berjalan' => ['icon' => 'cube', 'tone' => 'brand'],
@@ -14,158 +11,187 @@
         'Incident Terbuka' => ['icon' => 'triangle-alert', 'tone' => 'danger'],
         'Order Produksi Aktif' => ['icon' => 'cog', 'tone' => 'violet'],
     ];
+    $kpiCards = $stats instanceof \Illuminate\Support\Collection ? $stats : collect($stats);
 @endphp
-<x-layouts.app title="Executive Dashboard"><section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+<x-layouts.app title="Executive Dashboard">
+<section class="mx-auto max-w-[1500px] px-4 py-7 sm:px-6 lg:px-8">
+
+{{-- ===== HEADER ===== --}}
 <header class="flex flex-wrap items-end justify-between gap-4">
 <div>
-<p class="text-xs font-bold uppercase tracking-widest text-[var(--brand-primary)]">{{ $company->code }} · {{ $dateLabel }}</p>
-<h1 class="mt-1 text-2xl font-bold tracking-tight">{{ $greeting }}, {{ str(auth()->user()?->name ?? 'Team')->before(' ') }}</h1>
-<p class="mt-2 max-w-2xl text-sm text-slate-500">Angka kunci {{ $company->name }} sesuai kewenangan Anda — diperbarui real-time dari dokumen posted.</p>
+<h1 class="text-[26px] font-extrabold leading-tight tracking-tight">{{ $greeting }}, {{ str(auth()->user()?->name ?? 'Team')->before(' ') }} 👋</h1>
+<p class="mt-1 text-sm text-[var(--text-muted)]">Berikut ringkasan bisnis Anda hari ini · {{ now()->format('d M Y') }}</p>
 </div>
-<a href="/apps" class="x-ui.button secondary">▦ Semua Aplikasi</a>
+<div class="flex items-center gap-2">
+@can('finance.manage')
+<a href="/admin/experience" class="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] px-3.5 py-2 text-xs font-bold text-[var(--text-secondary)] transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]">Kelola Widget</a>
+@endcan
+<a href="{{ route('apps') }}" class="rounded-xl border border-[var(--border-default)] bg-[var(--surface-card)] px-3.5 py-2 text-xs font-bold text-[var(--text-secondary)] transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]">▦ Semua Aplikasi</a>
+</div>
 </header>
 
-<div class="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-@forelse($stats as $label => $stat)
+{{-- ===== ROW 1: KPI ===== --}}
+<div class="mt-6 grid gap-4 sm:grid-cols-2 md:grid-cols-3 2xl:grid-cols-6">
+@forelse($kpiCards->take(6) as $label => $stat)
 @php($meta = $statMeta[$label] ?? ['icon' => 'dashboard', 'tone' => 'brand'])
-<x-ui.stat-card :label="$label" :value="is_numeric($stat) ? number_format($stat, 0, ',', '.') : (is_array($stat) ? (is_string($stat['value']) && str_starts_with($stat['value'], 'Rp') ? $stat['value'] : number_format((float) $stat['value'], 0, ',', '.')) : '-')" :hint="$stat['hint'] ?? ''" :icon="$meta['icon']" :tone="$meta['tone']" :class="($widths[$label] ?? 3) >= 6 ? 'sm:col-span-2 xl:col-span-2' : ''" />
+<x-ui.stat-card :label="$label" :value="is_numeric($stat) ? number_format($stat, 0, ',', '.') : (is_array($stat) ? (is_string($stat['value']) && str_starts_with($stat['value'], 'Rp') ? $stat['value'] : number_format((float) $stat['value'], 0, ',', '.')) : '-')" :hint="$stat['hint'] ?? ''" :icon="$meta['icon']" :tone="$meta['tone']" valueClass="text-[22px] leading-tight" :class="($widths[$label] ?? 0) >= 6 ? 'sm:col-span-2 md:col-span-3 2xl:col-span-2' : ''" />
 @empty
-<x-ui.empty icon="dashboard" title="Belum ada widget untuk kewenangan Anda" description="Hubungi Company Admin bila akses operasional diperlukan." />
+<div class="rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-8 text-center text-sm text-[var(--text-muted)] sm:col-span-2 md:col-span-3 2xl:col-span-6">Belum ada widget untuk kewenangan Anda — hubungi Company Admin bila akses operasional diperlukan.</div>
 @endforelse
 </div>
-
-@if($executive)
-<div class="mt-10 flex items-center justify-between">
-<h2 class="text-lg font-black tracking-tight">Cockpit Eksekutif</h2>
-<a href="/admin/reports/executive" class="text-xs font-bold text-[var(--brand-primary)]">Laporan Eksekutif →</a>
-</div>
-<div class="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-5">
-<x-ui.stat-card valueClass="text-xl xl:text-[22px]" label="Pendapatan MTD" value="Rp {{ number_format($executive['revenue_mtd'], 0, ',', '.') }}" hint="Billing posted bulan ini" icon="wallet" tone="brand" />
-<x-ui.stat-card valueClass="text-xl xl:text-[22px]" label="Pendapatan YTD" value="Rp {{ number_format($executive['revenue_ytd'], 0, ',', '.') }}" hint="Akumulasi tahun berjalan" icon="chart" tone="info" />
-<x-ui.stat-card valueClass="text-xl xl:text-[22px]" label="Gross Profit YTD" value="Rp {{ number_format($executive['gp_ytd'], 0, ',', '.') }}" hint="Billing − biaya aktual tercatat" icon="calculator" :tone="$executive['gp_ytd'] < 0 ? 'danger' : 'success'" />
-<x-ui.stat-card valueClass="text-xl xl:text-[22px]" label="Nilai Kontrak Aktif" value="Rp {{ number_format($executive['contract_active'], 0, ',', '.') }}" hint="Proyek aktif berjalan" icon="briefcase" tone="violet" />
-<x-ui.stat-card label="Win Rate Tender" value="{{ $executive['win_rate'] !== null ? $executive['win_rate'].'%' : '-' }}" hint="Dari tender yang diputuskan" icon="flag" tone="success" />
+@if($kpiCards->count() > 6)
+<div class="mt-3 flex flex-wrap gap-2">
+@foreach($kpiCards->skip(6) as $label => $stat)
+@php($meta = $statMeta[$label] ?? ['icon' => 'dashboard', 'tone' => 'brand'])
+<a href="#kpi-lainnya" class="inline-flex items-center gap-2 rounded-full border border-[var(--border-subtle)] bg-[var(--surface-card)] px-3.5 py-1.5 text-xs font-bold text-[var(--text-secondary)] transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)]"><x-ui.icon :name="$meta['icon']" class="h-3.5 w-3.5" />{{ $label }}: {{ is_numeric($stat) ? number_format($stat, 0, ',', '.') : (is_array($stat) ? $stat['value'] : '-') }}</a>
+@endforeach
 </div>
 @endif
 
+{{-- ===== ROW 2: CHART UTAMA + ATTENTION ===== --}}
+<div class="mt-6 grid gap-5 lg:grid-cols-12">
 @if($revenueTrend && $revenueTrend->isNotEmpty())
-<div class="mt-10 grid gap-5 lg:grid-cols-5">
-<article class="rounded-[var(--radius-card)] border bg-white p-6 shadow-[var(--shadow-card)] lg:col-span-3">
-<div class="flex items-center justify-between"><h2 class="font-bold tracking-tight">Tren Pendapatan & PPN Keluaran</h2><a href="/admin/billing" class="text-xs font-bold text-[var(--brand-primary)]">Billing →</a></div>
-<p class="mb-4 mt-0.5 text-xs text-slate-500">Dari progress billing posted 6 bulan terakhir.</p>
-<div class="relative h-64"><canvas id="chart-revenue"></canvas></div>
+<article class="rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)] lg:col-span-8">
+<div class="flex items-center justify-between"><h2 class="text-[15px] font-extrabold tracking-tight">Performa Pendapatan</h2><a href="/admin/billing" class="text-xs font-bold text-[var(--brand-primary)]">Billing →</a></div>
+<p class="mt-0.5 text-xs text-[var(--text-muted)]">DPP billing posted vs PPN keluaran · 6 bulan terakhir</p>
+<div class="relative mt-4 h-64"><canvas id="chart-revenue"></canvas></div>
 </article>
-@if($pileStatus && $pileStatus->isNotEmpty())
-<article class="rounded-[var(--radius-card)] border bg-white p-6 shadow-[var(--shadow-card)] lg:col-span-2">
-<h2 class="font-bold tracking-tight">Status Titik Bored Pile</h2>
-<p class="mb-4 mt-0.5 text-xs text-slate-500">Distribusi seluruh titik lintas proyek.</p>
-<div class="relative h-64"><canvas id="chart-piles"></canvas></div>
-</article>
-@endif
+@elseif($executive)
+<article class="rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)] lg:col-span-8">
+<h2 class="text-[15px] font-extrabold tracking-tight">Ringkasan Eksekutif</h2>
+<div class="mt-4 grid gap-4 sm:grid-cols-3">
+<div class="rounded-xl bg-[var(--surface-muted)] p-4"><p class="text-[11px] font-bold uppercase tracking-wide text-[var(--text-muted)]">Pendapatan MTD</p><p class="mt-1 text-xl font-extrabold tabular-nums">Rp {{ number_format($executive['revenue_mtd'], 0, ',', '.') }}</p></div>
+<div class="rounded-xl bg-[var(--surface-muted)] p-4"><p class="text-[11px] font-bold uppercase tracking-wide text-[var(--text-muted)]">Nilai Kontrak</p><p class="mt-1 text-xl font-extrabold tabular-nums">Rp {{ number_format($executive['contract_active'], 0, ',', '.') }}</p></div>
+<div class="rounded-xl bg-[var(--surface-muted)] p-4"><p class="text-[11px] font-bold uppercase tracking-wide text-[var(--text-muted)]">Win Rate</p><p class="mt-1 text-xl font-extrabold tabular-nums">{{ $executive['win_rate'] !== null ? $executive['win_rate'].'%' : '-' }}</p></div>
 </div>
+</article>
 @endif
+<article class="rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)] lg:col-span-4">
+<h2 class="text-[15px] font-extrabold tracking-tight">Perlu Perhatian</h2>
+<div class="mt-4 space-y-2.5">
+@forelse($attention as $item)
+@php($tones = ['warning' => 'bg-amber-50 text-amber-600', 'danger' => 'bg-red-50 text-red-600', 'success' => 'bg-emerald-50 text-emerald-600', 'brand' => 'bg-sky-50 text-sky-600'])
+@php($tone = $tones[$item['tone']] ?? $tones['brand'])
+<{{ $item['href'] ? 'a href="'.$item['href'].'"' : 'div' }} class="flex items-center gap-3 rounded-xl border border-[var(--border-subtle)] p-3 transition hover:border-[var(--brand-primary)]">
+<span class="grid h-9 w-9 shrink-0 place-items-center rounded-lg {{ $tone }}"><x-ui.icon :name="$item['icon']" class="h-4 w-4" /></span>
+<span class="min-w-0 flex-1 text-[13px] font-semibold">{{ $item['label'] }}</span>
+<span class="text-lg font-extrabold tabular-nums {{ $item['count'] > 0 ? '' : 'text-[var(--text-muted)]' }}">{{ $item['count'] }}</span>
+</{{ $item['href'] ? 'a' : 'div' }}>
+@empty
+<p class="rounded-xl bg-[var(--surface-muted)] p-4 text-sm text-[var(--text-muted)]">Tidak ada item perlu perhatian.</p>
+@endforelse
+</div>
+</article>
+</div>
 
+{{-- ===== ROW 3: PROJECT TABLE + ACTIVITY ===== --}}
+<div class="mt-6 grid gap-5 lg:grid-cols-12">
 @if($projectHealth->isNotEmpty())
-<div class="mt-10 flex items-center justify-between">
-<h2 class="text-lg font-black tracking-tight">Kesehatan Proyek</h2>
-<a href="/admin/projects" class="text-xs font-bold text-[var(--brand-primary)]">Semua Proyek →</a>
-</div>
-<p class="mt-1 text-sm text-slate-500">Fisik vs rencana, EAC dan margin — status hijau/kuning/merah mengikuti ambang yang dapat diatur di Pengaturan Perusahaan.</p>
-<div class="mt-4 overflow-x-auto rounded-[var(--radius-card)] border bg-white shadow-[var(--shadow-card)]">
-<table class="w-full text-sm table-sticky"><thead><tr><th>Proyek</th><th class="text-right">Fisik</th><th class="text-right">Rencana</th><th class="text-right">Varians</th><th class="text-right">EAC</th><th class="text-right">Margin Est.</th><th>Status</th></tr></thead><tbody>
+<article class="rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-[var(--shadow-xs)] lg:col-span-8">
+<div class="flex items-center justify-between px-5 pt-4"><h2 class="text-[15px] font-extrabold tracking-tight">Kinerja Proyek</h2><a href="/admin/projects" class="text-xs font-bold text-[var(--brand-primary)]">Semua Proyek →</a></div>
+<div class="mt-3 overflow-x-auto px-2 pb-2">
+<table class="w-full text-sm"><thead><tr><th class="!bg-transparent">Proyek</th><th class="!bg-transparent text-right">Fisik</th><th class="!bg-transparent text-right">Varians</th><th class="!bg-transparent text-right">EAC</th><th class="!bg-transparent">Progres</th><th class="!bg-transparent">Status</th></tr></thead><tbody>
 @foreach($projectHealth as $row)
-<tr onclick="location.href='/admin/projects/{{ $row['project']->id }}'" class="cursor-pointer transition hover:bg-slate-50 dark:hover:!bg-slate-800">
-<td class="py-3"><strong>{{ $row['project']->code }}</strong> · {{ $row['project']->name }}</td>
+<tr onclick="location.href='/admin/projects/{{ $row['project']->id }}'" class="cursor-pointer">
+<td class="py-3.5 pl-3"><strong class="text-[13px]">{{ $row['project']->code }}</strong><span class="block max-w-48 truncate text-xs text-[var(--text-muted)]">{{ $row['project']->name }}</span></td>
 <td class="text-right font-mono tabular-nums">{{ number_format($row['physical'], 1) }}%</td>
-<td class="text-right font-mono tabular-nums">{{ number_format($row['planned'], 1) }}%</td>
-<td class="text-right font-mono tabular-nums {{ abs($row['variance']) > 0 ? ($row['variance'] < 0 ? 'text-red-600' : 'text-emerald-700') : '' }}">{{ $row['variance'] > 0 ? '+' : '' }}{{ number_format($row['variance'], 1) }} pp</td>
+<td class="text-right font-mono tabular-nums {{ $row['variance'] < 0 ? 'text-red-600' : ($row['variance'] > 0 ? 'text-emerald-600' : 'text-[var(--text-muted)]') }}">{{ $row['variance'] > 0 ? '+' : '' }}{{ number_format($row['variance'], 1) }}</td>
 <td class="text-right font-mono tabular-nums">{{ number_format($row['eac'], 0, ',', '.') }}</td>
-<td class="text-right font-mono tabular-nums {{ $row['margin'] !== null && $row['margin'] < 0 ? 'text-red-600' : '' }}">{{ $row['margin'] !== null ? number_format($row['margin'], 1).'%' : '-' }}</td>
-<td class="py-3">@if($row['health'] === 'green')<span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold text-emerald-700 ring-1 ring-inset ring-emerald-600/25"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>HIJAU</span>@elseif($row['health'] === 'yellow')<span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-bold text-amber-700 ring-1 ring-inset ring-amber-600/25"><span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>KUNING</span>@else<span class="inline-flex items-center gap-1.5 rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-bold text-red-700 ring-1 ring-inset ring-red-600/25"><span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>MERAH</span>@endif</td>
+<td class="px-3"><div class="flex items-center gap-2"><div class="h-1.5 w-full min-w-16 max-w-24 overflow-hidden rounded-full bg-[var(--surface-muted)]"><div class="h-full rounded-full {{ $row['health'] === 'red' ? 'bg-red-500' : ($row['health'] === 'yellow' ? 'bg-amber-500' : 'bg-emerald-500') }}" style="width: {{ min(100, (float) $row['physical']) }}%"></div></div><span class="text-[10px] font-bold text-[var(--text-muted)]">{{ number_format($row['planned'], 0) }}%</span></div></td>
+<td class="py-3.5 pr-3"><span class="inline-flex items-center gap-1.5 text-[11px] font-bold {{ $row['health'] === 'red' ? 'text-red-600' : ($row['health'] === 'yellow' ? 'text-amber-600' : 'text-emerald-600') }}"><span class="h-2 w-2 rounded-full bg-current"></span>{{ strtoupper($row['health']) }}</span></td>
 </tr>
 @endforeach
 </tbody></table>
 </div>
+</article>
 @endif
-
-<div class="mt-10 grid gap-5 lg:grid-cols-2">
-@if($procurementQueue)
-<x-ui.card bodyClass="p-6">
-<div class="flex items-center justify-between"><h2 class="font-bold tracking-tight">Antrean Procurement</h2><a href="/admin/procurement" class="text-xs font-bold text-[var(--brand-primary)]">Procurement →</a></div>
-<div class="mt-4 grid gap-3 sm:grid-cols-3">
-<a href="/admin/procurement/rfq" class="rounded-xl border bg-slate-50/60 p-4 transition hover:border-[var(--brand-primary)]"><p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">RFQ Terbuka</p><p class="mt-1 text-2xl font-black tabular-nums">{{ $procurementQueue['rfqOpen'] }}</p></a>
-<a href="/admin/procurement" class="rounded-xl border bg-slate-50/60 p-4 transition hover:border-[var(--brand-primary)]"><p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">PO Menunggu Terima</p><p class="mt-1 text-2xl font-black tabular-nums">{{ $procurementQueue['poPendingReceive'] }}</p></a>
-<a href="/admin/procurement" class="rounded-xl border bg-slate-50/60 p-4 transition hover:border-[var(--brand-primary)]"><p class="text-[11px] font-bold uppercase tracking-wide text-slate-500">Komitmen PO</p><p class="mt-1 text-lg font-black tabular-nums">Rp {{ number_format((float) $procurementQueue['poValue'], 0, ',', '.') }}</p></a>
+@if($activity->isNotEmpty())
+<article class="rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)] {{ $projectHealth->isNotEmpty() ? 'lg:col-span-4' : 'lg:col-span-12' }}">
+<div class="flex items-center justify-between"><h2 class="text-[15px] font-extrabold tracking-tight">Aktivitas Terbaru</h2><a href="/admin/audit" class="text-xs font-bold text-[var(--brand-primary)]">Audit →</a></div>
+<ul class="mt-4 space-y-3.5">
+@foreach($activity as $log)
+<li class="flex gap-3">
+<span class="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-[var(--surface-muted)] text-[var(--text-secondary)]"><x-ui.icon name="clock" class="h-3.5 w-3.5" /></span>
+<div class="min-w-0"><p class="truncate text-[13px] font-semibold">{{ str($log->event)->replace('_', ' ')->title() }}</p><p class="text-xs text-[var(--text-muted)]">{{ $log->actor?->name ?? 'Sistem' }} · {{ $log->created_at->diffForHumans() }}</p></div>
+</li>
+@endforeach
+</ul>
+</article>
+@endif
 </div>
-</x-ui.card>
-@endif
+
+{{-- ===== ROW 4: SECONDARY COMPACT ===== --}}
+@if($aging || ($pileStatus && $pileStatus->isNotEmpty()) || $procurementQueue)
+<div class="mt-6 grid gap-5 lg:grid-cols-3">
 @if($aging)
-<x-ui.card bodyClass="p-6">
-<div class="flex items-center justify-between"><h2 class="font-bold tracking-tight">Aging Piutang & Utang</h2><a href="/admin/reports/aging" class="text-xs font-bold text-[var(--brand-primary)]">Detail Aging →</a></div>
-<p class="mb-4 mt-0.5 text-xs text-slate-500">Piutang Rp {{ number_format((float) $aging['ar_total'], 0, ',', '.') }} · utang Rp {{ number_format((float) $aging['ap_total'], 0, ',', '.') }}</p>
-<div class="relative h-48"><canvas id="chart-aging"></canvas></div>
-</x-ui.card>
+<article class="rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)]">
+<div class="flex items-center justify-between"><h2 class="text-[15px] font-extrabold tracking-tight">Aging AR/AP</h2><a href="/admin/reports/aging" class="text-xs font-bold text-[var(--brand-primary)]">Detail →</a></div>
+<p class="mt-0.5 text-xs text-[var(--text-muted)]">Piutang Rp {{ number_format((float) $aging['ar_total'], 0, ',', '.') }} · utang Rp {{ number_format((float) $aging['ap_total'], 0, ',', '.') }}</p>
+<div class="relative mt-3 h-44"><canvas id="chart-aging"></canvas></div>
+</article>
 @endif
+@if($pileStatus && $pileStatus->isNotEmpty())
+<article class="rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)]">
+<div class="flex items-center justify-between"><h2 class="text-[15px] font-extrabold tracking-tight">Status Bored Pile</h2><a href="/admin/projects" class="text-xs font-bold text-[var(--brand-primary)]">Proyek →</a></div>
+<div class="relative mt-3 h-44"><canvas id="chart-piles"></canvas></div>
+</article>
+@endif
+@if($procurementQueue)
+<article class="rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)]">
+<div class="flex items-center justify-between"><h2 class="text-[15px] font-extrabold tracking-tight">Procurement</h2><a href="/admin/procurement" class="text-xs font-bold text-[var(--brand-primary)]">Buka →</a></div>
+<div class="mt-4 space-y-3">
+<div class="flex items-center justify-between rounded-xl bg-[var(--surface-muted)] px-4 py-3"><span class="text-xs font-bold text-[var(--text-secondary)]">RFQ Terbuka</span><span class="text-lg font-extrabold tabular-nums">{{ $procurementQueue['rfqOpen'] }}</span></div>
+<div class="flex items-center justify-between rounded-xl bg-[var(--surface-muted)] px-4 py-3"><span class="text-xs font-bold text-[var(--text-secondary)]">PO Menunggu Terima</span><span class="text-lg font-extrabold tabular-nums">{{ $procurementQueue['poPendingReceive'] }}</span></div>
+<div class="flex items-center justify-between rounded-xl bg-[var(--surface-muted)] px-4 py-3"><span class="text-xs font-bold text-[var(--text-secondary)]">Komitmen PO</span><span class="text-sm font-extrabold tabular-nums">Rp {{ number_format((float) $procurementQueue['poValue'], 0, ',', '.') }}</span></div>
 </div>
-
-<div class="mt-10 grid gap-5 lg:grid-cols-2">
-@if($approvals !== null)
-<x-ui.card bodyClass="p-6">
-<div class="flex items-center justify-between"><h2 class="font-bold tracking-tight">Menunggu Persetujuan</h2><a href="/admin/approvals" class="text-xs font-bold text-[var(--brand-primary)]">Approval Center →</a></div>
-<div class="mt-3 space-y-2">@forelse($approvals as $approval)
-<div class="flex items-center justify-between rounded-xl border p-3 text-sm transition hover:border-[var(--brand-primary)]"><div><strong>{{ class_basename($approval->approvable_type) }} #{{ $approval->approvable_id }}</strong><span class="block text-xs text-slate-500">Tahap {{ $approval->current_sequence }} @if($approval->due_at)· SLA {{ $approval->due_at->format('d/m H:i') }}@endif</span></div>@if($approval->due_at && $approval->due_at->isPast())<x-ui.badge status="exception" label="overdue" />@else<x-ui.badge status="pending_approval" label="pending" />@endif</div>
-@empty<x-ui.empty icon="check" title="Tidak ada dokumen menunggu" description="Semua approval dalam batas SLA." />@endforelse</div>
-</x-ui.card>
+</article>
 @endif
 @if($journals->isNotEmpty())
-<x-ui.card bodyClass="p-6">
-<div class="flex items-center justify-between"><h2 class="font-bold tracking-tight">Jurnal Terbaru</h2><a href="/admin/finance/journals" class="text-xs font-bold text-[var(--brand-primary)]">Buku Besar →</a></div>
-<table class="mt-3 w-full text-sm"><thead><tr><th>Nomor</th><th>Sumber</th><th>Tanggal</th><th class="text-right">Nilai</th></tr></thead><tbody>@foreach($journals as $journal)<tr class="transition hover:bg-slate-50 dark:hover:!bg-slate-800"><td class="py-2.5 font-mono text-xs">{{ $journal->number }}</td><td>{{ str($journal->source_type)->replace('_', ' ') }}</td><td>{{ $journal->journal_date->format('d/m/Y') }}</td><td class="text-right font-mono tabular-nums">{{ number_format((float) ($journal->entries->sum('debit') ?: 0), 0, ',', '.') }}</td></tr>@endforeach</tbody></table>
-</x-ui.card>
+<article class="rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)]">
+<div class="flex items-center justify-between"><h2 class="text-[15px] font-extrabold tracking-tight">Jurnal Terbaru</h2><a href="/admin/finance/journals" class="text-xs font-bold text-[var(--brand-primary)]">Buku Besar →</a></div>
+<table class="mt-3 w-full text-[13px]"><tbody>@foreach($journals as $journal)<tr class="border-b border-[var(--border-subtle)] last:border-0"><td class="py-2.5 font-mono text-xs">{{ $journal->number }}</td><td class="text-[var(--text-muted)]">{{ str($journal->source_type)->replace('_', ' ') }}</td><td class="text-right font-mono tabular-nums">{{ number_format((float) ($journal->entries->sum('debit') ?: 0), 0, ',', '.') }}</td></tr>@endforeach</tbody></table>
+</article>
 @endif
 </div>
-
-<h2 class="mt-10 text-lg font-black tracking-tight print:hidden">Akses Cepat</h2>
-<div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4 print:hidden">
-@if(auth()->user()->hasPermission('tender.view',$company->id))<a href="/admin/tenders" class="card-lift rounded-[var(--radius-card)] border bg-white p-5 shadow-[var(--shadow-card)]"><strong>Marketing & Tender</strong><p class="mt-2 text-sm leading-relaxed text-slate-500">Pelanggan, tender, hasil dan konversi proyek.</p></a>@endif
-@if(auth()->user()->hasPermission('project.view',$company->id))<a href="/admin/projects" class="card-lift rounded-[var(--radius-card)] border bg-white p-5 shadow-[var(--shadow-card)]"><strong>Project & Bored Pile</strong><p class="mt-2 text-sm leading-relaxed text-slate-500">Zona, titik, progress dan concrete overbreak.</p></a>@endif
-@if(auth()->user()->hasPermission('procurement.view',$company->id))<a href="/admin/procurement" class="card-lift rounded-[var(--radius-card)] border bg-white p-5 shadow-[var(--shadow-card)]"><strong>Procurement</strong><p class="mt-2 text-sm leading-relaxed text-slate-500">Vendor, PO versi, three-way matching.</p></a>@endif
-@if(auth()->user()->hasPermission('finance.view',$company->id))<a href="/admin/billing" class="card-lift rounded-[var(--radius-card)] border bg-white p-5 shadow-[var(--shadow-card)]"><strong>Billing & Pajak</strong><p class="mt-2 text-sm leading-relaxed text-slate-500">Progress billing, retensi, PPN dan bukti potong.</p></a>@endif
-</div>
+@endif
 </section>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     if (!window.Chart) return;
+    const css = getComputedStyle(document.documentElement);
+    const v = (name, fallback) => css.getPropertyValue(name).trim() || fallback;
     const dark = document.documentElement.classList.contains('dark');
-    Chart.defaults.color = dark ? '#94a3b8' : '#334155';
-    Chart.defaults.borderColor = dark ? '#22304d' : '#e2e8f0';
+    Chart.defaults.color = v('--text-muted', '#8292a8');
+    Chart.defaults.borderColor = v('--border-subtle', '#e8edf4');
     Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
-    const brand = getComputedStyle(document.documentElement).getPropertyValue('--brand-primary').trim() || '#0369a1';
-    const palette = [brand, '#0891b2', '#7c3aed', '#f59e0b', '#10b981'];
+    Chart.defaults.font.size = 11;
+    const brand = v('--brand-primary', '#0369a1');
+    const palette = [brand, v('--tone-info', '#0284c7'), v('--tone-violet', '#7c3aed'), v('--tone-warning', '#d97706'), v('--tone-success', '#059669')];
+    const grid = { grid: { color: v('--border-subtle', '#e8edf4'), drawTicks: false }, border: { display: false } };
     @if($revenueTrend && $revenueTrend->isNotEmpty())
     new Chart(document.getElementById('chart-revenue'), {
         type: 'bar',
         data: { labels: @json($revenueTrend->pluck('label')), datasets: [
-            { label: 'DPP Billing', data: @json($revenueTrend->pluck('dpp')), backgroundColor: brand, borderRadius: 8 },
-            { label: 'PPN Keluaran', data: @json($revenueTrend->pluck('tax')), backgroundColor: '#f59e0b', borderRadius: 8 },
+            { label: 'DPP Billing', data: @json($revenueTrend->pluck('dpp')), backgroundColor: brand, borderRadius: 8, maxBarThickness: 42 },
+            { label: 'PPN Keluaran', data: @json($revenueTrend->pluck('tax')), backgroundColor: v('--tone-warning', '#d97706'), borderRadius: 8, maxBarThickness: 42 },
         ]},
-        options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: { callback: v => 'Rp ' + (v/1e6) + ' jt' } } }, plugins: { legend: { position: 'bottom' } } }
+        options: { responsive: true, maintainAspectRatio: false, scales: { x: grid, y: { ...grid, ticks: { callback: v2 => 'Rp ' + (v2/1e6) + ' jt' } } }, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, boxHeight: 10, usePointStyle: true, pointStyle: 'circle' } }, tooltip: { backgroundColor: v('--text-primary', '#0f172a'), padding: 10, cornerRadius: 8, displayColors: false } } }
     });
     @endif
     @if($pileStatus && $pileStatus->isNotEmpty())
     new Chart(document.getElementById('chart-piles'), {
         type: 'doughnut',
         data: { labels: @json($pileStatus->keys()->map(fn ($s) => str($s)->replace('_', ' ')->title())), datasets: [{ data: @json($pileStatus->values()), backgroundColor: palette, borderWidth: 0 }] },
-        options: { responsive: true, maintainAspectRatio: false, cutout: '62%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } }
+        options: { responsive: true, maintainAspectRatio: false, cutout: '64%', plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, boxHeight: 10, usePointStyle: true, pointStyle: 'circle' } } } }
     });
     @endif
     @if($aging)
     new Chart(document.getElementById('chart-aging'), {
         type: 'bar',
-        data: { labels: @json($aging['buckets']->keys()), datasets: [{ label: 'Outstanding', data: @json($aging['buckets']->values()), backgroundColor: ['#10b981', '#f59e0b', '#f97316', '#ef4444'], borderRadius: 8 }] },
-        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => 'Rp ' + Number(ctx.raw).toLocaleString('id-ID') } } }, scales: { x: { ticks: { callback: v => (v/1e6) + ' jt' } } } }
+        data: { labels: @json($aging['buckets']->keys()), datasets: [{ label: 'Outstanding', data: @json($aging['buckets']->values()), backgroundColor: [v('--tone-success', '#059669'), v('--tone-warning', '#d97706'), '#f97316', v('--tone-danger', '#dc2626')], borderRadius: 8, maxBarThickness: 22 }] },
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, scales: { x: { ...grid, ticks: { callback: v2 => (v2/1e6) + ' jt' } }, y: { grid: { display: false }, border: { display: false } } }, plugins: { legend: { display: false }, tooltip: { backgroundColor: v('--text-primary', '#0f172a'), padding: 10, cornerRadius: 8, callbacks: { label: ctx => 'Rp ' + Number(ctx.raw).toLocaleString('id-ID') } } } }
     });
     @endif
 });

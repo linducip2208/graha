@@ -19,6 +19,7 @@ class ThemePresets
                 'tokens' => [
                     '--brand-primary' => '#0f2a52', '--brand-primary-hover' => '#16386b', '--brand-accent' => '#38bdf8',
                     '--surface-sidebar' => '#0f1e3d', '--surface-topbar' => '#ffffff',
+                    '--text-sidebar' => '#dbe4f3', '--text-sidebar-muted' => '#8fa3c4',
                     '--font-ui' => 'Instrument Sans', '--font-heading' => 'Instrument Sans',
                     '--radius-button' => '.6rem', '--radius-card' => '.9rem',
                     '--density-pad' => '.65rem', '--shadow-card' => '0 1px 2px rgba(15,23,42,.05),0 8px 24px -16px rgba(15,23,42,.18)',
@@ -29,6 +30,7 @@ class ThemePresets
                 'tokens' => [
                     '--brand-primary' => '#0e7490', '--brand-primary-hover' => '#155e75', '--brand-accent' => '#22d3ee',
                     '--surface-sidebar' => '#083344', '--surface-topbar' => '#ffffff',
+                    '--text-sidebar' => '#d3ecef', '--text-sidebar-muted' => '#7fb5c4',
                     '--font-ui' => 'Inter', '--font-heading' => 'Inter',
                     '--radius-button' => '.55rem', '--radius-card' => '.8rem',
                     '--density-pad' => '.6rem', '--shadow-card' => '0 1px 3px rgba(8,51,68,.12)',
@@ -39,6 +41,7 @@ class ThemePresets
                 'tokens' => [
                     '--brand-primary' => '#334155', '--brand-primary-hover' => '#1e293b', '--brand-accent' => '#0ea5e9',
                     '--surface-sidebar' => '#f8fafc', '--surface-topbar' => '#ffffff',
+                    '--text-sidebar' => '#334155', '--text-sidebar-muted' => '#7c8ba1',
                     '--font-ui' => 'System UI', '--font-heading' => 'System UI',
                     '--radius-button' => '.4rem', '--radius-card' => '.55rem',
                     '--density-pad' => '.85rem', '--shadow-card' => '0 1px 2px rgba(15,23,42,.06)',
@@ -49,6 +52,7 @@ class ThemePresets
                 'tokens' => [
                     '--brand-primary' => '#e11d48', '--brand-primary-hover' => '#be123c', '--brand-accent' => '#fb7185',
                     '--surface-sidebar' => '#111827', '--surface-topbar' => '#111827',
+                    '--text-sidebar' => '#d6dde8', '--text-sidebar-muted' => '#8794a8',
                     '--font-ui' => 'Manrope', '--font-heading' => 'Manrope',
                     '--radius-button' => '.5rem', '--radius-card' => '.7rem',
                     '--density-pad' => '.6rem', '--shadow-card' => '0 2px 10px rgba(0,0,0,.35)',
@@ -59,6 +63,7 @@ class ThemePresets
                 'tokens' => [
                     '--brand-primary' => '#b45309', '--brand-primary-hover' => '#92400e', '--brand-accent' => '#f59e0b',
                     '--surface-sidebar' => '#1c1917', '--surface-topbar' => '#fafaf9',
+                    '--text-sidebar' => '#e7e0d8', '--text-sidebar-muted' => '#a49a8d',
                     '--font-ui' => 'IBM Plex Sans', '--font-heading' => 'IBM Plex Sans',
                     '--radius-button' => '.5rem', '--radius-card' => '.65rem',
                     '--density-pad' => '.6rem', '--shadow-card' => '0 1px 3px rgba(28,25,23,.15)',
@@ -69,6 +74,7 @@ class ThemePresets
                 'tokens' => [
                     '--brand-primary' => '#4f46e5', '--brand-primary-hover' => '#4338ca', '--brand-accent' => '#818cf8',
                     '--surface-sidebar' => '#1e1b4b', '--surface-topbar' => '#ffffff',
+                    '--text-sidebar' => '#e0dfff', '--text-sidebar-muted' => '#9d97d6',
                     '--font-ui' => 'Source Sans 3', '--font-heading' => 'Manrope',
                     '--radius-button' => '.7rem', '--radius-card' => '1rem',
                     '--density-pad' => '.7rem', '--shadow-card' => '0 4px 20px -10px rgba(79,70,229,.35)',
