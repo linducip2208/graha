@@ -11,7 +11,7 @@ class CompanyExperience extends Model
 
     protected function casts(): array
     {
-        return ['is_published' => 'boolean', 'published_at' => 'datetime', 'nav_config' => 'array', 'terminology' => 'array', 'dashboard_config' => 'array', 'launcher_config' => 'array', 'launcher_covers' => 'array'];
+        return ['is_published' => 'boolean', 'published_at' => 'datetime', 'nav_config' => 'array', 'terminology' => 'array', 'dashboard_config' => 'array', 'launcher_config' => 'array', 'launcher_covers' => 'array', 'public_site' => 'array'];
     }
 
     public function company(): BelongsTo

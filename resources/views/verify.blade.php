@@ -1,48 +1,39 @@
-<!doctype html>
-<html lang="id">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Verifikasi Tanda Tangan Digital</title>
-<style>
-body{font-family:ui-sans-serif,system-ui,sans-serif;background:#f8fafc;color:#0f172a;margin:0;padding:24px}
-.wrap{max-width:640px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:28px}
-.badge{display:inline-block;padding:6px 14px;border-radius:999px;font-weight:800;font-size:13px;letter-spacing:.04em}
-.ok{background:#dcfce7;color:#166534}.bad{background:#fee2e2;color:#991b1b}
-dl{margin:18px 0 0;display:grid;grid-template-columns:150px 1fr;gap:8px 12px;font-size:14px}
-dt{color:#64748b;font-weight:600}dd{margin:0;word-break:break-all;font-variant-numeric:tabular-nums}
-.hash{font-family:ui-monospace,monospace;font-size:12px}
-ul.checks{list-style:none;padding:0;margin:14px 0 0;font-size:13px}
-li{padding:4px 0}li.ya{color:#166534}li.tidak{color:#b91c1c}
-.qr{float:right;width:132px;height:132px;margin:0 0 10px 14px;border:1px solid #e2e8f0;border-radius:12px;padding:6px;background:#fff}
-footer{margin-top:22px;padding-top:14px;border-top:1px solid #e2e8f0;color:#94a3b8;font-size:12px}
-</style>
-</head>
-<body>
-<div class="wrap">
-<img alt="QR verifikasi" class="qr" src="data:image/svg+xml;base64,{{ base64_encode($qrSvg) }}">
-@php($allOk = $result['valid'])
-<span class="badge {{ $allOk ? 'ok' : 'bad' }}">{{ $allOk ? 'TERVERIFIKASI' : 'GAGAL VERIFIKASI' }}</span>
-<h1 style="font-size:20px;margin:12px 0 4px">Tanda Tangan Digital {{ $signature->version?->document?->number }}</h1>
-<p style="color:#475569;font-size:14px;margin:0">Verifikasi kriptografis terhadap versi dokumen v{{ $signature->version?->version }} dan keutuhan file di penyimpanan.</p>
-
-<ul class="checks">
-<li class="{{ $result['checks']['version_found'] ? 'ya' : 'tidak' }}">{{ $result['checks']['version_found'] ? '✓' : '✗' }} Versi dokumen ditemukan</li>
-<li class="{{ $result['checks']['status_completed'] ? 'ya' : 'tidak' }}">{{ $result['checks']['status_completed'] ? '✓' : '✗' }} Status tanda tangan selesai</li>
-<li class="{{ $result['checks']['hash_bound'] ? 'ya' : 'tidak' }}">{{ $result['checks']['hash_bound'] ? '✓' : '✗' }} Hash tanda tangan terikat versi dokumen</li>
-<li class="{{ $result['checks']['file_intact'] ? 'ya' : 'tidak' }}">{{ $result['checks']['file_intact'] ? '✓' : '✗' }} File utuh (SHA-256 cocok, tidak diubah)</li>
-</ul>
-
-<dl>
-<dt>Dokumen</dt><dd>{{ $signature->version?->document?->title }}</dd>
-<dt>Versi</dt><dd>v{{ $signature->version?->version }}</dd>
-<dt>Penandatangan</dt><dd>{{ $signature->signer_name }}@if($signature->signer_position) — {{ $signature->signer_position }}@endif</dd>
-<dt>Tipe</dt><dd>{{ str($signature->signature_type)->replace('_',' ') }}</dd>
-<dt>Waktu</dt><dd>{{ $signature->signed_at?->format('d/m/Y H:i:s') ?? '-' }} WIB</dd>
-<dt>SHA-256</dt><dd class="hash">{{ $signature->signed_hash }}</dd>
-</dl>
-
-<footer>Halaman verifikasi publik. Pindai QR pada dokumen untuk membuka halaman ini kembali kapan pun. Nomor verifikasi: <span class="hash">{{ $token }}</span></footer>
+<x-layouts.public title="Verifikasi Tanda Tangan Digital" description="Verifikasi keaslian tanda tangan digital dokumen: integritas hash, versi, penandatangan, dan waktu.">
+@php($valid = (bool) ($result['valid'] ?? false))
+@php($checks = $result['checks'] ?? [])
+@php($version = $result['version'] ?? null)
+@php($document = $version?->document)
+<div class="mx-auto max-w-2xl px-5 py-16">
+<article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+<div class="flex items-center gap-4 border-b border-slate-200 p-6 {{ $valid ? 'bg-emerald-50' : 'bg-red-50' }}">
+<span class="grid h-12 w-12 shrink-0 place-items-center rounded-full {{ $valid ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' }}">
+<x-ui.icon :name="$valid ? 'check' : 'triangle-alert'" class="h-6 w-6" />
+</span>
+<div class="min-w-0">
+<p class="text-lg font-black">{{ $valid ? 'Tanda Tangan TERVERIFIKASI' : 'GAGAL VERIFIKASI' }}</p>
+<p class="mt-0.5 text-sm {{ $valid ? 'text-emerald-700' : 'text-red-700' }}">{{ $valid ? 'Integritas dokumen terjaga — hash cocok dengan catatan audit.' : 'Satu atau lebih pemeriksaan integritas tidak terpenuhi.' }}</p>
 </div>
-</body>
-</html>
+</div>
+<dl class="grid gap-x-6 gap-y-4 p-6 text-sm sm:grid-cols-[180px_1fr]">
+@if($document)<dt class="font-bold text-slate-500">Dokumen</dt><dd class="break-words"><span class="font-mono text-xs">{{ $document->number }}</span> · {{ $document->title }}</dd>@endif
+@if($version)<dt class="font-bold text-slate-500">Versi</dt><dd class="font-mono">v{{ $version->version }} (Rev. {{ $version->revision }})</dd>@endif
+<dt class="font-bold text-slate-500">Penandatangan</dt><dd>{{ $signature->signer_name }}@if($signature->signer_position)<span class="text-slate-400"> · {{ $signature->signer_position }}</span>@endif</dd>
+<dt class="font-bold text-slate-500">Jenis TTD</dt><dd class="uppercase">{{ str_replace('_', ' ', $signature->signature_type) }}</dd>
+@if($signature->signed_at ?? null)<dt class="font-bold text-slate-500">Ditandatangani</dt><dd>{{ $signature->signed_at->format('d M Y H:i').' WIB' }}</dd>@endif
+<dt class="font-bold text-slate-500">Signed Hash (SHA-256)</dt><dd class="break-all font-mono text-xs">{{ $signature->signed_hash }}</dd>
+<dt class="font-bold text-slate-500">Pemeriksaan Integritas</dt>
+<dd>
+<ul class="space-y-1.5">
+@foreach(['version_found' => 'Versi dokumen ditemukan', 'status_completed' => 'Proses tanda tangan selesai', 'hash_bound' => 'Hash cocok dengan versi bertanda tangan', 'file_intact' => 'Berkas utuh (SHA-256 terverifikasi)'] as $key => $label)
+<li class="flex items-center gap-2"><span class="grid h-4.5 w-4.5 place-items-center rounded-full {{ ($checks[$key] ?? false) ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600' }}"><x-ui.icon :name="($checks[$key] ?? false) ? 'check' : 'triangle-alert'" class="h-3 w-3" /></span>{{ $label }}</li>
+@endforeach
+</ul>
+</dd>
+</dl>
+<div class="border-t border-slate-200 bg-slate-50 px-6 py-4 text-xs text-slate-400">
+Halaman verifikasi publik — hanya menampilkan status integritas dan metadata minimum dokumen.
+</div>
+</article>
+<p class="mt-6 text-center text-sm"><a href="/" class="font-bold text-sky-700 hover:underline">← Kembali ke beranda</a></p>
+</div>
+</x-layouts.public>

@@ -89,6 +89,51 @@ class ExperienceController extends Controller
         return back()->with('status', 'Custom cover dihapus; default dikembalikan.');
     }
 
+    /** Simpan konfigurasi Public Site (homepage publik per company). */
+    public function savePublicSite(Request $request, CurrentCompany $current)
+    {
+        abort_unless($request->user()->hasPermission('finance.manage', $current->id()), 403);
+        $data = $request->validate([
+            'enabled' => ['required', 'boolean'],
+            'hero_title' => ['nullable', 'string', 'max:200'],
+            'hero_subtitle' => ['nullable', 'string', 'max:500'],
+            'cta1_label' => ['nullable', 'string', 'max:40'],
+            'cta1_url' => ['nullable', 'string', 'max:300'],
+            'cta2_label' => ['nullable', 'string', 'max:40'],
+            'cta2_url' => ['nullable', 'string', 'max:300'],
+            'footer_text' => ['nullable', 'string', 'max:200'],
+            'sections' => ['nullable', 'array'],
+        ]);
+        $row = CompanyExperience::firstOrNew(['company_id' => $current->id()]);
+        $site = (array) ($row->public_site ?? []);
+        $site['enabled'] = $data['enabled'];
+        foreach (['hero_title', 'hero_subtitle', 'cta1_label', 'cta1_url', 'cta2_label', 'cta2_url', 'footer_text'] as $key) {
+            $site[$key] = $data[$key] ?? null;
+        }
+        $site['sections'] = $data['sections'] ?? [];
+        $row->public_site = $site;
+        $row->save();
+        ThemeService::flush($current->id());
+
+        return back()->with('status', 'Public Site disimpan.');
+    }
+
+    /** Upload hero image homepage publik (JPEG/PNG/WebP -> WebP 1600x900). */
+    public function uploadPublicHero(Request $request, CurrentCompany $current, ExperienceVersionService $service)
+    {
+        abort_unless($request->user()->hasPermission('finance.manage', $current->id()), 403);
+        $data = $request->validate(['file' => ['required', 'file', 'max:5120', 'mimes:jpg,jpeg,png,webp']]);
+        $path = $service->storePublicHero($current->id(), $request->file('file'), $request->user());
+        $row = CompanyExperience::firstOrNew(['company_id' => $current->id()]);
+        $site = (array) ($row->public_site ?? []);
+        $site['hero_image'] = $path;
+        $row->public_site = $site;
+        $row->save();
+        ThemeService::flush($current->id());
+
+        return back()->with('status', 'Hero image publik tersimpan (WebP 1600x900).');
+    }
+
     public function update(Request $request, CurrentCompany $current, ThemeService $service)
     {
         abort_unless($request->user()->hasPermission('finance.manage', $current->id()), 403);

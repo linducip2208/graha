@@ -40,6 +40,10 @@ document.querySelectorAll('details.nav-group').forEach((d)=>{const k='navgrp:'+(
 const wsNav=document.querySelector('#workspace-nav');
 if(wsNav){wsNav.querySelectorAll('details.ws-group').forEach((d)=>{d.addEventListener('toggle',()=>{if(d.open){wsNav.querySelectorAll('details.ws-group[open]').forEach((o)=>{if(o!==d)o.open=false})}})})}
 
+// ===== Public homepage: product proof tab preview (screenshot asli) =====
+const proof=document.querySelector('[data-proof]');
+if(proof){const img=proof.querySelector('[data-proof-img]');const shots={dashboard:'dashboard-redesign-v2-1440',project:'projects-portfolio-v2-1440',finance:'finance-overview-v2-1440',foundation:'foundation-control-v2-1440'};proof.querySelectorAll('[data-proof-btn]').forEach((btn)=>{btn.addEventListener('click',()=>{proof.querySelectorAll('[data-proof-btn]').forEach((b)=>b.classList.toggle('active',b===btn));const key=btn.dataset.proofBtn;if(shots[key]&&img)img.src=window.location.origin+'/marketing/screens/'+shots[key]+'.png'})})}
+
 // ===== Drawer (create panel samping): [data-drawer-open="id"] / [data-drawer-close] =====
 document.addEventListener('click',(e)=>{
 const opener=e.target.closest('[data-drawer-open]');

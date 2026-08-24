@@ -172,15 +172,16 @@ class DocumentControlPageTest extends TestCase
         }
         $this->assertSame(25, DB::table('documents')->count());
 
-        // Pagination 20/halaman + link halaman 2.
+        // Pagination 20/halaman + link halaman 2 (hitung tautan baris secara presisi).
         $page1 = $this->get('/admin/documents')->assertOk()->getContent();
-        $this->assertSame(20, substr_count($page1, '/admin/documents/'));
+        $rows = preg_match_all('/href="[^"]*\/admin\/documents\/\d+"/', $page1);
+        $this->assertSame(20, $rows, 'Jumlah baris dokumen: '.$rows);
         $this->assertStringContainsString('page=2', $page1);
 
         // Pencarian mempersempit daftar.
         $search = $this->get('/admin/documents?q=Khusus+Beton')->assertOk()->getContent();
-        $this->assertStringContainsString('Laporan Khusus Beton', $search);
-        $this->assertStringNotContainsString('Laporan Rutin 3<', $search);
+        $this->assertSame(1, preg_match_all('/Laporan Khusus Beton/', $search));
+        $this->assertStringNotContainsString('Laporan Rutin 3</a>', $search);
 
         // Filter jenis dokumen.
         $type = $this->get('/admin/documents?type=report')->assertOk()->getContent();

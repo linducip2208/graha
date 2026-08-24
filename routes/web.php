@@ -341,6 +341,8 @@ Route::post('/admin/experience/versions/{version}/publish', [ExperienceControlle
 Route::post('/admin/experience/versions/{version}/rollback', [ExperienceController::class, 'rollbackTo'])->middleware(['auth', 'company']);
 Route::post('/admin/experience/assets', [ExperienceController::class, 'uploadAsset'])->middleware(['auth', 'company']);
 Route::post('/admin/experience/launcher', [ExperienceController::class, 'saveLauncherConfig'])->middleware(['auth', 'company']);
+Route::post('/admin/experience/public-site', [ExperienceController::class, 'savePublicSite'])->middleware(['auth', 'company']);
+Route::post('/admin/experience/public-site/hero', [ExperienceController::class, 'uploadPublicHero'])->middleware(['auth', 'company']);
 Route::post('/admin/experience/launcher/covers', [ExperienceController::class, 'uploadLauncherCover'])->middleware(['auth', 'company']);
 Route::post('/admin/experience/launcher/covers/delete', [ExperienceController::class, 'deleteLauncherCover'])->middleware(['auth', 'company']);
 Route::post('/admin/experience/versions/{version}/preview', [ExperienceController::class, 'startPreview'])->middleware(['auth', 'company']);

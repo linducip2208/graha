@@ -15,6 +15,9 @@ return [
 
     'name' => env('APP_NAME', 'Laravel'),
 
+    // Tampilkan kredensial demo di halaman login (default: hanya di environment local).
+    'show_demo_credentials' => env('SHOW_DEMO_CREDENTIALS', env('APP_ENV') === 'local'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Environment

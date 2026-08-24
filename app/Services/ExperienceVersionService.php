@@ -161,6 +161,46 @@ class ExperienceVersionService
         return $path;
     }
 
+    /** Hero image homepage publik: optimasi ke WebP 1600x900 (disk privat, disajikan /branding). */
+    public function storePublicHero(int $companyId, UploadedFile $file, User $actor): string
+    {
+        $allowedMimes = ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/webp' => 'webp'];
+        $ext = $allowedMimes[$file->getClientMimeType()] ?? null;
+        throw_unless($ext !== null, ValidationException::withMessages(['file' => 'Hero harus JPEG/PNG/WebP.']));
+        throw_if($file->getSize() > 5 * 1024 * 1024, ValidationException::withMessages(['file' => 'Hero maksimal 5 MB.']));
+
+        $content = (string) $file->getContent();
+        $image = @imagecreatefromstring($content);
+        throw_unless($image !== false, ValidationException::withMessages(['file' => 'Berkas gambar tidak dapat dibaca.']));
+
+        $targetW = 1600;
+        $targetH = 900;
+        $srcW = imagesx($image);
+        $srcH = imagesy($image);
+        $scale = max($targetW / $srcW, $targetH / $srcH);
+        $cropW = (int) round($targetW / $scale);
+        $cropH = (int) round($targetH / $scale);
+        $canvas = imagecreatetruecolor($targetW, $targetH);
+        $srcX = (int) floor(($srcW - $cropW) / 2);
+        $srcY = (int) floor(($srcH - $cropH) / 2);
+        imagecopyresampled($canvas, $image, 0, 0, $srcX, $srcY, $targetW, $targetH, $cropW, $cropH);
+        imagedestroy($image);
+        ob_start();
+        imagewebp($canvas, null, 82);
+        imagedestroy($canvas);
+        $optimized = (string) ob_get_clean();
+
+        $old = CompanyExperience::find($companyId)?->public_site['hero_image'] ?? null;
+        $path = "branding/{$companyId}/public/hero-".now()->format('YmdHis').'.webp';
+        Storage::disk('local')->put($path, $optimized);
+        if ($old && Storage::disk('local')->exists($old)) {
+            Storage::disk('local')->delete($old);
+        }
+        $this->audit->record($companyId, $actor->id, 'experience.public_hero_uploaded', CompanyExperience::firstOrNew(['company_id' => $companyId]));
+
+        return $path;
+    }
+
     /** Hapus custom cover workspace; registry default otomatis kembali dipakai. */
     public function deleteLauncherCover(int $companyId, string $workspaceKey, User $actor): void
     {

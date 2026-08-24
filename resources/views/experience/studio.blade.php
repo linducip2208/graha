@@ -89,6 +89,36 @@
 </div>
 </fieldset>
 
+<fieldset class="rounded-xl border p-4"><legend class="px-2 text-sm font-bold">Public Site (Homepage)</legend>
+@php($ps = (array) ($row?->public_site ?? []))
+<form method="post" action="/admin/experience/public-site" class="grid gap-3">@csrf
+<div class="flex flex-wrap items-center gap-4">
+<label class="flex items-center gap-2 text-xs font-semibold"><input type="checkbox" name="enabled" value="1" @checked(($ps['enabled'] ?? true)) class="h-4 w-4"> Homepage publik aktif (branding company ini)</label>
+</div>
+<div class="grid gap-3 sm:grid-cols-2">
+<label class="text-xs font-semibold">Judul Hero<input name="hero_title" value="{{ $ps['hero_title'] ?? '' }}" maxlength="200" class="mt-1 w-full rounded-lg border p-2 text-xs"></label>
+<label class="text-xs font-semibold">Subjudul Hero<textarea name="hero_subtitle" rows="2" maxlength="500" class="mt-1 w-full rounded-lg border p-2 text-xs">{{ $ps['hero_subtitle'] ?? '' }}</textarea></label>
+<label class="text-xs font-semibold">Label CTA Utama<input name="cta1_label" value="{{ $ps['cta1_label'] ?? '' }}" maxlength="40" class="mt-1 w-full rounded-lg border p-2 text-xs"></label>
+<label class="text-xs font-semibold">URL CTA Utama<input name="cta1_url" value="{{ $ps['cta1_url'] ?? '' }}" maxlength="300" class="mt-1 w-full rounded-lg border p-2 text-xs"></label>
+<label class="text-xs font-semibold">Label CTA Kedua<input name="cta2_label" value="{{ $ps['cta2_label'] ?? '' }}" maxlength="40" class="mt-1 w-full rounded-lg border p-2 text-xs"></label>
+<label class="text-xs font-semibold">URL CTA Kedua<input name="cta2_url" value="{{ $ps['cta2_url'] ?? '' }}" maxlength="300" class="mt-1 w-full rounded-lg border p-2 text-xs"></label>
+<label class="text-xs font-semibold sm:col-span-2">Teks Footer<input name="footer_text" value="{{ $ps['footer_text'] ?? '' }}" maxlength="200" class="mt-1 w-full rounded-lg border p-2 text-xs"></label>
+</div>
+<fieldset class="rounded-lg border p-3"><legend class="px-1 text-[11px] font-bold uppercase tracking-wide text-slate-400">Tampilkan Section</legend>
+<div class="grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
+@foreach(['proof' => 'Screenshot Produk', 'flow' => 'Alur Kerja', 'modules' => 'Modul', 'foundation' => 'Proyek & Pondasi', 'passport' => 'Pile Passport', 'finance' => 'Keuangan', 'supply' => 'Supply Chain', 'workshop' => 'Workshop', 'qhse' => 'QMS & HSE', 'documents' => 'Dokumen', 'security' => 'Keamanan', 'multicompany' => 'Multi-Company', 'implementation' => 'Implementasi'] as $key => $label)
+<label class="flex items-center gap-2"><input type="checkbox" name="sections[{{ $key }}]" value="1" @checked(! isset($ps['sections'][$key]) || $ps['sections'][$key]) class="h-3.5 w-3.5">{{ $label }}</label>
+@endforeach
+</div>
+</fieldset>
+<div><button class="rounded-xl bg-slate-800 px-4 py-2 text-xs font-bold text-white">Simpan Public Site</button></div>
+</form>
+<form method="post" action="/admin/experience/public-site/hero" enctype="multipart/form-data" class="mt-3 flex flex-wrap items-center gap-2 border-t pt-3">@csrf
+@if(($ps['hero_image'] ?? null))<img src="/branding/{{ app(\App\Support\Tenancy\CurrentCompany::class)->id() }}/{{ basename($ps['hero_image']) }}" alt="Hero aktif" class="h-12 w-[107px] rounded-lg object-cover">@endif
+<label class="cursor-pointer rounded-lg border px-2.5 py-1.5 text-[11px] font-bold text-[var(--brand-primary)] hover:bg-[var(--surface-muted)]">Ganti Hero Image<input type="file" name="file" accept=".jpg,.jpeg,.png,.webp" required class="hidden" onchange="this.form.requestSubmit()"></label>
+<span class="text-[11px] text-slate-400">JPEG/PNG/WebP · maks 5 MB · otomatis WebP 1600×900. Kosong = screenshot dashboard default.</span>
+</form>
+</fieldset>
 <fieldset class="rounded-xl border p-4"><legend class="px-2 text-sm font-bold">App Launcher</legend>
 <p class="text-[11px] text-slate-400">Pengaturan default halaman /apps untuk seluruh user company. User tetap dapat mengganti mode tampilan sendiri (preferensi browser).</p>
 <form method="post" action="/admin/experience/launcher" class="mt-3 grid gap-3 sm:grid-cols-3">@csrf
