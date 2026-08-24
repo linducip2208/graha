@@ -1,0 +1,23 @@
+const { chromium } = require('playwright');
+const path = require('path');
+const BASE = 'http://127.0.0.1:8899';
+const OUT = path.join(__dirname, '..', 'public', 'marketing', 'screens');
+(async () => {
+  const browser = await chromium.launch();
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await ctx.newPage();
+  await page.goto(BASE + '/login', { waitUntil: 'networkidle' });
+  await page.type('input[type=email]', 'admin@grahapondasi.test', { delay: 12 });
+  await page.type('input[type=password]', 'password', { delay: 12 });
+  await page.locator('button[type=submit]').first().click();
+  await page.waitForTimeout(1200);
+  await page.goto(BASE + '/admin/qms', { waitUntil: 'networkidle' });
+  await page.waitForTimeout(600);
+  await page.screenshot({ path: path.join(OUT, 'qms-v2-1440.png') });
+  console.log('OK qms re-shot');
+  await page.goto(BASE + '/admin/projects?view=kanban', { waitUntil: 'networkidle' });
+  await page.waitForTimeout(500);
+  await page.screenshot({ path: path.join(OUT, 'projects-kanban-v2-1440.png') });
+  console.log('OK kanban re-shot');
+  await browser.close();
+})();
