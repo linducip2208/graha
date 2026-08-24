@@ -1,4 +1,4 @@
-<x-layouts.app title="{{ $project->code }} â€” {{ $project->name }}">
+<x-layouts.app title="{{ $project->code }} —” {{ $project->name }}">
 @php($tabs = [
     'overview' => 'Ringkasan',
     'planning' => 'Perencanaan',
@@ -13,7 +13,7 @@
     'hse' => 'HSE',
 ])
 <section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-<p class="text-xs font-bold uppercase tracking-widest text-sky-700">{{ $project->code }} Ã‚Â· {{ $project->location }}</p>
+<p class="text-xs font-bold uppercase tracking-widest text-[var(--brand-primary)]">{{ $project->code }} Ã‚Â· {{ $project->location }}</p>
 <h1 class="mt-1 text-2xl font-bold tracking-tight">{{ $project->name }}</h1>
 <div class="mt-2 flex flex-wrap items-center gap-3 text-sm text-slate-500">
 <span class="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase">{{ str_replace('_', ' ', $project->status) }}</span>
@@ -70,7 +70,7 @@
 </form>
 <div class="mt-3 overflow-x-auto"><table class="w-full text-sm"><tbody>
 @forelse($wbsTree as $node)
-<tr class="border-t"><td style="padding-left: {{ 8 + $node->depth * 20 }}px"><span class="font-mono font-bold">{{ $node->code }}</span> <span class="ml-2">{{ $node->name }}</span>@if((int)$node->depth === 0)<span class="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-slate-500">Phase</span>@elseif((int)$node->depth === 1)<span class="ml-2 rounded bg-sky-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-sky-600">Paket</span>@else<span class="ml-2 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-600">Aktivitas</span>@endif</td><td class="text-right font-mono">{{ $node->budget ? number_format((float)$node->budget,0,',','.') : '-' }}</td></tr>
+<tr class="border-t"><td style="padding-left: {{ 8 + $node->depth * 20 }}px"><span class="font-mono font-bold">{{ $node->code }}</span> <span class="ml-2">{{ $node->name }}</span>@if((int)$node->depth === 0)<span class="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-slate-500">Phase</span>@elseif((int)$node->depth === 1)<span class="ml-2 rounded bg-sky-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-[var(--brand-primary)]">Paket</span>@else<span class="ml-2 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-600">Aktivitas</span>@endif</td><td class="text-right font-mono">{{ $node->budget ? number_format((float)$node->budget,0,',','.') : '-' }}</td></tr>
 @empty<tr><td class="p-3 text-slate-400">Belum ada WBS — mulai dari Phase root, lalu paket kerja dan aktivitas di bawahnya.</td></tr>@endforelse
 </tbody></table></div>
 </article>
@@ -88,7 +88,7 @@
 <div class="rounded-xl border p-3 text-sm">
 <div class="flex flex-wrap items-center justify-between gap-2">
 <strong>{{ $log->title }}</strong>
-<span class="rounded-full px-2 py-0.5 text-[11px] font-bold {{ $log->status === 'resolved' ? 'bg-emerald-50 text-emerald-700' : ($log->status === 'in_progress' ? 'bg-sky-50 text-sky-700' : 'bg-red-50 text-red-700') }}">{{ strtoupper($log->status) }}</span>
+<span class="rounded-full px-2 py-0.5 text-[11px] font-bold {{ $log->status === 'resolved' ? 'bg-emerald-50 text-emerald-700' : ($log->status === 'in_progress' ? 'bg-sky-50 text-[var(--brand-primary)]' : 'bg-red-50 text-red-700') }}">{{ strtoupper($log->status) }}</span>
 </div>
 <p class="text-xs text-slate-500">{{ ucfirst($log->type) }} Â· dibuat {{ $log->raised_at?->format('d/m/Y') }}{{ $log->target_date ? ' Â· target '.$log->target_date->format('d/m/Y') : '' }}{{ $log->pile ? ' Â· pile '.$log->pile->pile_number : '' }} oleh {{ $log->recorder?->name }}</p>
 @if($log->description)<p class="mt-1 text-xs">{{ \Illuminate\Support\Str::limit($log->description, 180) }}</p>@endif
@@ -100,7 +100,7 @@
 </form>
 @elseif($log->resolution_notes)<p class="mt-1 text-xs text-emerald-700">Selesai: {{ \Illuminate\Support\Str::limit($log->resolution_notes, 120) }}</p>@endif
 </div>
-@empty<p class="text-sm text-slate-400">Belum ada kendala tercatat â€” catat hambatan gambar/material/izin agar tidak menghantam jadwal diam-diam.</p>@endforelse
+@empty<p class="text-sm text-slate-400">Belum ada kendala tercatat —” catat hambatan gambar/material/izin agar tidak menghantam jadwal diam-diam.</p>@endforelse
 </div>
 </article>
 @endif
@@ -108,7 +108,7 @@
 @if($activeTab === 'piles')
 <section class="mt-6 overflow-x-auto rounded-2xl border bg-white">
 <table class="w-full text-sm table-sticky"><thead><tr><th>Pile</th><th>Zona</th><th>Diameter</th><th>Depth</th><th>Beton</th><th>Status</th><th>Genealogi</th></tr></thead><tbody>@forelse($piles as $pile)
-<tr><td class="font-mono font-bold">{{ $pile->pile_number }}</td><td>{{ $pile->zone?->code }}</td><td>{{ $pile->diameter_mm }} mm</td><td>{{ $pile->actual_depth_m ?? $pile->planned_depth_m }} m</td><td>{{ $pile->actual_concrete_m3 ?? '-' }} mÃ‚Â³</td><td>{{ str_replace('_', ' ', strtoupper($pile->status)) }}</td><td><a href="{{ route('piles.genealogy', $pile) }}" class="font-bold text-sky-700 hover:underline">Genealogi</a> Â· <a href="{{ route('piles.as-built', $pile) }}" class="text-slate-500 hover:underline">PDF</a></td></tr>
+<tr><td class="font-mono font-bold">{{ $pile->pile_number }}</td><td>{{ $pile->zone?->code }}</td><td>{{ $pile->diameter_mm }} mm</td><td>{{ $pile->actual_depth_m ?? $pile->planned_depth_m }} m</td><td>{{ $pile->actual_concrete_m3 ?? '-' }} mÃ‚Â³</td><td>{{ str_replace('_', ' ', strtoupper($pile->status)) }}</td><td><a href="{{ route('piles.genealogy', $pile) }}" class="font-bold text-[var(--brand-primary)] hover:underline">Genealogi</a> Â· <a href="{{ route('piles.as-built', $pile) }}" class="text-slate-500 hover:underline">PDF</a></td></tr>
 @empty<tr><td colspan="7" class="p-8 text-center text-slate-500">Belum ada titik bored pile pada proyek ini.</td></tr>@endforelse
 </tbody></table>
 </section>
@@ -154,17 +154,17 @@
 <td>{{ $plan->quantity }}</td>
 <td class="text-right font-mono">{{ $plan->estimated_value ? number_format((float)$plan->estimated_value,0,',','.') : '-' }}</td>
 <td>{{ $plan->required_date->format('d/m/Y') }}</td>
-<td><span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $plan->status === 'received' ? 'bg-emerald-50 text-emerald-700' : ($plan->status === 'cancelled' ? 'bg-slate-100 text-slate-500' : ($plan->required_date->isPast() && in_array($plan->status,['planned','pr_created']) ? 'bg-red-100 text-red-700' : 'bg-sky-50 text-sky-700')) }}">{{ strtoupper($plan->status) }}</span></td>
+<td><span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $plan->status === 'received' ? 'bg-emerald-50 text-emerald-700' : ($plan->status === 'cancelled' ? 'bg-slate-100 text-slate-500' : ($plan->required_date->isPast() && in_array($plan->status,['planned','pr_created']) ? 'bg-red-100 text-red-700' : 'bg-sky-50 text-[var(--brand-primary)]')) }}">{{ strtoupper($plan->status) }}</span></td>
 <td>{{ $plan->purchase_request_id ? 'PR#'.$plan->purchase_request_id : '-' }} / {{ $plan->purchase_order_id ? 'PO#'.$plan->purchase_order_id : '-' }}</td>
 <td>
 <form method="post" action="/admin/procurement-plans/{{ $plan->id }}/link" class="flex gap-1">@csrf
 <select name="kind" class="rounded-lg border p-1 text-[11px]"><option value="pr">PR</option><option value="po">PO</option></select>
 <input type="number" name="document_id" required min="1" placeholder="ID" class="w-16 rounded-lg border p-1 text-[11px]">
-<button class="text-sky-700 font-bold text-[11px]">Tautkan</button>
+<button class="text-[var(--brand-primary)] font-bold text-[11px]">Tautkan</button>
 </form>
 </td>
 </tr>
-@empty<tr><td colspan="7" class="p-4 text-center text-slate-400">Belum ada rencana pengadaan â€” susun kebutuhan material/jasa per tanggal dibutuhkan.</td></tr>@endforelse
+@empty<tr><td colspan="7" class="p-4 text-center text-slate-400">Belum ada rencana pengadaan —” susun kebutuhan material/jasa per tanggal dibutuhkan.</td></tr>@endforelse
 </tbody></table></div>
 </x-ui.card>
 @endif
@@ -190,7 +190,7 @@
 
 @if($activeTab === 'cost' && isset($baselines))
 <x-ui.card class="lg:col-span-3" bodyClass="p-6">
-<div class="flex flex-wrap items-center justify-between gap-2"><h2 class="font-bold">Budget Baseline (versi)</h2><span class="text-xs text-slate-400">Baseline aktif: {{ $costing['baseline_version'] ? 'v'.$costing['baseline_version'] : 'belum ada â€” memakai estimated cost proyek' }}</span></div>
+<div class="flex flex-wrap items-center justify-between gap-2"><h2 class="font-bold">Budget Baseline (versi)</h2><span class="text-xs text-slate-400">Baseline aktif: {{ $costing['baseline_version'] ? 'v'.$costing['baseline_version'] : 'belum ada —” memakai estimated cost proyek' }}</span></div>
 <form method="post" action="/admin/project-costing/baselines" class="mt-3 grid gap-2 no-print">@csrf
 <input type="hidden" name="project_id" value="{{ $project->id }}">
 <textarea name="lines" required rows="3" placeholder="kode|uraian|qty|harga_satuan per baris&#10;MAT-BETON|Beton fc25|38|1500000" class="rounded-xl border p-2.5 font-mono text-xs"></textarea>
@@ -200,7 +200,7 @@
 <div class="flex flex-wrap items-center justify-between gap-2 rounded-xl border p-3 text-sm">
 <strong>Budget v{{ $b->version }}</strong>
 <span class="font-mono">Rp {{ number_format((float) $b->total_budget, 0, ',', '.') }}</span>
-<span class="rounded-full px-2 py-0.5 text-[11px] font-bold {{ $b->status === 'approved' ? 'bg-emerald-50 text-emerald-700' : ($b->status === 'draft' ? 'bg-sky-50 text-sky-700' : 'bg-slate-100 text-slate-500') }}">{{ strtoupper($b->status) }}</span>
+<span class="rounded-full px-2 py-0.5 text-[11px] font-bold {{ $b->status === 'approved' ? 'bg-emerald-50 text-emerald-700' : ($b->status === 'draft' ? 'bg-sky-50 text-[var(--brand-primary)]' : 'bg-slate-100 text-slate-500') }}">{{ strtoupper($b->status) }}</span>
 @if($b->approved_at)<span class="text-[11px] text-slate-400">{{ $b->approved_at->format('d/m/Y') }} oleh {{ $b->approver?->name }}</span>@endif
 @if($b->status === 'draft')
 <form method="post" action="/admin/project-costing/baselines/{{ $b->id }}/approve" class="no-print">@csrf
@@ -208,7 +208,7 @@
 </form>
 @endif
 </div>
-@empty<p class="text-sm text-slate-400">Belum ada baseline â€” buat v0 untuk mengunci anggaran awal proyek.</p>@endforelse
+@empty<p class="text-sm text-slate-400">Belum ada baseline —” buat v0 untuk mengunci anggaran awal proyek.</p>@endforelse
 </div>
 </x-ui.card>
 @endif
@@ -236,7 +236,7 @@
 <section class="mt-6 space-y-3">
 @forelse($ncrs ?? [] as $ncr)
 <article class="rounded-2xl border bg-white p-5 shadow-sm"><div class="flex flex-wrap items-center justify-between gap-2"><strong>{{ $ncr->number }}</strong><span class="text-xs uppercase text-slate-500">{{ $ncr->source_type }} Ã‚Â· severitas {{ $ncr->severity }}</span><x-ui.badge :status="$ncr->status === 'closed' ? 'posted' : 'pending_approval'" :label="$ncr->status" /></div><p class="mt-2 text-sm text-slate-600">{{ $ncr->description }}</p>
-@if($ncr->actions->isNotEmpty())<ul class="mt-2 space-y-1 text-xs text-slate-500">@foreach($ncr->actions as $action)<li>? {{ str($action->action)->limit(90) }} â€” {{ $action->status }} @if($action->due_at)(tenggat {{ $action->due_at->format('d/m/Y') }})@endif</li>@endforeach</ul>@endif</article>
+@if($ncr->actions->isNotEmpty())<ul class="mt-2 space-y-1 text-xs text-slate-500">@foreach($ncr->actions as $action)<li>? {{ str($action->action)->limit(90) }} —” {{ $action->status }} @if($action->due_at)(tenggat {{ $action->due_at->format('d/m/Y') }})@endif</li>@endforeach</ul>@endif</article>
 @empty
 <x-ui.empty icon="shield" title="Tidak ada NCR pada proyek ini" description="Kualitas pekerjaan dalam kendali." />
 @endforelse

@@ -21,7 +21,7 @@
 <input name="mill_cert_number" placeholder="No. mill cert" class="rounded-xl border p-3">
 <input name="storage_location" placeholder="Lokasi penyimpanan" class="rounded-xl border p-3 xl:col-span-2">
 </div>
-<button class="w-fit rounded-xl bg-sky-700 px-6 py-3 font-bold text-white">Daftarkan cage</button>
+<button class="w-fit rounded-xl bg-[var(--brand-primary)] px-6 py-3 font-bold text-white">Daftarkan cage</button>
 </form>
 
 <h2 class="mt-10 text-lg font-black">Daftar Cage</h2>
@@ -64,7 +64,7 @@
 @if($cage->qc_status === 'passed')
 <form method="post" action="/admin/manufacturing/cages/{{ $cage->id }}/deliver" class="mt-2 flex flex-wrap items-center gap-2">@csrf
 <select name="bored_pile_id" required class="rounded-lg border p-1.5 text-xs"><option value="">Kirim ke titik siap pasang</option>@foreach($piles as $pile)<option value="{{ $pile->id }}">{{ $pile->project?->code }}/{{ $pile->pile_number }} ({{ str($pile->status)->replace('_',' ') }})</option>@endforeach</select>
-<button onclick="return confirm('Catat pengiriman cage ke titik ini?')" class="font-bold text-sky-700">Catat pengiriman</button></form>
+<button onclick="return confirm('Catat pengiriman cage ke titik ini?')" class="font-bold text-[var(--brand-primary)]">Catat pengiriman</button></form>
 @endif
 @endif
 <form method="post" action="/admin/manufacturing/cages/{{ $cage->id }}/material" class="mt-2 flex flex-wrap items-center gap-2 no-print">@csrf
@@ -84,7 +84,7 @@
 @if(($evidences[$cage->id] ?? collect())->isNotEmpty())<span class="text-xs text-slate-500">{{ ($evidences[$cage->id])->count() }} foto tersimpan</span>@endif
 </form>
 @forelse($evidences[$cage->id] ?? [] as $ev)
-<div class="mt-2 flex items-center gap-3 rounded-xl bg-slate-50 p-2 text-xs"><img src="{{ route('evidence.file', $ev) }}" alt="{{ $ev->original_name }}" class="h-14 w-14 rounded-lg border object-cover"><div><strong>{{ \Illuminate\Support\Str::limit($ev->original_name, 40) }}</strong><br>{{ $ev->size_kb }} KB · {{ $ev->created_at->format('d/m/Y H:i') }} · {{ $ev->uploader?->name }} <a href="{{ route('evidence.download', $ev) }}" class="font-bold text-sky-700">Unduh</a></div></div>
+<div class="mt-2 flex items-center gap-3 rounded-xl bg-slate-50 p-2 text-xs"><img src="{{ route('evidence.file', $ev) }}" alt="{{ $ev->original_name }}" class="h-14 w-14 rounded-lg border object-cover"><div><strong>{{ \Illuminate\Support\Str::limit($ev->original_name, 40) }}</strong><br>{{ $ev->size_kb }} KB · {{ $ev->created_at->format('d/m/Y H:i') }} · {{ $ev->uploader?->name }} <a href="{{ route('evidence.download', $ev) }}" class="font-bold text-[var(--brand-primary)]">Unduh</a></div></div>
 @empty
 @endforelse
 </article>

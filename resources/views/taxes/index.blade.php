@@ -32,7 +32,7 @@
 <select name="kind" required class="rounded-xl border p-3"><option value="ppn_output">PPN Keluaran (penjualan)</option><option value="ppn_input">PPN Masukan (pembelian)</option><option value="withholding">Pemotongan PPh (bukti potong)</option></select>
 <input type="number" step=".0001" min="0" max="100" name="rate_percent" required placeholder="Tarif % (mis. 11)" class="rounded-xl border p-3">
 <input name="description" placeholder="Keterangan (opsional)" class="rounded-xl border p-3">
-<button class="rounded-xl bg-sky-700 p-3 text-white">Simpan tarif</button>
+<button class="rounded-xl bg-[var(--brand-primary)] p-3 text-white">Simpan tarif</button>
 <p class="text-xs text-slate-500">Contoh umum: PPN keluaran 11%, PPN masukan 11%, PPh 23 2%, PPh final konstruksi 0,5–2%.</p>
 </form>
 @endif

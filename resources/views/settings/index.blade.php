@@ -36,7 +36,7 @@
 <label class="flex items-center gap-3 self-end rounded-xl border p-3 text-sm"><input type="checkbox" name="require_pile_test_pass" value="1" @checked($values['require_pile_test_pass'] === '1')> <span class="font-semibold">Wajib uji pile passed sebelum completed</span></label>
 </div>
 <label class="mt-4 block text-sm font-semibold">Catatan Kaki Faktur<textarea name="invoice_footer_note" rows="2" class="mt-1 w-full rounded-xl border p-3">{{ $values['invoice_footer_note'] }}</textarea></label>
-<div class="mt-5 flex flex-wrap gap-3 items-center"><button class="rounded-xl bg-sky-700 px-6 py-3 font-bold text-white">Simpan pengaturan</button><span class="text-xs text-slate-400">Hanya role dengan izin Finance Manage yang dapat menyimpan.</span></div>
+<div class="mt-5 flex flex-wrap gap-3 items-center"><button class="rounded-xl bg-[var(--brand-primary)] px-6 py-3 font-bold text-white">Simpan pengaturan</button><span class="text-xs text-slate-400">Hanya role dengan izin Finance Manage yang dapat menyimpan.</span></div>
 </form>
 @endif
 
@@ -52,7 +52,7 @@
 <article class="card-lift rounded-2xl border bg-white p-6">
 <h2 class="font-bold">⇄ Accounting Mapping</h2>
 <p class="mt-2 text-sm text-slate-500">Pemetaan setiap jenis transaksi ke akun debit/kredit — wajib lengkap sebelum posting.</p>
-<a href="/admin/finance/accounting-mappings" class="mt-4 inline-block rounded-xl bg-sky-700 px-4 py-2 text-sm font-bold text-white">Buka mapping</a>
+<a href="/admin/finance/accounting-mappings" class="mt-4 inline-block rounded-xl bg-[var(--brand-primary)] px-4 py-2 text-sm font-bold text-white">Buka mapping</a>
 </article>
 <article class="card-lift rounded-2xl border bg-white p-6">
 <h2 class="font-bold">% Tarif Pajak</h2>

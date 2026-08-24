@@ -10,7 +10,7 @@
 <h2 class="font-bold">Buat RFQ Baru</h2>
 <div class="grid gap-2 sm:grid-cols-2"><input name="number" required placeholder="Nomor RFQ" class="rounded-xl border p-3"><input name="title" required placeholder="Judul pengadaan" class="rounded-xl border p-3"><label class="text-xs font-semibold">Batas penawaran<input type="date" name="due_date" class="mt-1 w-full rounded-xl border p-3"></label><input name="notes" placeholder="Catatan (opsional)" class="rounded-xl border p-3"></div>
 <label class="block text-xs font-semibold">Item — satu per baris: <code>SKU|kuantitas</code><textarea name="items" rows="3" placeholder="ITM-BESI|5&#10;ITM-BENTONITE|200" required class="mt-1 w-full rounded-xl border p-2.5 font-mono text-xs"></textarea></label>
-<button class="w-fit rounded-xl bg-sky-700 px-6 py-3 font-bold text-white">Buat RFQ</button>
+<button class="w-fit rounded-xl bg-[var(--brand-primary)] px-6 py-3 font-bold text-white">Buat RFQ</button>
 </form>
 
 @if($rfq)

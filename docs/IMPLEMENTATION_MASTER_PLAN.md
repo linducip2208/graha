@@ -360,3 +360,12 @@ Verifikasi: 198 tests / 808 assertions, pint bersih, view:cache + npm run build 
 | UI-C2 | CSS | Table polish (hover row, tabular-nums), focus-visible ring konsisten, scrollbar halus light/dark | Tested | Suite penuh | prefers-reduced-motion sudah ada |
 
 Verifikasi: 198 tests / 808 assertions, pint bersih, build sukses. Screenshot: dashboard-premium-{1440,dark-1440,375}.png + finance-overview-1440.png.
+
+# Pembaruan 2026-08-24 (7) - Fasa 6: Konsistensi Token Brand & Kebersihan Glyph
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| UI-C3 | Komponen | Sapu text-sky-700/600, hover:border-sky-500, bg-sky-700 -> token --brand-primary di 78 view admin | Tested | Suite penuh 198 | auth/pdf sengaja dikecualikan |
+| BUG-003 | Konten | Mojibake UTF-8 (em-dash rusak) di 5 view (finance/inventory/procurement/projects/tenders) | Fixed | Suite penuh | scripts/fix-mojibake.php reusable |
+
+White-label kini benar-benar menyeluruh: ganti preset/warna di Experience Studio mengubah aksen SEMUA halaman admin (sebelumnya sebagian terkunci sky). Verifikasi: 198 tests / 808 assertions, pint bersih, build sukses.

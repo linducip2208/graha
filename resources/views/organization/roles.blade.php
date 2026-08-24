@@ -29,7 +29,7 @@
 <div class="space-y-5">
 <form method="post" action="/admin/organization/roles/{{ $role->id }}/permissions" class="rounded-2xl border bg-white p-5">@csrf
 <h2 class="font-black">Permission — {{ $role->name }}</h2>
-@if(! $role->is_system && auth()->user()->hasPermission('organization.manage', app(\App\Support\Tenancy\CurrentCompany::class)->id()))<button class="mt-2 rounded-xl bg-sky-700 px-5 py-2.5 font-bold text-white">Simpan permission</button>@endif
+@if(! $role->is_system && auth()->user()->hasPermission('organization.manage', app(\App\Support\Tenancy\CurrentCompany::class)->id()))<button class="mt-2 rounded-xl bg-[var(--brand-primary)] px-5 py-2.5 font-bold text-white">Simpan permission</button>@endif
 <div class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
 @foreach($permissionsByModule as $module => $perms)
 <fieldset class="rounded-xl border p-4"><legend class="px-1 text-xs font-bold uppercase tracking-wide text-slate-500">{{ str($module)->replace('_',' ') }}</legend>

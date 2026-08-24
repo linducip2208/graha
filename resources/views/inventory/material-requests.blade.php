@@ -13,7 +13,7 @@
 <select name="bored_pile_id" class="rounded-xl border p-3"><option value="">Titik pile (opsional)</option>@foreach($piles as $pile)<option value="{{ $pile->id }}">{{ $pile->project?->code }}/{{ $pile->pile_number }}</option>@endforeach</select>
 </div>
 <label class="block text-xs font-semibold">Item — satu per baris: <code>SKU|qty</code><textarea name="lines" rows="3" required placeholder="ITM-BESI|1.5&#10;ITM-BENTONITE|20" class="mt-1 w-full rounded-xl border p-2.5 font-mono text-xs"></textarea></label>
-<button class="w-fit rounded-xl bg-sky-700 px-6 py-3 font-bold text-white">Ajukan permintaan</button>
+<button class="w-fit rounded-xl bg-[var(--brand-primary)] px-6 py-3 font-bold text-white">Ajukan permintaan</button>
 </form>
 
 <h2 class="mt-10 text-lg font-black">Daftar Permintaan</h2>
@@ -29,7 +29,7 @@
 @if($mr->status === 'requested' && $mr->requested_by !== auth()->id())
 <form method="post" action="/admin/inventory/material-requests/{{ $mr->id }}/approve" class="mt-2 inline">@csrf<button onclick="return confirm('Setujui permintaan material ini?')" class="rounded-lg bg-emerald-700 px-4 py-2 text-xs font-bold text-white">Approve</button></form>
 @elseif($mr->status === 'approved')
-<form method="post" action="/admin/inventory/material-requests/{{ $mr->id }}/issue" class="mt-2 inline">@csrf<button onclick="return confirm('Terbitkan seluruh sisa material dari gudang dan posting jurnal biaya proyek?')" class="rounded-lg bg-sky-700 px-4 py-2 text-xs font-bold text-white">Issue ke proyek</button></form>
+<form method="post" action="/admin/inventory/material-requests/{{ $mr->id }}/issue" class="mt-2 inline">@csrf<button onclick="return confirm('Terbitkan seluruh sisa material dari gudang dan posting jurnal biaya proyek?')" class="rounded-lg bg-[var(--brand-primary)] px-4 py-2 text-xs font-bold text-white">Issue ke proyek</button></form>
 @endif
 @endif
 </x-ui.card>

@@ -35,9 +35,9 @@
 <select name="bored_pile_id" class="rounded-lg border p-1.5 text-xs"><option value="">Titik (jika instalasi)</option>@foreach($piles as $p)<option value="{{ $p->id }}">{{ $p->project?->code }}/{{ $p->pile_number }}</option>@endforeach</select>
 <input type="number" step=".01" min="0" name="cost" placeholder="Biaya" class="w-24 rounded-lg border p-1.5 text-xs">
 <input name="notes" placeholder="Catatan" class="flex-1 min-w-40 rounded-lg border p-1.5 text-xs">
-<button class="font-bold text-sky-700">Catat pergerakan</button>
+<button class="font-bold text-[var(--brand-primary)]">Catat pergerakan</button>
 </form>
-<details class="mt-2"><summary class="cursor-pointer text-xs font-bold text-sky-700">Riwayat ({{ $unit->movements->count() }} terakhir)</summary>
+<details class="mt-2"><summary class="cursor-pointer text-xs font-bold text-[var(--brand-primary)]">Riwayat ({{ $unit->movements->count() }} terakhir)</summary>
 <ul class="mt-1 space-y-1 text-xs text-slate-600">@foreach($unit->movements as $m)<li>{{ $m->occurred_at->format('d/m/Y') }} — <strong>{{ str($m->type)->replace('_',' ') }}</strong> {{ $m->pile?->pile_number ? '· '.$m->pile->pile_number : '' }} {{ $m->notes ? '· '.\Illuminate\Support\Str::limit($m->notes, 60) : '' }}</li>@endforeach</ul>
 </details>
 <form method="post" action="/admin/casings/{{ $unit->id }}/evidence" enctype="multipart/form-data" class="mt-2 flex flex-wrap items-center gap-2 no-print">@csrf
@@ -46,7 +46,7 @@
 @if(($evidences[$unit->id] ?? collect())->isNotEmpty())<span class="text-xs text-slate-500">{{ ($evidences[$unit->id])->count() }} foto tersimpan</span>@endif
 </form>
 @forelse($evidences[$unit->id] ?? [] as $ev)
-<div class="mt-2 flex items-center gap-3 rounded-xl bg-slate-50 p-2 text-xs"><img src="{{ route('evidence.file', $ev) }}" alt="{{ $ev->original_name }}" class="h-14 w-14 rounded-lg border object-cover"><div><strong>{{ \Illuminate\Support\Str::limit($ev->original_name, 40) }}</strong><br>{{ $ev->size_kb }} KB · {{ $ev->created_at->format('d/m/Y H:i') }} · {{ $ev->uploader?->name }} <a href="{{ route('evidence.download', $ev) }}" class="font-bold text-sky-700">Unduh</a></div></div>
+<div class="mt-2 flex items-center gap-3 rounded-xl bg-slate-50 p-2 text-xs"><img src="{{ route('evidence.file', $ev) }}" alt="{{ $ev->original_name }}" class="h-14 w-14 rounded-lg border object-cover"><div><strong>{{ \Illuminate\Support\Str::limit($ev->original_name, 40) }}</strong><br>{{ $ev->size_kb }} KB · {{ $ev->created_at->format('d/m/Y H:i') }} · {{ $ev->uploader?->name }} <a href="{{ route('evidence.download', $ev) }}" class="font-bold text-[var(--brand-primary)]">Unduh</a></div></div>
 @empty
 @endforelse
 </x-ui.card>

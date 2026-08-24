@@ -15,7 +15,7 @@
 <div class="rounded-xl border p-4 text-sm">
 <div class="flex flex-wrap items-center justify-between gap-2">
 <strong>{{ \Illuminate\Support\Str::limit($action->action, 80) }}</strong>
-<span class="rounded-full px-2 py-0.5 text-[11px] font-bold {{ $action->status === 'effective' ? 'bg-emerald-50 text-emerald-700' : ($action->status === 'open' ? 'bg-red-50 text-red-700' : 'bg-sky-50 text-sky-700') }}">{{ strtoupper($action->status) }}</span>
+<span class="rounded-full px-2 py-0.5 text-[11px] font-bold {{ $action->status === 'effective' ? 'bg-emerald-50 text-emerald-700' : ($action->status === 'open' ? 'bg-red-50 text-red-700' : 'bg-sky-50 text-[var(--brand-primary)]') }}">{{ strtoupper($action->status) }}</span>
 </div>
 <p class="mt-1 text-xs text-slate-500">PIC {{ $action->owner?->name }} · tenggat {{ $action->due_at?->format('d/m/Y') }}@if($action->verified_at) · diverifikasi {{ $action->verified_at->format('d/m/Y') }} oleh {{ $action->verifier?->name }}@endif</p>
 @if($action->effectiveness_notes)<p class="mt-1 text-xs text-emerald-700">Efektivitas: {{ $action->effectiveness_notes }}</p>@endif

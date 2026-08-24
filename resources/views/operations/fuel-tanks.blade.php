@@ -9,7 +9,7 @@
 <strong>{{ $t->code }} — {{ $t->name }}</strong>
 <p class="mt-2 text-2xl font-black tabular-nums">{{ number_format((float) $t->balance, 0, ',', '.') }} L</p>
 <p class="text-xs text-slate-500">Kapasitas {{ number_format((float) $t->capacity_l, 0, ',', '.') }} L</p>
-<a href="/admin/fuel-tanks?tank={{ $t->id }}" class="mt-2 inline-block text-xs font-bold text-sky-700">Kelola →</a>
+<a href="/admin/fuel-tanks?tank={{ $t->id }}" class="mt-2 inline-block text-xs font-bold text-[var(--brand-primary)]">Kelola →</a>
 </article>@empty<x-ui.empty icon="wrench" title="Belum ada tangki" description="Daftarkan tangki solar utama untuk mulai pencatatan." />@endforelse</div>
 
 <form method="post" action="/admin/fuel-tanks" class="mt-8 grid gap-3 rounded-2xl border bg-white p-5 no-print">@csrf
@@ -28,7 +28,7 @@
 <input name="reference" placeholder="Referensi (surat jalan/dispetch)" class="rounded-xl border p-3">
 <input name="idempotency_key" required value="ft-{{ now()->format('YmdHis') }}-{{ rand(100,999) }}" class="rounded-xl border p-3 font-mono text-xs">
 </div>
-<button class="w-fit rounded-xl bg-sky-700 px-6 py-3 font-bold text-white">Catat transaksi</button>
+<button class="w-fit rounded-xl bg-[var(--brand-primary)] px-6 py-3 font-bold text-white">Catat transaksi</button>
 </form>
 
 <form method="post" action="/admin/fuel-tanks/{{ $tank->id }}/reconcile" class="mt-4 grid gap-3 rounded-2xl border bg-white p-5 no-print">@csrf

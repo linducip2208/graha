@@ -1,9 +1,9 @@
 <x-layouts.app title="Tender {{ $tender->number }}">
 @php($tabs = ['overview' => 'Ringkasan', 'estimate' => 'Estimasi & Margin', 'decision' => 'Bid / No-Bid', 'participants' => 'Peserta', 'outcome' => 'Outcome', 'lessons' => 'Lessons Learned'])
 <section class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-<p class="text-xs font-bold uppercase tracking-widest text-sky-700">{{ $tender->number }} Â· {{ $tender->year }}</p>
+<p class="text-xs font-bold uppercase tracking-widest text-[var(--brand-primary)]">{{ $tender->number }} Â· {{ $tender->year }}</p>
 <x-ui.page-header title="{{ $tender->project_name }}" subtitle="Pelanggan: {{ $tender->customer?->name }}@if($tender->location) · {{ $tender->location }}@endif@if($tender->bid_value) · Bid Rp {{ number_format((float) $tender->bid_value, 0, ',', '.') }}@endif" status="{{ str_replace('_',' ', $tender->status) }}">
-@if($project)<a href="/admin/projects/{{ $project->id }}" class="font-semibold text-sky-700 hover:underline">Proyek terkait →</a>@endif
+@if($project)<a href="/admin/projects/{{ $project->id }}" class="font-semibold text-[var(--brand-primary)] hover:underline">Proyek terkait →</a>@endif
 </x-ui.page-header>
 
 <x-ui.tabs :tabs="$tabs" :active="$activeTab" class="mt-6" />
@@ -52,7 +52,7 @@
 <p class="text-sm text-slate-500">Skor dari faktor data nyata; bobot & ambang diatur perusahaan di Pengaturan. Faktor tanpa data tidak dikarang — hasilnya Perlu Review.</p>
 </div>
 <form method="post" action="/admin/tenders/{{ $tender->id }}/bid-decision" class="no-print">@csrf
-<button @disabled(!in_array($tender->status, ['preparation','bidding'])) class="rounded-xl bg-sky-700 px-5 py-2.5 text-sm font-bold text-white disabled:opacity-40">{{ $decision ? 'Evaluasi ulang' : 'Jalankan evaluasi' }}</button>
+<button @disabled(!in_array($tender->status, ['preparation','bidding'])) class="rounded-xl bg-[var(--brand-primary)] px-5 py-2.5 text-sm font-bold text-white disabled:opacity-40">{{ $decision ? 'Evaluasi ulang' : 'Jalankan evaluasi' }}</button>
 </form>
 </div>
 @guest
@@ -103,6 +103,6 @@
 </section>
 @endif
 
-<a href="/admin/tenders" class="mt-8 inline-block text-sm font-bold text-sky-700 print:hidden">â† Kembali ke daftar tender</a>
+<a href="/admin/tenders" class="mt-8 inline-block text-sm font-bold text-[var(--brand-primary)] print:hidden">â† Kembali ke daftar tender</a>
 </section>
 </x-layouts.app>

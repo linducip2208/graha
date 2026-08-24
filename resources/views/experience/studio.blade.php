@@ -139,7 +139,7 @@
 <form method="post" action="/admin/experience/draft" class="mb-2 no-print">@csrf<x-ui.button variant="secondary" type="submit" class="!py-1.5 !text-xs">Simpan sebagai draft baru</x-ui.button></form>
 <table class="w-full text-xs"><thead><tr><th>Versi</th><th>Status</th><th>Diterbitkan</th><th>Aksi</th></tr></thead><tbody>
 @forelse($versions as $v)
-<tr class="border-t"><td class="font-mono font-bold">v{{ $v->version }}</td><td><span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $v->status === 'published' ? 'bg-emerald-50 text-emerald-700' : ($v->status === 'draft' ? 'bg-sky-50 text-sky-700' : 'bg-slate-100 text-slate-500') }}">{{ strtoupper($v->status) }}</span></td><td>{{ $v->published_at?->format('d/m/Y H:i') ?? '-' }}</td>
+<tr class="border-t"><td class="font-mono font-bold">v{{ $v->version }}</td><td><span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $v->status === 'published' ? 'bg-emerald-50 text-emerald-700' : ($v->status === 'draft' ? 'bg-sky-50 text-[var(--brand-primary)]' : 'bg-slate-100 text-slate-500') }}">{{ strtoupper($v->status) }}</span></td><td>{{ $v->published_at?->format('d/m/Y H:i') ?? '-' }}</td>
 <td class="flex gap-2">@if($v->status !== 'published')
 
 @endif

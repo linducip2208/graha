@@ -24,7 +24,7 @@
 <td><code class="rounded bg-slate-100 px-1.5 py-0.5 text-[11px]">{{ $log->event }}</code></td>
 <td class="text-xs">{{ $log->auditable_type ? class_basename($log->auditable_type).' #'.$log->auditable_id : '—' }}</td>
 <td><span class="font-mono text-[10px] text-slate-400" title="{{ $log->entry_hash }}">{{ substr((string) $log->entry_hash, 0, 10) }}…</span></td>
-<td class="max-w-md"><details><summary class="cursor-pointer text-xs font-bold text-sky-700">Lihat data</summary><pre class="mt-1 max-h-48 overflow-auto whitespace-pre-wrap break-all rounded-lg bg-slate-50 p-2 text-[11px]">{{ json_encode($log->new_values ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}</pre></details></td>
+<td class="max-w-md"><details><summary class="cursor-pointer text-xs font-bold text-[var(--brand-primary)]">Lihat data</summary><pre class="mt-1 max-h-48 overflow-auto whitespace-pre-wrap break-all rounded-lg bg-slate-50 p-2 text-[11px]">{{ json_encode($log->new_values ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}</pre></details></td>
 </tr>
 @empty<tr><td colspan="6" class="p-8 text-center text-slate-500">Belum ada aktivitas tercatat untuk filter ini.</td></tr>@endforelse
 </tbody>

@@ -1,6 +1,6 @@
 <x-layouts.app title="Output Produksi Ditolak">
     <section class="mx-auto max-w-7xl px-4 py-8 lg:px-8">
-        <a href="/admin/manufacturing/quality" class="text-sm font-bold text-sky-700">&larr; Quality Control Produksi</a>
+        <a href="/admin/manufacturing/quality" class="text-sm font-bold text-[var(--brand-primary)]">&larr; Quality Control Produksi</a>
         <h1 class="mt-3 text-2xl font-bold tracking-tight">Output Ditolak dan Keputusan Disposition</h1>
         <p class="mt-2 max-w-3xl text-slate-500">Tentukan tindak lanjut setiap hasil produksi yang tidak memenuhi kriteria. Output ditolak tidak pernah menambah stok barang jadi: pilih <strong>rework</strong> untuk diperbaiki dan diperiksa ulang, atau <strong>scrap</strong> untuk membebankan nilainya dari WIP ke biaya scrap.</p>
 

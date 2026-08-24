@@ -40,7 +40,7 @@
 <label class="text-[11px] font-bold text-slate-500">Reorder Point<input type="number" step=".0001" min="0" name="reorder_point" value="{{ $it->reorder_point }}" required class="mt-0.5 block w-28 rounded border p-1.5 text-xs"></label>
 <label class="text-[11px] font-bold text-slate-500">Target Max<input type="number" step=".0001" min="0" name="reorder_max" value="{{ $it->reorder_max }}" class="mt-0.5 block w-28 rounded border p-1.5 text-xs"></label>
 <label class="text-[11px] font-bold text-slate-500">Lead Time (hari)<input type="number" min="0" max="365" name="lead_time_days" value="{{ $it->lead_time_days }}" class="mt-0.5 block w-20 rounded border p-1.5 text-xs"></label>
-<button class="rounded-lg bg-sky-700 px-4 py-2 text-xs font-bold text-white">Simpan</button>
+<button class="rounded-lg bg-[var(--brand-primary)] px-4 py-2 text-xs font-bold text-white">Simpan</button>
 </form>
 @endforeach
 </div>

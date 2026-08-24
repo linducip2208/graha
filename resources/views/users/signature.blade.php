@@ -9,7 +9,7 @@
 <h2 class="font-bold">Unggah / Ganti</h2>
 <input type="file" name="signature" accept=".png" required class="rounded-xl border p-3 text-sm">
 <ul class="list-disc space-y-1 pl-5 text-xs text-slate-500"><li>Format PNG, latar transparan</li><li>Maksimal 1 MB</li><li>Minimal 100×40 px</li></ul>
-<button class="rounded-xl bg-sky-700 p-3 font-bold text-white">Simpan tanda tangan</button>
+<button class="rounded-xl bg-[var(--brand-primary)] p-3 font-bold text-white">Simpan tanda tangan</button>
 </form>
 <div class="rounded-2xl border bg-white p-6">
 <h2 class="font-bold">Tanda Tangan Saat Ini</h2>
@@ -21,5 +21,5 @@
 </div>
 </div>
 
-<a href="/dashboard" class="mt-8 inline-block text-sm font-bold text-sky-700">← Kembali ke dashboard</a>
+<a href="/dashboard" class="mt-8 inline-block text-sm font-bold text-[var(--brand-primary)]">← Kembali ke dashboard</a>
 </section></x-layouts.app>

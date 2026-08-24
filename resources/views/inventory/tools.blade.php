@@ -24,7 +24,7 @@
 <select name="user_id" required class="rounded-lg border p-1.5 text-xs"><option value="">Serahkan ke</option>@foreach($members as $m)<option value="{{ $m->id }}">{{ $m->name }}</option>@endforeach</select>
 <select name="project_id" class="rounded-lg border p-1.5 text-xs"><option value="">Proyek (opsional)</option>@foreach($projects as $prj)<option value="{{ $prj->id }}">{{ $prj->code }}</option>@endforeach</select>
 <input type="date" name="expected_return_at" class="rounded-lg border p-1.5 text-xs">
-<button @disabled($tool->status !== 'available') class="font-bold text-sky-700 disabled:opacity-40">Check-out</button>
+<button @disabled($tool->status !== 'available') class="font-bold text-[var(--brand-primary)] disabled:opacity-40">Check-out</button>
 </form>
 <form method="post" action="/admin/tools/{{ $tool->id }}/checkin" class="inline-flex flex-wrap items-end gap-2 no-print">@csrf
 <input name="condition_note" placeholder="Catatan kondisi saat kembali" class="w-48 rounded-lg border p-1.5 text-xs">
@@ -41,11 +41,11 @@
 @if(($evidences[$tool->id] ?? collect())->isNotEmpty())<span class="text-xs text-slate-500">{{ ($evidences[$tool->id])->count() }} foto tersimpan</span>@endif
 </form>
 @forelse($evidences[$tool->id] ?? [] as $ev)
-<div class="mt-2 flex items-center gap-3 rounded-xl bg-slate-50 p-2 text-xs"><img src="{{ route('evidence.file', $ev) }}" alt="{{ $ev->original_name }}" class="h-14 w-14 rounded-lg border object-cover"><div><strong>{{ \Illuminate\Support\Str::limit($ev->original_name, 40) }}</strong><br>{{ $ev->size_kb }} KB · {{ $ev->created_at->format('d/m/Y H:i') }} · {{ $ev->uploader?->name }} <a href="{{ route('evidence.download', $ev) }}" class="font-bold text-sky-700">Unduh</a></div></div>
+<div class="mt-2 flex items-center gap-3 rounded-xl bg-slate-50 p-2 text-xs"><img src="{{ route('evidence.file', $ev) }}" alt="{{ $ev->original_name }}" class="h-14 w-14 rounded-lg border object-cover"><div><strong>{{ \Illuminate\Support\Str::limit($ev->original_name, 40) }}</strong><br>{{ $ev->size_kb }} KB · {{ $ev->created_at->format('d/m/Y H:i') }} · {{ $ev->uploader?->name }} <a href="{{ route('evidence.download', $ev) }}" class="font-bold text-[var(--brand-primary)]">Unduh</a></div></div>
 @empty
 @endforelse
 
-<details class="mt-2"><summary class="cursor-pointer text-xs font-bold text-sky-700">Riwayat</summary>
+<details class="mt-2"><summary class="cursor-pointer text-xs font-bold text-[var(--brand-primary)]">Riwayat</summary>
 <ul class="mt-1 space-y-1 text-xs text-slate-600">@foreach($tool->movements as $mv)<li>{{ $mv->occurred_at->format('d/m/Y H:i') }} — <strong>{{ str($mv->type)->replace('_',' ') }}</strong> oleh {{ $mv->holder?->name }} {{ $mv->notes ? '· '.\Illuminate\Support\Str::limit($mv->notes, 60) : '' }}</li>@endforeach</ul>
 </details>
 </x-ui.card>

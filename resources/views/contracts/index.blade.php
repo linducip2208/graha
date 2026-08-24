@@ -39,7 +39,7 @@
 <input name="days_extension" type="number" min="0" placeholder="Perpanjangan (hari)" class="rounded-xl border p-3">
 <input name="effective_date" type="date" class="rounded-xl border p-3">
 <textarea name="description" placeholder="Uraian, dasar permintaan, referensi klausa kontrak…" class="rounded-xl border p-3 lg:col-span-3"></textarea>
-<button class="rounded-xl bg-sky-700 p-3 text-white">Simpan Draft</button>
+<button class="rounded-xl bg-[var(--brand-primary)] p-3 text-white">Simpan Draft</button>
 </form>
 
 @if($workflows->isEmpty())

@@ -8,7 +8,7 @@
 
 @if($project)
 <div class="mt-4 grid grid-cols-3 gap-2 lg:hidden no-print">
-<a href="#drilling" class="flex min-h-[56px] items-center justify-center rounded-2xl bg-sky-700 text-sm font-bold text-white shadow active:scale-95">⛏️ Drilling</a>
+<a href="#drilling" class="flex min-h-[56px] items-center justify-center rounded-2xl bg-[var(--brand-primary)] text-sm font-bold text-white shadow active:scale-95">⛏️ Drilling</a>
 <a href="#concrete" class="flex min-h-[56px] items-center justify-center rounded-2xl bg-amber-600 text-sm font-bold text-white shadow active:scale-95">🚛 Beton</a>
 <a href="#testing" class="flex min-h-[56px] items-center justify-center rounded-2xl bg-emerald-700 text-sm font-bold text-white shadow active:scale-95">🧪 Testing</a>
 </div>
@@ -23,7 +23,7 @@
 <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4"><label class="text-xs font-semibold">Mulai<input type="datetime-local" name="drilling_started_at" required class="mt-1 w-full rounded-xl border p-2.5"></label><label class="text-xs font-semibold">Selesai<input type="datetime-local" name="drilling_finished_at" class="mt-1 w-full rounded-xl border p-2.5"></label><label class="text-xs font-semibold">Muka air tanah (m)<input type="number" step=".001" name="groundwater_level_m" class="mt-1 w-full rounded-xl border p-2.5"></label><label class="text-xs font-semibold">Alat bor<input name="drilling_tool" placeholder="Bucket / Auger" class="mt-1 w-full rounded-xl border p-2.5"></label><label class="text-xs font-semibold">Metode cleaning<input name="cleaning_method" placeholder="Air siram / bentonite" class="mt-1 w-full rounded-xl border p-2.5"></label><label class="text-xs font-semibold">Final cleaning (menit)<input type="number" min="0" name="final_cleaning_minutes" class="mt-1 w-full rounded-xl border p-2.5"></label><label class="text-xs font-semibold">Endapan (mm)<input type="number" step=".01" name="sediment_depth_mm" class="mt-1 w-full rounded-xl border p-2.5"></label><label class="text-xs font-semibold">Cuaca<input name="weather" class="mt-1 w-full rounded-xl border p-2.5"></label></div>
 <label class="block text-xs font-semibold">Bore log — satu lapisan per baris: <code>dari|ke|deskripsi tanah</code><textarea name="layers" rows="4" placeholder="0|2.5|Lempung liat coklat&#10;2.5|8|Pasir lepas" class="mt-1 w-full rounded-xl border p-2.5 font-mono text-xs"></textarea></label>
 <div class="grid gap-2 sm:grid-cols-2"><input name="obstruction" placeholder="Hambatan (opsional)" class="rounded-xl border p-3"><input name="problem" placeholder="Masalah (opsional)" class="rounded-xl border p-3"><input name="corrective_action" placeholder="Tindakan korektif (opsional)" class="rounded-xl border p-3"><input name="notes" placeholder="Catatan (opsional)" class="rounded-xl border p-3"></div>
-<button class="w-fit rounded-xl bg-sky-700 px-6 py-3 font-bold text-white">Simpan drilling record</button>
+<button class="w-fit rounded-xl bg-[var(--brand-primary)] px-6 py-3 font-bold text-white">Simpan drilling record</button>
 </form>
 @endif
 <div class="mt-4 space-y-3">@forelse($drillings as $d)
@@ -33,7 +33,7 @@
 <x-ui.badge :status="$d->status === 'verified' ? 'approved' : 'draft'" />
 </div>
 <p class="mt-1 text-xs text-slate-500">{{ $d->layers->count() }} lapisan · muka air {{ $d->groundwater_level_m ?? '-' }} m · endapan {{ $d->sediment_depth_mm ?? '-' }} mm · cuaca {{ $d->weather ?? '-' }} · oleh {{ $d->recorder?->name }} @if($d->verifier)· diverifikasi {{ $d->verifier->name }}@endif</p>
-<details class="mt-2"><summary class="cursor-pointer text-xs font-bold text-sky-700">Bore log</summary>
+<details class="mt-2"><summary class="cursor-pointer text-xs font-bold text-[var(--brand-primary)]">Bore log</summary>
 <table class="mt-2 w-full text-xs"><thead><tr><th>#</th><th>Dari (m)</th><th>Ke (m)</th><th>Deskripsi</th></tr></thead><tbody>@foreach($d->layers as $layer)<tr><td>{{ $layer->sequence }}</td><td>{{ $layer->depth_from_m }}</td><td>{{ $layer->depth_to_m }}</td><td>{{ $layer->soil_description }}</td></tr>@endforeach</tbody></table></details>
 @if($canManage && $d->status === 'draft' && $d->recorded_by !== auth()->id())<form method="post" action="/admin/projects/field-ops/drillings/{{ $d->id }}/verify" class="mt-2">@csrf<button class="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white">Verifikasi</button></form>@endif
 <form method="post" action="/admin/projects/field-ops/evidence/drilling" enctype="multipart/form-data" class="mt-2 flex flex-wrap items-center gap-2 no-print">@csrf<input type="hidden" name="id" value="{{ $d->id }}"><input type="file" name="file" accept=".jpg,.jpeg,.png,.webp" required class="text-xs"><button class="rounded-lg border px-2 py-1 text-xs font-bold">Lampirkan foto</button></form>
@@ -59,7 +59,7 @@
 <label class="text-xs font-semibold">No. sampel<input name="sample_number" class="mt-1 w-full rounded-xl border p-2.5"></label>
 <label class="text-xs font-semibold">Idempotency<input name="idempotency_key" value="cd-{{ now()->format('YmdHis') }}-{{ rand(100,999) }}" required class="mt-1 w-full rounded-xl border p-2.5 font-mono text-xs"></label>
 </div>
-<button class="w-fit rounded-xl bg-sky-700 px-6 py-3 font-bold text-white">Catat truck</button>
+<button class="w-fit rounded-xl bg-[var(--brand-primary)] px-6 py-3 font-bold text-white">Catat truck</button>
 </form>
 @endif
 <div class="mt-4 overflow-x-auto rounded-2xl border bg-white"><table class="w-full min-w-[900px] text-sm table-sticky"><thead><tr><th>DO</th><th>Pile</th><th>Pemasok</th><th>Truk</th><th class="text-right">Pesan/Tiba</th><th class="text-right">Terima/Tolak</th><th>Slump</th><th>Status</th><th>Aksi</th></tr></thead><tbody>@forelse($deliveries as $cd)
@@ -89,7 +89,7 @@
 <td><x-ui.badge :status="match($test->result_status) { 'passed' => 'approved', 'failed' => 'rejected', default => 'pending_approval' }" :label="$test->result_status" />@if($test->consultant_approved_at)<span class="ml-1 text-[10px] text-emerald-600">✓ konsultan</span>@endif</td>
 <td>{{ $test->report_number ?? '-' }}</td>
 <td class="min-w-56">@if($canManage && $test->result_status === 'scheduled')
-<form method="post" action="/admin/projects/field-ops/tests/{{ $test->id }}/result" class="flex flex-wrap items-center gap-1">@csrf<select name="result_status" class="rounded border p-1.5 text-xs"><option value="passed">Passed</option><option value="failed">Failed</option></select><input name="report_number" placeholder="No. laporan" class="w-24 rounded border p-1.5 text-xs"><button class="font-bold text-sky-700">Rekam</button></form>
+<form method="post" action="/admin/projects/field-ops/tests/{{ $test->id }}/result" class="flex flex-wrap items-center gap-1">@csrf<select name="result_status" class="rounded border p-1.5 text-xs"><option value="passed">Passed</option><option value="failed">Failed</option></select><input name="report_number" placeholder="No. laporan" class="w-24 rounded border p-1.5 text-xs"><button class="font-bold text-[var(--brand-primary)]">Rekam</button></form>
 @elseif($canManage && $test->result_status === 'passed' && ! $test->consultant_approved_at)
 <form method="post" action="/admin/projects/field-ops/tests/{{ $test->id }}/approve" class="inline">@csrf<button class="font-bold text-emerald-700">Approval konsultan</button></form>
 @else<span class="text-xs text-slate-400">{{ \Illuminate\Support\Str::limit($test->interpretation ?? '-', 40) }}</span>@endif</td></tr>
