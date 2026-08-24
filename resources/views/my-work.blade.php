@@ -1,7 +1,7 @@
 <x-layouts.app title="My Work">
 <div class="page-container">
 <p class="text-xs font-bold uppercase tracking-widest text-[var(--brand-primary)]">{{ $company?->code }}</p>
-<h1 class="mt-1 text-2xl font-bold tracking-tight">Pekerjaan Saya</h1>
+<x-ui.page-header title="Pekerjaan Saya" />
 <p class="mt-2 text-slate-500">Seluruh penugasan dan dokumen yang menunggu tindakan Anda lintas modul — diurutkan berdasarkan tenggat.</p>
 
 @php($totalTasks = $toDecide->count() + $capaActions->count() + $hseActions->count() + $signatures->count())

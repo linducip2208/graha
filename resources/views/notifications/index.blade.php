@@ -1,5 +1,5 @@
 <x-layouts.app title="Notifikasi"><div class="page-container">
-<h1 class="text-2xl font-bold tracking-tight">Notifikasi</h1>
+<x-ui.page-header title="Notifikasi" />
 <p class="mt-2 text-slate-500">Pemberitahuan approval, pengingat SLA, dan aktivitas dokumen yang melibatkan Anda.</p>
 @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4">{{ session('status') }}</div>@endif
 <div class="mt-6 flex items-center justify-between">
