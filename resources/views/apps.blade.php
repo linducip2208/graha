@@ -1,6 +1,6 @@
 @php($cfg = $launcherConfig)
 <x-layouts.app title="Semua Aplikasi">
-<section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8" id="app-launcher" data-view-default="{{ $cfg['style'] }}">
+<div class="page-container" id="app-launcher" data-view-default="{{ $cfg['style'] }}">
 <header class="flex flex-wrap items-end justify-between gap-4">
 <div>
 <p class="text-xs font-bold uppercase tracking-widest text-[var(--brand-primary)]">{{ $company?->company_display_name ?? $company?->code }}</p>
@@ -125,7 +125,7 @@
 <p class="text-lg font-bold">Tidak ada aplikasi yang cocok.</p>
 <p class="mt-1 text-sm text-slate-500">Coba kata kunci lain atau hapus pencarian.</p>
 </div>
-</section>
+</div>
 
 <script>
 (function () {

@@ -1,5 +1,5 @@
 <x-layouts.app title="Routing dan Biaya Produksi">
-<section class="mx-auto max-w-7xl px-4 py-8 lg:px-8">
+<div class="page-container">
     <div class="flex flex-wrap gap-4"><a href="/admin/manufacturing" class="text-sm font-bold text-[var(--brand-primary)]">&larr; Manufacturing Control</a>@if(auth()->user()->hasPermission('report.view',app(\App\Support\Tenancy\CurrentCompany::class)->id()))<a href="/admin/reports/manufacturing" class="text-sm font-bold text-emerald-700">Lihat Rekonsiliasi WIP &rarr;</a>@endif</div>
     <h1 class="mt-3 text-2xl font-bold tracking-tight">Routing, Work Center, dan Biaya Konversi</h1>
     <p class="mt-2 max-w-4xl text-slate-500">Tetapkan urutan kerja dan waktu standar pada BOM. Ketika jam aktual dicatat, sistem menghitung tenaga kerja serta overhead dari tarif work center, mendebit Manufacturing WIP, dan menampilkan variance waktu/biaya.</p>
@@ -37,5 +37,5 @@
         @if(in_array($order->status,['released','in_progress']) && auth()->user()->hasPermission('manufacturing.manage', app(\App\Support\Tenancy\CurrentCompany::class)->id()))<div class="mt-4 grid gap-3 lg:grid-cols-2">@foreach($order->bom?->routingOperations??[] as $operation)<form method="post" action="/admin/manufacturing/orders/{{ $order->id }}/operations/{{ $operation->id }}" class="grid gap-2 rounded-xl bg-sky-50 p-4">@csrf<h4 class="font-bold">{{ $operation->sequence }}. {{ $operation->name }} / {{ $operation->workCenter?->code }}</h4><input type="number" step=".0001" min=".0001" name="quantity_processed" required placeholder="Kuantitas diproses" class="rounded-xl border p-2"><input type="number" step=".0001" min=".0001" name="actual_hours" required placeholder="Jam aktual" class="rounded-xl border p-2"><textarea name="notes" placeholder="Catatan realisasi atau penyebab variance" class="rounded-xl border p-2"></textarea><input type="hidden" name="idempotency_key" value="operation-{{ Str::uuid() }}"><button class="rounded-xl bg-[var(--brand-primary)] p-2 font-bold text-white">Post Jam Aktual dan Biaya ke WIP</button></form>@endforeach</div>@endif
         </x-ui.card>
     @empty<div class="rounded-2xl border border-dashed p-8">Belum ada production order.</div>@endforelse</div></section>
-</section>
-</x-layouts.app>
+</div>
+</x-layouts.app>>

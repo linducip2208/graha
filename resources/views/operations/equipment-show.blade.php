@@ -1,4 +1,4 @@
-<x-layouts.app title="Equipment {{ $equipment->code }}"><section class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+<x-layouts.app title="Equipment {{ $equipment->code }}"><div class="page-container">
 <x-ui.page-header title="{{ $equipment->code }} — {{ $equipment->name }}" subtitle="{{ ucfirst($equipment->ownership) }} · {{ $equipment->category }} · Hour meter {{ $equipment->current_hour_meter }} jam" status="{{ strtoupper($equipment->status) }}">
 <a href="/admin/operations" class="x-ui.button secondary">← Kembali ke Operations</a>
 </x-ui.page-header>
@@ -43,4 +43,4 @@
 </div>
 </x-ui.card>
 </div>
-</section></x-layouts.app>
+</div></x-layouts.app>

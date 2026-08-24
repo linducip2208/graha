@@ -1,4 +1,4 @@
-<x-layouts.app title="Permintaan Material"><section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+<x-layouts.app title="Permintaan Material"><div class="page-container">
 <h1 class="text-2xl font-bold tracking-tight">Permintaan Material Proyek</h1>
 <p class="mt-2 text-slate-500">Permintaan → approval pemisah → pengeluaran gudang dengan jurnal <strong>Biaya Material (D) / Gudang (K)</strong> berdimensi proyek, otomatis masuk project cost ledger.</p>
 @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4">{{ session('status') }}</div>@endif
@@ -34,4 +34,4 @@
 @endif
 </x-ui.card>
 @empty<x-ui.empty icon="archive" title="Belum ada permintaan" description="Ajukan permintaan material pertama untuk proyek aktif." />@endforelse</div>
-</section></x-layouts.app>
+</div></x-layouts.app>

@@ -1,4 +1,4 @@
-<x-layouts.app title="Lot Traceability"><section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+<x-layouts.app title="Lot Traceability"><div class="page-container">
 <h1 class="text-2xl font-bold tracking-tight">Material Traceability per Lot</h1>
 <p class="mt-1 text-sm text-slate-500">Telusuri satu lot: dari penerimaan (GR/vendor) hingga konsumsi (proyek/pile/produksi/cage). Ledger immutable — jejak tidak dapat diubah.</p>
 <form method="get" action="/admin/inventory/lots" class="mt-5 flex flex-wrap gap-2 no-print">
@@ -20,4 +20,4 @@
 <p class="mt-2 text-xs text-slate-400">Total {{ $movements->count() }} pergerakan · qty masuk {{ $movements->where('quantity','>',0)->sum('quantity') }} · qty keluar {{ abs($movements->where('quantity','<',0)->sum('quantity')) }}.</p>
 @endif
 @endif
-</section></x-layouts.app>
+</div></x-layouts.app>

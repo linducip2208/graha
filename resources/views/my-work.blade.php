@@ -1,5 +1,5 @@
 <x-layouts.app title="My Work">
-<section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+<div class="page-container">
 <p class="text-xs font-bold uppercase tracking-widest text-[var(--brand-primary)]">{{ $company?->code }}</p>
 <h1 class="mt-1 text-2xl font-bold tracking-tight">Pekerjaan Saya</h1>
 <p class="mt-2 text-slate-500">Seluruh penugasan dan dokumen yang menunggu tindakan Anda lintas modul — diurutkan berdasarkan tenggat.</p>
@@ -68,5 +68,5 @@
 @endif
 
 </div>
-</section>
-</x-layouts.app>
+</div>
+</x-layouts.app>>

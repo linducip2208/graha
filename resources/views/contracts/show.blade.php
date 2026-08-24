@@ -1,5 +1,5 @@
 <x-layouts.app title="Kontrak — {{ $contract->number }}">
-<section class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+<div class="page-container">
 <x-ui.page-header title="{{ $contract->number }} — {{ $contract->title }}" subtitle="{{ ($types = \App\Models\ContractChange::TYPES)[$contract->type] ?? $contract->type }} · Nilai Rp {{ number_format((float) $contract->amount, 0, ',', '.') }}@if($contract->days_extension > 0) · +{{ $contract->days_extension }} hari@endif@if($contract->effective_date) · Efektif {{ $contract->effective_date->format('d/m/Y') }}@endif" status="{{ str_replace('_',' ', $contract->status) }}">
 @if($contract->project)<a href="/admin/projects/{{ $contract->project->id }}" class="font-semibold text-[var(--brand-primary)] hover:underline">{{ $contract->project->code }}</a>@endif
 </x-ui.page-header>
@@ -22,5 +22,5 @@
 </form>
 @endif
 <a href="/admin/contracts" class="mt-8 inline-block text-sm font-bold text-[var(--brand-primary)]">← Kembali ke daftar kontrak</a>
-</section>
-</x-layouts.app>
+</div>
+</x-layouts.app>>

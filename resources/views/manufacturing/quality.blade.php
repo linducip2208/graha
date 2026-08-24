@@ -1,5 +1,5 @@
 <x-layouts.app title="Quality Control Produksi">
-    <section class="mx-auto max-w-7xl px-4 py-8 lg:px-8">
+    <div class="page-container">
         <a href="/admin/manufacturing" class="text-sm font-bold text-[var(--brand-primary)]">&larr; Manufacturing Control</a>
         <h1 class="mt-3 text-2xl font-bold tracking-tight">Pemeriksaan dan Pelepasan Hasil Produksi</h1>
         <p class="mt-2 max-w-3xl text-slate-500">Quality Control memeriksa output terhadap kriteria yang ditetapkan. Hanya kuantitas berstatus diterima yang dapat dipindahkan dari WIP menjadi barang jadi.</p>
@@ -24,5 +24,5 @@
                 </x-ui.card>
             @empty<div class="rounded-2xl border border-dashed p-8 text-center">Belum ada production order untuk diperiksa.</div>@endforelse
         </div>
-    </section>
-</x-layouts.app>
+    </div>
+</x-layouts.app>>

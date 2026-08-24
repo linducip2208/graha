@@ -1,4 +1,4 @@
-<x-layouts.app title="NCR {{ $ncr->number }}"><section class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+<x-layouts.app title="NCR {{ $ncr->number }}"><div class="page-container">
 @php($ncrSubtitle = ucfirst($ncr->source_type).' · Severitas '.ucfirst($ncr->severity).($ncr->project ? ' · '.$ncr->project->code.' — '.$ncr->project->name : '').($ncr->due_at ? ' · Tenggat '.(is_string($ncr->due_at) ? $ncr->due_at : $ncr->due_at->format('d/m/Y')) : ''))
 <x-ui.page-header title="NCR {{ $ncr->number }}" :subtitle="$ncrSubtitle" status="{{ str_replace('_',' ', $ncr->status) }}">
 <a href="/admin/qms" class="x-ui.button secondary">← Kembali ke QMS</a>
@@ -29,4 +29,4 @@
 @empty<p class="text-sm text-slate-400">Belum ada CAPA — tambahkan dari daftar NCR di halaman QMS.</p>@endforelse
 </div>
 </x-ui.card>
-</section></x-layouts.app>
+</div></x-layouts.app>

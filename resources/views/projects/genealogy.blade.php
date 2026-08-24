@@ -1,5 +1,5 @@
 <x-layouts.app title="Genealogi {{ $pile->pile_number }} — {{ $pile->project->code }}">
-<section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+<div class="page-container">
 <x-ui.page-header title="Genealogi {{ $pile->pile_number }}" subtitle="{{ $pile->project->code }} — {{ $pile->project->name }} · Zona {{ $pile->zone?->name ?? '-' }} · Ø{{ $pile->diameter_mm }} mm" status="{{ str($pile->status)->replace('_',' ') }}">
 <div class="flex flex-wrap gap-2 no-print">
 <a href="{{ route('piles.passport', $pile) }}" class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white">Pile Passport</a>
@@ -88,4 +88,4 @@
 </ol>
 </x-ui.card>
 </div>
-</section></x-layouts.app>
+</div></x-layouts.app>

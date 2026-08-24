@@ -1,4 +1,4 @@
-<x-layouts.app title="PO {{ $order->number }}"><section class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+<x-layouts.app title="PO {{ $order->number }}"><div class="page-container">
 <x-ui.page-header title="PO {{ $order->number }} (v{{ $order->version }})" subtitle="{{ $order->vendor?->name }} · {{ $order->currency }} {{ number_format((float) $order->total, 2, ',', '.') }} · Tanggal {{ $order->order_date->format('d/m/Y') }}" status="{{ strtoupper($order->status) }}">
 <a href="/admin/procurement" class="x-ui.button secondary">← Kembali ke Procurement</a>
 </x-ui.page-header>
@@ -17,4 +17,4 @@
 @empty<p class="text-sm text-slate-400">Belum ada revisi.</p>@endforelse
 </div>
 </x-ui.card>
-</section></x-layouts.app>
+</div></x-layouts.app>

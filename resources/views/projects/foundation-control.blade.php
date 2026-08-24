@@ -1,5 +1,5 @@
 <x-layouts.app title="Foundation Control — {{ $project->code }}">
-<section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+<div class="page-container">
 <x-ui.page-header title="Foundation Control Tower" subtitle="{{ $project->code }} — {{ $project->name }}" status="{{ str($project->status)->replace('_',' ') }}">
 <div class="flex flex-wrap gap-2 no-print">
 <a href="{{ route('projects.show', $project) }}" class="rounded-xl border px-4 py-2 text-sm font-semibold">Project Detail</a>
@@ -112,4 +112,4 @@
     <x-ui.stat-card label="Uji Pending" value="{{ $kpi['tests_pending'] }}" hint="menunggu hasil rekam" />
     <x-ui.stat-card label="NCR Terbuka" value="{{ $openNcrCount }}" />
 </div>
-</section></x-layouts.app>
+</div></x-layouts.app>

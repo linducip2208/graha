@@ -1,4 +1,4 @@
-<x-layouts.app title="Pajak & Bukti Potong"><section class="mx-auto max-w-7xl px-4 py-8 lg:px-8">
+<x-layouts.app title="Pajak & Bukti Potong"><div class="page-container">
 <h1 class="text-2xl font-bold tracking-tight">Pajak & Bukti Potong</h1>
 <p class="mt-2 text-slate-500">Rekapitulasi PPN keluaran/masukan dan PPh yang dipotong atau dipotongkan, plus master tarif pajak perusahaan.</p>
 @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4">{{ session('status') }}</div>@endif
@@ -63,4 +63,4 @@
 <div class="overflow-x-auto rounded-2xl border bg-white p-5"><h2 class="font-bold">Bukti Potong Diterbitkan (ke vendor)</h2>
 <table class="mt-3 w-full text-sm"><thead><tr class="border-b text-left uppercase text-[11px] tracking-wide text-slate-500"><th>No. Bukti</th><th>Pembayaran</th><th>Vendor</th><th class="text-right">Dipotong</th></tr></thead>
 <tbody>@forelse($certificatesIn as $cert)<tr class="border-b last:border-0"><td class="py-2 font-mono text-xs">{{ $cert->bukti_potong_number }}<span class="block text-slate-400">{{ optional($cert->bukti_potong_date)->format('d/m/Y') }}</span></td><td>{{ $cert->number }}</td><td>{{ $cert->invoice?->vendor?->name }}</td><td class="text-right font-mono">{{ number_format($cert->withholding_amount, 2, ',', '.') }}</td></tr>@empty<tr><td colspan="4" class="p-6 text-center text-slate-500">Belum ada bukti potong ke vendor.</td></tr>@endforelse</tbody></table></div></div>
-</section></x-layouts.app>
+</div></x-layouts.app>
