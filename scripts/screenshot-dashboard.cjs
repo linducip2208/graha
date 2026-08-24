@@ -14,6 +14,7 @@ const OUT = path.join(__dirname, "..", "public", "marketing", "screens");
   await page.locator("button[type=submit]").first().click();
   await page.waitForTimeout(1500);
   const shots = [
+    { name: 'settings-hub-1440', width: 1440, height: 900, dark: false, url: '/admin/settings' },
     { name: "dashboard-premium-1440", width: 1440, height: 900, dark: false, url: "/dashboard" },
     { name: "dashboard-premium-dark-1440", width: 1440, height: 900, dark: true, url: "/dashboard" },
     { name: "dashboard-premium-375", width: 375, height: 812, dark: false, url: "/dashboard" },
@@ -29,3 +30,4 @@ const OUT = path.join(__dirname, "..", "public", "marketing", "screens");
   }
   await browser.close();
 })();
+

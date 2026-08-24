@@ -369,3 +369,13 @@ Verifikasi: 198 tests / 808 assertions, pint bersih, build sukses. Screenshot: d
 | BUG-003 | Konten | Mojibake UTF-8 (em-dash rusak) di 5 view (finance/inventory/procurement/projects/tenders) | Fixed | Suite penuh | scripts/fix-mojibake.php reusable |
 
 White-label kini benar-benar menyeluruh: ganti preset/warna di Experience Studio mengubah aksen SEMUA halaman admin (sebelumnya sebagian terkunci sky). Verifikasi: 198 tests / 808 assertions, pint bersih, build sukses.
+
+# Pembaruan 2026-08-24 (8) - Fasa 2 Lanjutan: Form Pattern Global
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| UI-F1 | Form | CSS global form: min-height 42px (touch WCAG), radius konsisten, focus ring brand, disabled state, :user-invalid merah progresif | Tested | Suite penuh | Berlaku otomatis ke SEMUA form tanpa ubah view |
+| UI-F2 | Komponen | x-ui.field (label + hint + error per name) dan x-ui.form-section (title + description) | Tested | smoke | Exemplar: halaman Pengaturan |
+| UI-F3 | UX | Form Settings direfaktor ke form-section + helper text per field | Tested | CompanySettingsTest + smoke screenshot settings-hub-1440.png | Nama input tidak berubah — backend aman |
+
+Verifikasi: 198 tests / 808 assertions, pint bersih.

@@ -5,20 +5,19 @@
 @if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{{ $errors->first() }}</div>@endif
 
 @if($canFinance)
-<form method="post" action="/admin/settings" class="mt-8 rounded-2xl border bg-white p-6">
+<form method="post" action="/admin/settings" class="mt-8 space-y-6">
 @csrf
-<h2 class="font-black">Identitas Perusahaan</h2>
-<p class="mt-1 text-sm text-slate-500">Dipakai pada kop faktur tagihan PDF dan dokumen keluaran.</p>
+<x-ui.form-section title="Identitas Perusahaan" description="Dipakai pada kop faktur tagihan PDF dan dokumen keluaran.">
 <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 <label class="block text-sm font-semibold">Alamat kantor<textarea name="company_address" rows="2" class="mt-1 w-full rounded-xl border p-3">{{ $values['company_address'] }}</textarea></label>
 <label class="block text-sm font-semibold">Telepon<input name="company_phone" value="{{ $values['company_phone'] }}" class="mt-1 w-full rounded-xl border p-3"></label>
 <label class="block text-sm font-semibold">Email<input type="email" name="company_email" value="{{ $values['company_email'] }}" class="mt-1 w-full rounded-xl border p-3"></label>
 <label class="block text-sm font-semibold">NPWP<input name="company_npwp" value="{{ $values['company_npwp'] }}" placeholder="00.000.000.0-000.000" class="mt-1 w-full rounded-xl border p-3"></label>
 </div>
+</x-ui.form-section>
 
-<h2 class="mt-8 font-black">Pengadaan, Billing & Mutu</h2>
-<p class="mt-1 text-sm text-slate-500">Nilai awal form operasional dan gate kualitas.</p>
-<div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+<x-ui.form-section title="Pengadaan, Billing & Mutu" description="Nilai awal form operasional dan gate kualitas.">
+<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
 <label class="block text-sm font-semibold">Termin Pembayaran (hari)<input type="number" min="0" max="365" name="default_payment_term_days" value="{{ $values['default_payment_term_days'] }}" required class="mt-1 w-full rounded-xl border p-3"></label>
 <label class="block text-sm font-semibold">Termin Utang Vendor (hari)<input type="number" min="0" max="365" name="default_vendor_payment_term_days" value="{{ $values['default_vendor_payment_term_days'] }}" required class="mt-1 w-full rounded-xl border p-3" title="Jatuh tempo default invoice vendor tanpa due date — dipakai laporan aging AP"></label>
 <label class="block text-sm font-semibold">Retensi Default (%)<input type="number" step=".0001" min="0" max="100" name="default_retention_percent" value="{{ $values['default_retention_percent'] }}" required class="mt-1 w-full rounded-xl border p-3"></label>
@@ -35,8 +34,11 @@
 <label class="block text-sm font-semibold">Ambang NO-BID (skor)<input type="number" step=".01" min="0" max="99" name="bid_threshold_no_bid" value="{{ $values['bid_threshold_no_bid'] }}" required class="mt-1 w-full rounded-xl border p-3"></label>
 <label class="flex items-center gap-3 self-end rounded-xl border p-3 text-sm"><input type="checkbox" name="require_pile_test_pass" value="1" @checked($values['require_pile_test_pass'] === '1')> <span class="font-semibold">Wajib uji pile passed sebelum completed</span></label>
 </div>
-<label class="mt-4 block text-sm font-semibold">Catatan Kaki Faktur<textarea name="invoice_footer_note" rows="2" class="mt-1 w-full rounded-xl border p-3">{{ $values['invoice_footer_note'] }}</textarea></label>
-<div class="mt-5 flex flex-wrap gap-3 items-center"><button class="rounded-xl bg-[var(--brand-primary)] px-6 py-3 font-bold text-white">Simpan pengaturan</button><span class="text-xs text-slate-400">Hanya role dengan izin Finance Manage yang dapat menyimpan.</span></div>
+<div class="mt-4">
+<label class="block text-sm font-semibold">Catatan Kaki Faktur<span class="help-text block">Teks tambahan di bagian bawah faktur PDF</span><textarea name="invoice_footer_note" rows="2" class="mt-1 w-full rounded-xl border p-3">{{ $values['invoice_footer_note'] }}</textarea></label>
+</div>
+</x-ui.form-section>
+<div class="flex flex-wrap gap-3 items-center"><button class="rounded-xl bg-[var(--brand-primary)] px-6 py-3 font-bold text-white transition hover:bg-[var(--brand-primary-hover)]">Simpan pengaturan</button><span class="text-xs text-slate-400">Hanya role dengan izin Finance Manage yang dapat menyimpan.</span></div>
 </form>
 @endif
 
