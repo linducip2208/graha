@@ -19,6 +19,7 @@
 <span class="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase">{{ str_replace('_', ' ', $project->status) }}</span>
 @if($project->planned_start)<span>Rencana: {{ $project->planned_start->format('d/m/Y') }} ? {{ $project->planned_end?->format('d/m/Y') }}</span>@endif
 @if($project->contract_value)<span>Kontrak: <strong class="font-mono">Rp {{ number_format((float) $project->contract_value, 0, ',', '.') }}</strong></span>@endif
+<a href="{{ route('projects.foundation-control', $project) }}" class="rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-bold text-white no-print">Foundation Control Tower →</a>
 </div>
 
 <x-ui.tabs :tabs="$tabs" :active="$activeTab" class="mt-6" />

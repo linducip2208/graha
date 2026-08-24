@@ -28,6 +28,7 @@ use App\Http\Controllers\PilePassportController;
 use App\Http\Controllers\ProcurementController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectCostingController;
+use App\Http\Controllers\ProjectFoundationController;
 use App\Http\Controllers\ProjectHandoverController;
 use App\Http\Controllers\QmsController;
 use App\Http\Controllers\ReportController;
@@ -117,6 +118,7 @@ Route::middleware(['auth', 'company', 'permission:project.view'])->prefix('admin
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
     Route::get('/projects/field-ops', [FieldOpsController::class, 'index'])->name('field-ops.index');
     Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
+    Route::get('/projects/{project}/foundation-control', [ProjectFoundationController::class, 'show'])->name('projects.foundation-control');
     Route::post('/projects/field-ops/drillings', [FieldOpsController::class, 'storeDrilling'])->middleware('permission:project.manage');
     Route::post('/projects/field-ops/drillings/{drilling}/verify', [FieldOpsController::class, 'verifyDrilling'])->middleware('permission:project.manage');
     Route::post('/projects/field-ops/deliveries', [FieldOpsController::class, 'storeDelivery'])->middleware('permission:project.manage');
