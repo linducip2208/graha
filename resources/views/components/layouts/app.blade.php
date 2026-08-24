@@ -7,9 +7,9 @@
 <meta property="og:title" content="{{ $title ?? config('app.name') }}">
 <meta property="og:description" content="ERP multi-company untuk kontraktor pondasi: approval berjenjang, jurnal otomatis, audit hash-chain.">
 <meta property="og:type" content="website">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>ðŸ—ï¸</text></svg>">
-<title>{{ $title ?? config('app.name') }}</title>
-<script>(function(){var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.classList.add('dark')}})();</script>
+@php($expCfg = $experience["config"] ?? [])
+<link rel="icon" href="{{ $expCfg['favicon_url'] ?? asset('favicon-default.svg') }}">
+<title>{{ ($expCfg['system_name'] ?? null) ? $expCfg['system_name'].' — '.config('app.name') : ($title ?? config('app.name')) }}</title>
 <style>:root{@foreach(($experience["tokens"] ?? []) as $tk => $tv){{ $tk }}:{{ $tv }};@endforeach}}</style>
 @vite(['resources/css/app.css','resources/js/app.js'])
 </head>
@@ -19,7 +19,7 @@
 @php($navGroups = \App\Support\Navigation::groups(auth()->user(), $cid))
 <div class="min-h-screen lg:grid lg:grid-cols-[236px_1fr] print:block">
 <aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-40 w-[248px] -translate-x-full overflow-y-auto bg-slate-950 text-slate-200 shadow-2xl transition-transform lg:sticky lg:top-0 lg:h-screen lg:w-auto lg:translate-x-0 print:hidden">
- <div class="flex items-center justify-between border-b border-white/10 px-5 py-5"><a href="/dashboard" class="flex items-center gap-2 font-black text-white"><span class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-sky-500 to-cyan-600 text-sm">ðŸ—ï¸</span>Graha Pondasi ERP</a><button data-sidebar-close class="rounded-lg p-2 lg:hidden" aria-label="Tutup menu">âœ•</button></div>
+<div class="flex items-center justify-between border-b border-white/10 px-4 py-3"><a href="/dashboard" class="flex items-center gap-2 font-black text-white">@if(!empty($expCfg['logo_url']))<img src="{{ $expCfg['logo_url'] }}" alt="logo" class="h-7 max-w-[150px] object-contain">@else<span class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-sky-500 to-cyan-600 text-sm">🏗️</span><span>{{ $expCfg['system_name'] ?? 'Graha Pondasi ERP' }}</span>@endif</a><button data-sidebar-close class="rounded-lg p-2 lg:hidden" aria-label="Tutup menu">✕</button></div>
  <nav id="admin-navigation" class="space-y-4 p-4 text-sm">
   @foreach($navGroups as $group)
   <details class="nav-group" data-group="{{ $group['label'] }}" open>

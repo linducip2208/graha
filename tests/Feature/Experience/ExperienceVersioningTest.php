@@ -83,5 +83,17 @@ class ExperienceVersioningTest extends TestCase
         $this->from('/admin/experience')->post('/admin/experience/assets', [
             'kind' => 'favicon', 'file' => UploadedFile::fake()->create('evil.exe', 50),
         ])->assertSessionHasErrors('file');
+
+        // Serving: guest punya akses ke file terdaftar; file asing 404.
+        $logoUrl = '/branding/'.$company->id.'/'.basename($row->logo_path);
+        $this->get($logoUrl)->assertOk()->assertHeader('Content-Type', 'image/svg+xml');
+        $this->get('/branding/'.$company->id.'/tidak-ada.png')->assertNotFound();
+
+        // Layout memakai system_name & favicon dari branding.
+        $this->actingAs($user)->withSession(['company_id' => $company->id])
+            ->get('/dashboard')
+            ->assertOk()
+            ->assertSee('/branding/', false)
+            ->assertSee('favicon-default.svg', false);
     }
 }

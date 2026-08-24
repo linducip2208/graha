@@ -44,6 +44,11 @@ class ThemeService
                     $config[$f] = $row->{$f};
                 }
             }
+            foreach (['logo_path', 'favicon_path'] as $pf) {
+                if (filled($row?->{$pf})) {
+                    $config[str_replace('_path', '_url', $pf)] = '/branding/'.$companyId.'/'.basename($row->{$pf});
+                }
+            }
 
             return ['tokens' => $tokens, 'config' => $config];
         });

@@ -4,7 +4,7 @@
 <div class="pointer-events-none absolute inset-0 opacity-40" style="background-image:radial-gradient(circle at 20% 15%, rgba(14,165,233,.35), transparent 45%),radial-gradient(circle at 85% 80%, rgba(6,182,212,.25), transparent 40%);"></div>
 <span class="hero-orb hero-orb-one" aria-hidden="true"></span>
 <span class="absolute -bottom-24 -right-24 select-none text-[18rem] opacity-10" aria-hidden="true">🏗️</span>
-<div class="relative flex items-center gap-2"><span class="grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-lg backdrop-blur">🏗️</span><strong>Graha Pondasi ERP</strong></div>
+<div class="relative flex items-center gap-2">@if(!empty($experience['config']['logo_url'] ?? null))<img src="{{ $experience['config']['logo_url'] }}" alt="{{ $experience['config']['system_name'] ?? 'logo' }}" class="h-10 max-w-[180px] object-contain">@else<span class="grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-lg backdrop-blur">🏗️</span><strong>{{ $experience["config"]["system_name"] ?? "Graha Pondasi ERP" }}</strong>@endif</div>
 <div class="relative">
 <h1 class="max-w-lg text-5xl font-black leading-tight">Keputusan proyek dengan data yang dapat ditelusuri.</h1>
 <p class="mt-4 max-w-md text-sky-200/90">Dari tender, bored pile, procurement, sampai jurnal berimbang — satu sistem multi-company dengan jejak audit hash-chain.</p>

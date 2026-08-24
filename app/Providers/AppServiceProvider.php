@@ -25,7 +25,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Experience Platform (ADR-058): resolve token theme untuk company aktif
         // dan bagikan ke shell. Tanpa baris company_experience → default preset.
-        View::composer('components.layouts.app', function ($view) {
+        View::composer(['components.layouts.app', 'auth.login'], function ($view) {
             $companyId = session('company_id');
             $experience = $companyId
                 ? app(ThemeService::class)->resolve((int) $companyId)

@@ -310,6 +310,7 @@ Route::post('/admin/tools/{tool}/checkout', [ToolController::class, 'checkOut'])
 Route::post('/admin/tools/{tool}/checkin', [ToolController::class, 'checkIn'])->middleware(['auth', 'company', 'permission:inventory.manage']);
 Route::post('/admin/tools/{tool}/lost', [ToolController::class, 'markLost'])->middleware(['auth', 'company', 'permission:inventory.manage']);
 Route::post('/admin/tools/{tool}/evidence', [ToolController::class, 'uploadEvidence'])->middleware(['auth', 'company', 'permission:inventory.manage']);
+Route::get('/branding/{company}/{file}', [ExperienceController::class, 'serveAsset'])->name('branding.asset');
 Route::get('/admin/experience', [ExperienceController::class, 'edit'])->middleware(['auth', 'company'])->name('experience.studio');
 Route::post('/admin/experience', [ExperienceController::class, 'update'])->middleware(['auth', 'company'])->name('experience.update');
 Route::post('/admin/experience/draft', [ExperienceController::class, 'saveDraft'])->middleware(['auth', 'company']);

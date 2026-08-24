@@ -10,6 +10,7 @@ use App\Services\ThemeService;
 use App\Support\Experience\ThemePresets;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Experience Studio (ADR-058): studio tampilan & white label per company.
@@ -112,5 +113,19 @@ class ExperienceController extends Controller
         ThemeService::flush($current->id());
 
         return back()->with('status', ucfirst($data['kind']).' tersimpan (storage privat).');
+    }
+
+    /** Serving asset branding: path harus terdaftar pada experience company tsb (anti traversal/enumeration). */
+    public function serveAsset(int $companyId, string $file)
+    {
+        $row = CompanyExperience::where('company_id', $companyId)->first();
+        abort_unless($row, 404);
+        $relative = collect([$row->logo_path, $row->favicon_path])->filter()->first(fn ($p) => str_ends_with((string) $p, '/'.$file));
+        abort_unless($relative && ! preg_match('#[\\\\/]{2}|\.\./#', $file), 404);
+        abort_unless(Storage::disk('local')->exists($relative), 404);
+
+        $mime = str_ends_with($file, '.svg') ? 'image/svg+xml' : (str_ends_with($file, '.png') ? 'image/png' : (str_ends_with($file, '.webp') ? 'image/webp' : 'image/jpeg'));
+
+        return Storage::disk('local')->response($relative, null, ['Content-Type' => $mime, 'Cache-Control' => 'private, max-age=3600']);
     }
 }
