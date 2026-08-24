@@ -379,3 +379,12 @@ White-label kini benar-benar menyeluruh: ganti preset/warna di Experience Studio
 | UI-F3 | UX | Form Settings direfaktor ke form-section + helper text per field | Tested | CompanySettingsTest + smoke screenshot settings-hub-1440.png | Nama input tidak berubah — backend aman |
 
 Verifikasi: 198 tests / 808 assertions, pint bersih.
+
+# Pembaruan 2026-08-24 (9) - Danger Modal Konsisten & Form Per-Modul (Penutup Fasa 2)
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| UI-M1 | UX | Danger-action modal global menggantikan confirm() native: 19 titik di 12 view | Tested | Suite penuh + smoke | data-confirm attribute; Esc/overlay/klik-luar menutup; focus management; form pakai requestSubmit agar validasi HTML5 tetap jalan |
+| UI-F4 | Form | Form grid utama dikonversi ke x-ui.field/form-section: inventory (master+movement), operations (equipment register), procurement (vendor+draft PO), RFQ | Tested | Ledger/PO/RFQ/Workspace tests | Nama input tidak berubah; helper text per field; required marker |
+
+Verifikasi akhir fasa UI: 198 tests / 808 assertions, pint bersih, build sukses. Screenshot: inventory-forms, procurement-forms, operations-forms, rfq-form, settings-hub.

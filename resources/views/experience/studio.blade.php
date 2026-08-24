@@ -111,7 +111,7 @@
 <button class="rounded-lg bg-violet-700 px-2.5 py-1.5 font-bold text-white">Upload cover</button>
 </form>
 @if($coverPath)
-<form method="post" action="/admin/experience/launcher/covers/delete" onsubmit="return confirm('Kembalikan ke cover default?')">@csrf
+<form method="post" action="/admin/experience/launcher/covers/delete" data-confirm="Kembalikan ke cover default?">@csrf
 <input type="hidden" name="workspace_key" value="{{ $ws['key'] }}">
 <button class="font-bold text-red-600">Hapus</button>
 </form>
@@ -144,7 +144,7 @@
 
 @endif
 @if($v->status === 'archived' || $v->status === 'published')
-<form method="post" action="/admin/experience/versions/{{ $v->id }}/rollback">@csrf<button onclick="return confirm('Rollback ke konfigurasi v{{ $v->version }}?')" class="font-bold text-amber-700 text-[11px]">Rollback</button></form>
+<form method="post" action="/admin/experience/versions/{{ $v->id }}/rollback">@csrf<button data-confirm="Rollback ke konfigurasi v{{ $v->version }}?" class="font-bold text-amber-700 text-[11px]">Rollback</button></form>
 @endif
 </td></tr>
 @empty<tr><td colspan="4" class="p-3 text-slate-400">Belum ada versi — simpan draft pertama untuk mulai versioning.</td></tr>@endforelse

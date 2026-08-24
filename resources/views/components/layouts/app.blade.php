@@ -66,4 +66,64 @@
 <header class="sticky top-0 z-20 border-b bg-white/90 backdrop-blur"><nav class="mx-auto flex max-w-7xl justify-between px-5 py-4"><a href="/" class="flex items-center gap-2 font-black text-sky-800"><span class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-sky-500 to-cyan-600 text-sm">ðŸ—ï¸</span>Graha Pondasi ERP</a><div class="flex gap-4"><a href="/docs">Dokumentasi</a><a href="/login">Masuk</a></div></nav></header><main>{{ $slot }}</main>
 @endif
 <x-ui.toast />
+<div id="confirm-modal" hidden class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/60 p-4 print:hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+<div class="w-full max-w-md rounded-2xl border bg-white p-6 shadow-2xl">
+<div class="flex items-start gap-4">
+<span class="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-red-50 text-red-600"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg></span>
+<div class="min-w-0"><h2 id="confirm-modal-title" class="text-base font-black tracking-tight">Konfirmasi</h2><p id="confirm-modal-message" class="mt-1 text-sm leading-relaxed text-slate-500"></p></div>
+</div>
+<div class="mt-5 flex justify-end gap-2">
+<button type="button" id="confirm-modal-cancel" class="rounded-xl border px-4 py-2 text-sm font-bold text-slate-600 transition hover:bg-slate-50">Batal</button>
+<button type="button" id="confirm-modal-ok" class="rounded-xl bg-red-600 px-4 py-2 text-sm font-bold text-white transition hover:bg-red-700">Ya, Lanjutkan</button>
+</div>
+</div>
+</div>
+<script>
+(function () {
+  var modal = document.getElementById('confirm-modal');
+  if (! modal) return;
+  var msgEl = document.getElementById('confirm-modal-message');
+  var cancelBtn = document.getElementById('confirm-modal-cancel');
+  var okBtn = document.getElementById('confirm-modal-ok');
+  var pending = null;
+  var lastFocus = null;
+  function open(el, message) {
+    pending = el;
+    lastFocus = document.activeElement;
+    msgEl.textContent = message;
+    modal.hidden = false;
+    cancelBtn.focus();
+  }
+  function close() {
+    modal.hidden = true;
+    var target = pending;
+    pending = null;
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+    return target;
+  }
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-confirm]');
+    if (! el) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    open(el, el.dataset.confirm);
+  }, true);
+  okBtn.addEventListener('click', function () {
+    var el = close();
+    if (! el) return;
+    el.removeAttribute('data-confirm');
+    if (el.tagName === 'FORM') {
+      if (el.requestSubmit) el.requestSubmit(); else el.submit();
+      return;
+    }
+    el.click();
+  });
+  cancelBtn.addEventListener('click', function () { close(); });
+  modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+  document.addEventListener('keydown', function (e) {
+    if (modal.hidden) return;
+    if (e.key === 'Escape') { e.preventDefault(); close(); }
+  });
+})();
+</script>
 </body></html>

@@ -204,7 +204,7 @@
 @if($b->approved_at)<span class="text-[11px] text-slate-400">{{ $b->approved_at->format('d/m/Y') }} oleh {{ $b->approver?->name }}</span>@endif
 @if($b->status === 'draft')
 <form method="post" action="/admin/project-costing/baselines/{{ $b->id }}/approve" class="no-print">@csrf
-<button onclick="return confirm('Setujui Budget v{{ $b->version }} sebagai baseline aktif? Versi approved lama otomatis superseded.')" class="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white">Setujui</button>
+<button data-confirm="Setujui Budget v{{ $b->version }} sebagai baseline aktif? Versi approved lama otomatis superseded." class="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white">Setujui</button>
 </form>
 @endif
 </div>

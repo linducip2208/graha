@@ -6,11 +6,14 @@
 
 <div class="mt-6 no-print"><form method="get" class="flex gap-2"><select name="rfq" onchange="this.form.submit()" class="rounded-xl border p-3 text-sm"><option value="">Pilih RFQ</option>@foreach($rfqs as $r)<option value="{{ $r->id }}" @selected($rfq?->id === $r->id)>{{ $r->number }} — {{ $r->title }} ({{ $r->status }})</option>@endforeach</select></form></div>
 
-<form method="post" action="/admin/procurement/rfq" class="mt-6 grid gap-3 rounded-2xl border bg-white p-5 no-print">@csrf
-<h2 class="font-bold">Buat RFQ Baru</h2>
-<div class="grid gap-2 sm:grid-cols-2"><input name="number" required placeholder="Nomor RFQ" class="rounded-xl border p-3"><input name="title" required placeholder="Judul pengadaan" class="rounded-xl border p-3"><label class="text-xs font-semibold">Batas penawaran<input type="date" name="due_date" class="mt-1 w-full rounded-xl border p-3"></label><input name="notes" placeholder="Catatan (opsional)" class="rounded-xl border p-3"></div>
-<label class="block text-xs font-semibold">Item — satu per baris: <code>SKU|kuantitas</code><textarea name="items" rows="3" placeholder="ITM-BESI|5&#10;ITM-BENTONITE|200" required class="mt-1 w-full rounded-xl border p-2.5 font-mono text-xs"></textarea></label>
-<button class="w-fit rounded-xl bg-[var(--brand-primary)] px-6 py-3 font-bold text-white">Buat RFQ</button>
+<form method="post" action="/admin/procurement/rfq" class="mt-6 no-print">@csrf
+<x-ui.form-section title="Buat RFQ Baru" description="Undang vendor, terima penawaran, lalu pilih pemenang — RFQ otomatis tertutup.">
+<div class="grid gap-4 sm:grid-cols-2"><x-ui.field label="Nomor RFQ" name="number" hint="Unik per perusahaan" required><input name="number" placeholder="mis. RFQ-2026-001" required class="w-full p-3"></x-ui.field><x-ui.field label="Judul pengadaan" name="title" required><input name="title" placeholder="mis. Pengadaan Besi Beton" required class="w-full p-3"></x-ui.field><x-ui.field label="Batas penawaran" name="due_date"><input type="date" name="due_date" class="w-full p-3"></x-ui.field><x-ui.field label="Catatan" name="notes" hint="Opsional"><input name="notes" placeholder="Instruksi untuk vendor" class="w-full p-3"></x-ui.field></div>
+<div class="mt-4">
+<label class="block"><span class="mb-1 block text-xs font-bold text-slate-600 dark:text-slate-300">Item — satu per baris <span class="font-mono text-slate-400">SKU|kuantitas</span></span><textarea name="items" rows="3" placeholder="ITM-BESI|5&#10;ITM-BENTONITE|200" required class="w-full rounded-xl border p-2.5 font-mono text-xs"></textarea></label>
+</div>
+<div class="mt-4"><button class="rounded-xl bg-[var(--brand-primary)] px-6 py-3 font-bold text-white">Buat RFQ</button></div>
+</x-ui.form-section>
 </form>
 
 @if($rfq)
@@ -40,7 +43,7 @@
 
 <h2 id="perbandingan" class="mt-10 scroll-mt-24 text-lg font-black">Perbandingan Penawaran</h2>
 <div class="mt-3 overflow-x-auto rounded-2xl border bg-white"><table class="w-full min-w-[760px] text-sm table-sticky"><thead><tr><th>#</th><th>Vendor</th><th class="text-right">Total (Rp)</th><th class="text-right">Lead (hari)</th><th class="text-right">Skor Teknis</th><th class="text-right">Skor Komersial</th><th>Termin</th><th>Status</th><th>Aksi</th></tr></thead><tbody>@forelse($comparison as $index => $row)
-<tr class="{{ $index === 0 ? 'bg-emerald-50' : '' }}"><td>{{ $index + 1 }}{{ $index === 0 ? ' 🏆' : '' }}</td><td class="font-semibold">{{ $row['vendor'] }}</td><td class="text-right font-mono">{{ number_format((float) $row['total'], 2, ',', '.') }}</td><td class="text-right">{{ $row['lead'] ?? '-' }}</td><td class="text-right">{{ $row['tech'] ?? '-' }}</td><td class="text-right">{{ $row['comm'] ?? '-' }}</td><td>{{ $row['payment_term'] ?? '-' }}</td><td><x-ui.badge :status="match($row['status']) { 'selected' => 'approved', 'rejected' => 'rejected', default => 'pending_approval' }" :label="$row['status']" /></td><td>@if($canManage && $rfq->status === 'open' && $row['status'] === 'submitted')<form method="post" action="/admin/procurement/rfq/quotations/{{ $row['id'] }}/select" class="inline">@csrf<button onclick="return confirm('Pilih vendor ini sebagai pemenang? RFQ akan ditutup dan quotation lain ditolak.')" class="font-bold text-emerald-700">Pilih</button></form>@else-</td>@endif</tr>
+<tr class="{{ $index === 0 ? 'bg-emerald-50' : '' }}"><td>{{ $index + 1 }}{{ $index === 0 ? ' 🏆' : '' }}</td><td class="font-semibold">{{ $row['vendor'] }}</td><td class="text-right font-mono">{{ number_format((float) $row['total'], 2, ',', '.') }}</td><td class="text-right">{{ $row['lead'] ?? '-' }}</td><td class="text-right">{{ $row['tech'] ?? '-' }}</td><td class="text-right">{{ $row['comm'] ?? '-' }}</td><td>{{ $row['payment_term'] ?? '-' }}</td><td><x-ui.badge :status="match($row['status']) { 'selected' => 'approved', 'rejected' => 'rejected', default => 'pending_approval' }" :label="$row['status']" /></td><td>@if($canManage && $rfq->status === 'open' && $row['status'] === 'submitted')<form method="post" action="/admin/procurement/rfq/quotations/{{ $row['id'] }}/select" class="inline">@csrf<button data-confirm="Pilih vendor ini sebagai pemenang? RFQ akan ditutup dan quotation lain ditolak." class="font-bold text-emerald-700">Pilih</button></form>@else-</td>@endif</tr>
 @empty<tr><td colspan="9" class="p-8 text-center">Belum ada quotation. Undang vendor lalu input penawarannya.</td></tr>@endforelse</tbody></table></div>
 @else
 <x-ui.empty icon="swap" title="Belum ada RFQ" description="Buat RFQ pertama untuk memulai proses pengadaan kompetitif sebelum PO." />

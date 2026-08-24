@@ -58,13 +58,13 @@
 @if($canManage)
 @if($cage->qc_status === 'draft' && $cage->created_by !== auth()->id())
 <form method="post" action="/admin/manufacturing/cages/{{ $cage->id }}/qc" class="mt-2 flex flex-wrap items-center gap-2">@csrf
-<input type="hidden" name="result" value="passed"><input type="number" step=".01" name="actual_weight_kg" required placeholder="Berat aktual (kg)" class="w-40 rounded-lg border p-1.5 text-xs"><input name="qc_notes" placeholder="Catatan QC" class="flex-1 rounded-lg border p-1.5 text-xs"><button onclick="return confirm('Rekam QC lolos dengan berat aktual ini?')" class="font-bold text-emerald-700">QC Lolos</button></form>
-<form method="post" action="/admin/manufacturing/cages/{{ $cage->id }}/qc" class="inline-flex gap-1">@csrf<input type="hidden" name="result" value="failed"><button onclick="return confirm('Tandai cage GAGAL QC?')" class="font-bold text-red-600">Gagal QC</button></form>
+<input type="hidden" name="result" value="passed"><input type="number" step=".01" name="actual_weight_kg" required placeholder="Berat aktual (kg)" class="w-40 rounded-lg border p-1.5 text-xs"><input name="qc_notes" placeholder="Catatan QC" class="flex-1 rounded-lg border p-1.5 text-xs"><button data-confirm="Rekam QC lolos dengan berat aktual ini?" class="font-bold text-emerald-700">QC Lolos</button></form>
+<form method="post" action="/admin/manufacturing/cages/{{ $cage->id }}/qc" class="inline-flex gap-1">@csrf<input type="hidden" name="result" value="failed"><button data-confirm="Tandai cage GAGAL QC?" class="font-bold text-red-600">Gagal QC</button></form>
 @endif
 @if($cage->qc_status === 'passed')
 <form method="post" action="/admin/manufacturing/cages/{{ $cage->id }}/deliver" class="mt-2 flex flex-wrap items-center gap-2">@csrf
 <select name="bored_pile_id" required class="rounded-lg border p-1.5 text-xs"><option value="">Kirim ke titik siap pasang</option>@foreach($piles as $pile)<option value="{{ $pile->id }}">{{ $pile->project?->code }}/{{ $pile->pile_number }} ({{ str($pile->status)->replace('_',' ') }})</option>@endforeach</select>
-<button onclick="return confirm('Catat pengiriman cage ke titik ini?')" class="font-bold text-[var(--brand-primary)]">Catat pengiriman</button></form>
+<button data-confirm="Catat pengiriman cage ke titik ini?" class="font-bold text-[var(--brand-primary)]">Catat pengiriman</button></form>
 @endif
 @endif
 <form method="post" action="/admin/manufacturing/cages/{{ $cage->id }}/material" class="mt-2 flex flex-wrap items-center gap-2 no-print">@csrf
@@ -76,7 +76,7 @@
 <input type="number" step=".0001" min="0.0001" name="quantity_kg" required placeholder="Qty (kg)" class="w-24 rounded-lg border p-1.5 text-xs">
 <input name="lot_number" placeholder="Heat/lot (ops.)" class="w-28 rounded-lg border p-1.5 text-xs">
 <input type="hidden" name="idempotency_key" value="{{ Str::uuid() }}">
-<button onclick="return confirm('Bebankan material ini ke cage? Stok berkurang dan jurnal biaya diposting.')" class="font-bold text-amber-700">Bebankan material</button>
+<button data-confirm="Bebankan material ini ke cage? Stok berkurang dan jurnal biaya diposting." class="font-bold text-amber-700">Bebankan material</button>
 </form>
 <form method="post" action="/admin/manufacturing/cages/{{ $cage->id }}/evidence" enctype="multipart/form-data" class="mt-2 flex flex-wrap items-center gap-2 no-print">@csrf
 <input type="file" name="file" accept="image/jpeg,image/png,image/webp" required class="rounded-lg border p-1.5 text-xs">

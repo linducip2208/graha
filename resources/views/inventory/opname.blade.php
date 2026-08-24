@@ -27,7 +27,7 @@
 <details class="mt-2"><summary class="cursor-pointer text-xs font-bold text-[var(--brand-primary)]">Detail varian</summary>
 <table class="mt-2 w-full text-xs"><thead><tr><th>SKU</th><th class="text-right">Sistem</th><th class="text-right">Fisik</th><th class="text-right">Selisih</th></tr></thead><tbody>@foreach($count->lines as $line)<tr><td>{{ $line->item?->sku }}</td><td class="text-right font-mono">{{ $line->system_quantity }}</td><td class="text-right font-mono">{{ $line->counted_quantity }}</td><td class="text-right font-mono {{ $line->variance() !== '0.0000' ? 'font-bold text-amber-600' : 'text-slate-400' }}">{{ $line->variance() }}</td></tr>@endforeach</tbody></table></details>
 @if($count->status === 'draft' && auth()->user()->hasPermission('inventory.manage', app(\App\Support\Tenancy\CurrentCompany::class)->id()) && $count->counted_by !== auth()->id())
-<form method="post" action="/admin/inventory/opname/{{ $count->id }}/approve" class="mt-2 inline">@csrf<button onclick="return confirm('Approve akan memposting adjustment ke ledger secara permanen untuk semua baris bervarian. Lanjutkan?')" class="rounded-lg bg-emerald-700 px-4 py-2 text-xs font-bold text-white">Approve & posting adjustment</button></form>
+<form method="post" action="/admin/inventory/opname/{{ $count->id }}/approve" class="mt-2 inline">@csrf<button data-confirm="Approve akan memposting adjustment ke ledger secara permanen untuk semua baris bervarian. Lanjutkan?" class="rounded-lg bg-emerald-700 px-4 py-2 text-xs font-bold text-white">Approve & posting adjustment</button></form>
 @endif
 </x-ui.card>
 @empty<x-ui.empty icon="archive" title="Belum ada opname" description="Buat penghitungan fisik pertama untuk gudang Anda." />@endforelse</div>

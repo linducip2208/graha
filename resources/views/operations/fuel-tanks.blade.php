@@ -33,7 +33,7 @@
 
 <form method="post" action="/admin/fuel-tanks/{{ $tank->id }}/reconcile" class="mt-4 grid gap-3 rounded-2xl border bg-white p-5 no-print">@csrf
 <h3 class="text-sm font-bold">Rekonsiliasi Fisik (stik/pembacaan meter)</h3>
-<div class="flex flex-wrap items-center gap-2"><input type="number" step=".01" name="reading" required placeholder="Volume fisik terbaca (L)" class="w-64 rounded-xl border p-3"><button onclick="return confirm('Selisih buku vs fisik akan dicatat sebagai penyesuaian permanen. Lanjutkan?')" class="rounded-xl bg-amber-600 px-5 py-3 font-bold text-white">Rekonsiliasi sekarang</button></div>
+<div class="flex flex-wrap items-center gap-2"><input type="number" step=".01" name="reading" required placeholder="Volume fisik terbaca (L)" class="w-64 rounded-xl border p-3"><button data-confirm="Selisih buku vs fisik akan dicatat sebagai penyesuaian permanen. Lanjutkan?" class="rounded-xl bg-amber-600 px-5 py-3 font-bold text-white">Rekonsiliasi sekarang</button></div>
 </form>
 
 <h2 class="mt-10 text-lg font-black">Kartu Stok {{ $tank->code }}</h2>

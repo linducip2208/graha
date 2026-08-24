@@ -32,7 +32,7 @@
 </form>
 <form method="post" action="/admin/tools/{{ $tool->id }}/lost" data-confirm="Tandai alat {{ $tool->code }} sebagai HILANG? Tindakan tercatat di audit trail dan tidak dapat dibatalkan." class="inline-flex flex-wrap items-end gap-2 no-print">@csrf
 <input name="lost_note" required placeholder="Alasan hilang" class="w-36 rounded-lg border p-1.5 text-xs">
-<button onclick="return confirm('Laporkan alat ini HILANG? Status tidak dapat dikembalikan.')" @disabled($tool->status === 'lost') class="font-bold text-red-600 disabled:opacity-40">Hilang</button>
+<button data-confirm="Laporkan alat ini HILANG? Status tidak dapat dikembalikan." @disabled($tool->status === 'lost') class="font-bold text-red-600 disabled:opacity-40">Hilang</button>
 </form>
 
 <form method="post" action="/admin/tools/{{ $tool->id }}/evidence" enctype="multipart/form-data" class="mt-2 flex flex-wrap items-center gap-2 no-print">@csrf
