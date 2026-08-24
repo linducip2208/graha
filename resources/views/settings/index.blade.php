@@ -87,4 +87,5 @@
 </article>
 @endif
 </div>
+<a href="/admin/experience" class="mt-6 inline-block rounded-xl bg-gradient-to-r from-sky-700 to-cyan-700 px-6 py-3 font-bold text-white no-print">Buka Experience Studio — Tampilan & White Label</a>
 </section></x-layouts.app>

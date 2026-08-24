@@ -9,6 +9,7 @@ use App\Http\Controllers\CasingController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\ExperienceController;
 use App\Http\Controllers\FieldOpsController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\FixedAssetController;
@@ -309,5 +310,7 @@ Route::post('/admin/tools/{tool}/checkout', [ToolController::class, 'checkOut'])
 Route::post('/admin/tools/{tool}/checkin', [ToolController::class, 'checkIn'])->middleware(['auth', 'company', 'permission:inventory.manage']);
 Route::post('/admin/tools/{tool}/lost', [ToolController::class, 'markLost'])->middleware(['auth', 'company', 'permission:inventory.manage']);
 Route::post('/admin/tools/{tool}/evidence', [ToolController::class, 'uploadEvidence'])->middleware(['auth', 'company', 'permission:inventory.manage']);
+Route::get('/admin/experience', [ExperienceController::class, 'edit'])->middleware(['auth', 'company'])->name('experience.studio');
+Route::post('/admin/experience', [ExperienceController::class, 'update'])->middleware(['auth', 'company'])->name('experience.update');
 Route::get('/admin/settings', [SettingsController::class, 'index'])->middleware(['auth', 'company'])->name('settings.index');
 Route::post('/admin/settings', [SettingsController::class, 'save'])->middleware(['auth', 'company', 'permission:finance.manage'])->name('settings.save');

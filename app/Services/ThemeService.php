@@ -1,0 +1,67 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\CompanyExperience;
+use App\Support\Experience\ThemePresets;
+use Illuminate\Support\Facades\Cache;
+
+/**
+ * Theme resolver (ADR-058): system defaults → preset → company override.
+ * Output: daftar token CSS final untuk layout. Cache per company, invalid
+ * saat publish. Semua nilai dari whitelist/validasi — tidak ada raw input.
+ */
+class ThemeService
+{
+    public const DEFAULT_PRESET = 'executive-navy';
+
+    public function resolve(int $companyId): array
+    {
+        return Cache::remember("experience:{$companyId}", now()->addHours(6), function () use ($companyId) {
+            $row = CompanyExperience::find($companyId);
+            $presetKey = $row->admin_theme ?? self::DEFAULT_PRESET;
+            $tokens = ThemePresets::get($presetKey)['tokens'];
+            $config = ['preset' => $presetKey, 'frontend_theme' => $row->frontend_theme ?? 'corporate'];
+
+            foreach (['primary_color' => '--brand-primary', 'secondary_color' => '--brand-secondary', 'accent_color' => '--brand-accent'] as $field => $token) {
+                if ($value = $row?->{$field}) {
+                    $tokens[$token] = $this->sanitizeHex($value) ? '#'.$this->sanitizeHex($value) : $tokens[$token];
+                }
+            }
+            if ($row?->font_ui && in_array($row->font_ui, ThemePresets::FONTS, true)) {
+                $tokens['--font-ui'] = $row->font_ui;
+            }
+            if ($row?->font_heading && in_array($row->font_heading, ThemePresets::FONTS, true)) {
+                $tokens['--font-heading'] = $row->font_heading;
+            }
+            foreach (['density', 'button_style', 'card_style', 'sidebar_style', 'topbar_style'] as $f) {
+                if (filled($row?->{$f})) {
+                    $config[$f] = $row->{$f};
+                }
+            }
+            foreach (['system_name', 'company_display_name', 'footer_text', 'support_email', 'login_headline'] as $f) {
+                if (filled($row?->{$f})) {
+                    $config[$f] = $row->{$f};
+                }
+            }
+
+            return ['tokens' => $tokens, 'config' => $config];
+        });
+    }
+
+    public static function flush(int $companyId): void
+    {
+        Cache::forget("experience:{$companyId}");
+    }
+
+    /** Terima "#RRGGBB" atau "RRGGBB"; kembalikan RRGGBB uppercase atau null. */
+    public function sanitizeHex(?string $raw): ?string
+    {
+        if (! $raw) {
+            return null;
+        }
+        $hex = ltrim(trim($raw), '#');
+
+        return preg_match('/^[0-9a-fA-F]{6}$/', $hex) ? strtoupper($hex) : null;
+    }
+}
