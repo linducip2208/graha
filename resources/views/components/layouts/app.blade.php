@@ -28,13 +28,13 @@
   @foreach($navGroups as $group)
   <details class="nav-group" data-group="{{ $group['label'] }}" open>
    <summary class="flex cursor-pointer select-none items-center justify-between px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-300">
-    <span>{{ $group['label'] }}</span><span class="nav-chevron text-[9px] opacity-60">â–¼</span>
+    <span>{{ $group['label'] }}</span><span class="nav-chevron text-[9px] opacity-60">&#9660;</span>
    </summary>
    <div class="space-y-0.5 pt-0.5">
    @foreach($group['items'] as $item)
     @if(! empty($item['children']))
     <details class="nav-details" {{ url()->current() === url($item['href']) ? 'open' : '' }}>
-     <summary class="admin-link cursor-pointer list-none"><x-ui.icon :name="$item['icon'] ?? 'dashboard'" class="h-[18px] w-[18px]" /><span>{{ $item['label'] }}</span><span class="nav-chevron ml-auto text-[10px] opacity-60">â–¼</span></summary>
+     <summary class="admin-link cursor-pointer list-none"><x-ui.icon :name="$item['icon'] ?? 'dashboard'" class="h-[18px] w-[18px]" /><span>{{ $item['label'] }}</span><span class="nav-chevron ml-auto text-[10px] opacity-60">&#9660;</span></summary>
      <div class="ml-6 mt-1 space-y-1 border-l border-white/10 pl-3">
       @foreach($item['children'] as $child)
       <a href="{{ $child['href'] }}" class="admin-link !py-2 text-[13px]">{{ $child['label'] }}</a>
@@ -52,7 +52,7 @@
  </nav>
 </aside>
 <div id="sidebar-overlay" data-sidebar-close class="fixed inset-0 z-30 hidden bg-slate-950/60 lg:hidden"></div>
-<div class="min-w-0"><header class="sticky top-0 z-20 flex items-center justify-between border-b bg-white/90 px-3 py-1.5 backdrop-blur lg:px-6 print:hidden"><div class="flex items-center gap-2.5"><button data-sidebar-open class="rounded-xl border p-2 lg:hidden" aria-label="Buka menu">â˜°</button><div><p class="text-xs text-slate-500">{{ $cid ? \App\Models\Company::find($cid)?->name : '' }}</p><strong>{{ $title ?? 'Dashboard' }}</strong></div></div><div class="flex items-center gap-3 sm:gap-4">
+<div class="min-w-0"><header class="sticky top-0 z-20 flex items-center justify-between border-b bg-white/90 px-3 py-1.5 backdrop-blur lg:px-6 print:hidden"><div class="flex items-center gap-2.5"><button data-sidebar-open class="rounded-xl border p-2 lg:hidden" aria-label="Buka menu">&#9776;</button><div><p class="text-xs text-slate-500">{{ $cid ? \App\Models\Company::find($cid)?->name : '' }}</p><strong>{{ $title ?? 'Dashboard' }}</strong></div></div><div class="flex items-center gap-3 sm:gap-4">
 <button id="global-search-trigger" class="hidden items-center gap-2 rounded-xl border px-3 py-2 text-sm text-slate-500 hover:border-sky-500 hover:text-sky-700 md:flex" title="Cari dokumen (Ctrl+K)" aria-label="Cari (Ctrl+K)">🔍<span class="hidden lg:inline">Cari apa saja…</span><kbd class="ml-2 hidden rounded border bg-slate-50 px-1.5 py-0.5 font-mono text-[10px] lg:inline">Ctrl K</kbd></button>
 <button id="quick-create-trigger" class="rounded-xl bg-sky-700 px-3 py-2 text-sm font-semibold text-white shadow hover:bg-sky-800 no-print" title="Buat baru" aria-label="Buat baru">＋ <span class="hidden sm:inline">Buat</span></button>
 <div id="quick-create-menu" hidden class="absolute right-4 top-full z-30 mt-2 w-64 overflow-hidden rounded-2xl border bg-white shadow-xl"><p class="border-b bg-slate-50 px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-slate-500">Buat Cepat</p><div class="py-1">@foreach(\App\Support\QuickCreate::items(auth()->user(), $cid) as $quick)<a href="{{ $quick['href'] }}" class="flex items-center gap-2 px-4 py-2 text-sm hover:bg-sky-50"><x-ui.icon :name="$quick['icon'] ?? 'plus'" class="h-4 w-4 text-sky-700" />{{ $quick['label'] }}</a>@endforeach</div></div>
