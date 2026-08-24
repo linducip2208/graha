@@ -36,10 +36,10 @@ class DocumentVersionService
      * as-built/dossier). Disk dari config objectstorage.document_disk —
      * tetap 'local' secara default agar perilaku existing tidak berubah.
      */
-    public function addFromContents(Document $document, string $contents, string $originalName, string $mime, User $actor, string $reason, ?string $disk = null): DocumentVersion
+    public function addFromContents(Document $document, string $contents, string $originalName, string $mime, User $actor, string $reason, ?string $disk = null, array $allowedMimes = ['application/pdf', 'image/jpeg', 'image/png']): DocumentVersion
     {
-        if (! in_array($mime, ['application/pdf', 'image/jpeg', 'image/png'], true) || strlen($contents) > 20 * 1024 * 1024) {
-            throw ValidationException::withMessages(['file' => 'File harus PDF/JPG/PNG dan maksimal 20 MB.']);
+        if (! in_array($mime, $allowedMimes, true) || strlen($contents) > 20 * 1024 * 1024) {
+            throw ValidationException::withMessages(['file' => 'File tidak sesuai whitelist atau melebihi 20 MB.']);
         }
         $disk ??= (string) config('objectstorage.document_disk', 'local');
         throw_unless(array_key_exists($disk, config('filesystems.disks', [])), ValidationException::withMessages(['file' => "Disk dokumen '{$disk}' tidak dikenal."]));

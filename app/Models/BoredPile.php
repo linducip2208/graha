@@ -6,6 +6,7 @@ use App\Models\Concerns\HasUuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
 class BoredPile extends Model
@@ -49,5 +50,10 @@ class BoredPile extends Model
     public function files(): HasMany
     {
         return $this->hasMany(StoredFile::class)->whereNull('original_file_id');
+    }
+
+    public function acceptance(): HasOne
+    {
+        return $this->hasOne(PileAcceptance::class, 'bored_pile_id')->latestOfMany();
     }
 }

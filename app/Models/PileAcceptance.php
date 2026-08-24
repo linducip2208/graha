@@ -37,7 +37,7 @@ class PileAcceptance extends Model
 
     public function pile(): BelongsTo
     {
-        return $this->belongsTo(BoredPile::class);
+        return $this->belongsTo(BoredPile::class, 'bored_pile_id');
     }
 
     public function project(): BelongsTo

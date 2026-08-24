@@ -129,6 +129,62 @@
     </ul>
     </x-ui.card>
 
+    {{-- Acceptance lifecycle (Phase 29/30) --}}
+    <x-ui.card>
+    <h2 class="font-black">Acceptance</h2>
+    @php($activeStatus = $acceptance && in_array($acceptance->status, ['pending','qa_review','engineer_review']) ? $acceptance->status : null)
+    <div class="mt-2 grid gap-3 lg:grid-cols-[1fr_320px]">
+        <div>
+            <p class="text-sm">
+                Status:
+                <span class="inline-block rounded-md px-2 py-1 text-[11px] font-bold uppercase {{ ['accepted'=>'bg-emerald-100 text-emerald-800','conditional'=>'bg-amber-100 text-amber-800','rejected'=>'bg-red-100 text-red-700'][str_replace('_review','_reviewed',$acceptance?->status ?? '')] ?? 'bg-slate-100 text-slate-700' }}">
+                    {{ $acceptance?->status ? str_replace('_', ' ', $acceptance->status) : 'belum diajukan' }}
+                </span>
+                @if($acceptance?->decided_at)<span class="text-xs text-slate-400"> · diputuskan {{ $acceptance->decided_at->format('d/m/Y H:i') }}</span>@endif
+            </p>
+            @if($acceptance?->conditions)<p class="mt-2 rounded-xl border border-amber-300 bg-amber-50 p-2 text-xs text-amber-800"><strong>Syarat kondisional:</strong> {{ $acceptance->conditions }}</p>@endif
+            @if($acceptance?->rejection_reason)<p class="mt-2 rounded-xl border border-red-300 bg-red-50 p-2 text-xs text-red-800"><strong>Alasan penolakan:</strong> {{ $acceptance->rejection_reason }}</p>@endif
+
+            <div class="mt-3 grid gap-1 sm:grid-cols-2">
+                @foreach($gates as $gate => $ok)
+                <div class="rounded-lg border px-2 py-1.5 text-xs {{ $ok ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-700' }}">
+                    {{ $ok ? '✓' : '✗' }} {{ str($gate)->replace('_',' ')->title() }}
+                </div>
+                @endforeach
+            </div>
+
+            @can('project.manage')
+            <form method="post" action="{{ route('piles.acceptance.request', $pile) }}" class="mt-3 inline">@csrf
+                <button @if($activeStatus || $gates['construction_complete'] === false) disabled @endif class="min-h-[44px] rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white disabled:opacity-40">Ajukan Acceptance</button>
+            </form>
+            @endcan
+            @can('qms.verify')
+            @if($activeStatus === 'pending')
+            <form method="post" action="{{ route('piles.acceptance.qa', $pile) }}" class="inline">@csrf<button class="ml-2 min-h-[44px] rounded-xl border px-4 py-2 text-sm font-semibold">QA Review Selesai</button></form>
+            @endif
+            @endcan
+            @can('approval.decide')
+            @if($activeStatus === 'qa_review')
+            <form method="post" action="{{ route('piles.acceptance.engineer', $pile) }}" class="inline">@csrf<button class="ml-2 min-h-[44px] rounded-xl border px-4 py-2 text-sm font-semibold">Engineer Review Selesai</button></form>
+            @elseif($activeStatus === 'engineer_review')
+            <form method="post" action="{{ route('piles.acceptance.decide', $pile) }}" class="mt-2 flex flex-wrap items-end gap-2">
+                @csrf
+                <select name="decision" class="min-h-[44px] rounded-xl border-stone-300 text-sm">
+                    <option value="accepted">Accept</option><option value="conditional">Conditional</option><option value="rejected">Reject</option>
+                </select>
+                <input name="conditions" placeholder="Syarat (untuk conditional)" class="min-h-[44px] w-48 rounded-xl border-stone-300 text-sm">
+                <input name="rejection_reason" placeholder="Alasan (untuk reject)" class="min-h-[44px] w-48 rounded-xl border-stone-300 text-sm">
+                <button class="min-h-[44px] rounded-xl bg-emerald-700 px-4 py-2 text-sm font-bold text-white">Putuskan</button>
+            </form>
+            @endif
+            @endcan
+        </div>
+        <aside class="text-xs text-slate-500">
+            Acceptance memisahkan "konstruksi selesai" dari "diterima". Gate membaca data nyata: status pile, hasil uji, NCR tertaut, aturan evidence company, as-built teregistrasi, dan data survey aktual.
+        </aside>
+    </div>
+    </x-ui.card>
+
     {{-- Bore log ringkas --}}
     <x-ui.card>
     <h2 class="font-black">Soil / Bore Log</h2>

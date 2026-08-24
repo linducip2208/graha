@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\BoredPile;
+use App\Models\PileAcceptance;
 use App\Models\StoredFile;
 use App\Services\AuditTrail;
 use App\Services\BoredPileGenealogyService;
+use App\Services\PileAcceptanceService;
 use App\Services\PileDocumentService;
 use App\Services\PileQrService;
 use App\Services\Storage\EvidenceStorageService;
@@ -63,6 +65,8 @@ class PilePassportController extends Controller
             'documents' => $documents,
             'timeline' => $timeline,
             'qrSvg' => $this->qr->svgForPileUrl(route('piles.public', $pile->public_uuid)),
+            'acceptance' => PileAcceptance::where('bored_pile_id', $pile->id)->latest()->first(),
+            'gates' => app(PileAcceptanceService::class)->gateChecks($pile),
         ]);
     }
 
@@ -131,5 +135,53 @@ class PilePassportController extends Controller
         $version = $documents->storeAcceptanceDossier($pile, $request->user())->loadMissing('document');
 
         return back()->with('status', "Acceptance Dossier tersimpan: {$version->document->number} v{$version->version} · SHA-256 ".substr($version->sha256, 0, 16).'…');
+    }
+
+    /** Ajukan acceptance (Phase 29) — snapshot gate dari data nyata. */
+    public function requestAcceptance(Request $request, BoredPile $pile, CurrentCompany $current, PileAcceptanceService $acceptance)
+    {
+        abort_unless($pile->project()->where('company_id', $current->id())->exists(), 404);
+        abort_unless($request->user()->hasPermission('project.manage', $current->id()), 403);
+        $acceptance->request($pile, $request->user());
+
+        return back()->with('status', 'Pengajuan acceptance dibuat — menunggu QA review.');
+    }
+
+    public function reviewQa(Request $request, BoredPile $pile, CurrentCompany $current, PileAcceptanceService $acceptanceService)
+    {
+        abort_unless($pile->project()->where('company_id', $current->id())->exists(), 404);
+        abort_unless($request->user()->hasPermission('qms.verify', $current->id()), 403);
+        $active = $acceptanceService->activeAcceptance($pile);
+        abort_if($active === null, 404);
+        $acceptanceService->reviewQa($active, $request->user());
+
+        return back()->with('status', 'QA review selesai — lanjut engineer review.');
+    }
+
+    public function reviewEngineer(Request $request, BoredPile $pile, CurrentCompany $current, PileAcceptanceService $acceptanceService)
+    {
+        abort_unless($pile->project()->where('company_id', $current->id())->exists(), 404);
+        abort_unless($request->user()->hasPermission('approval.decide', $current->id()), 403);
+        $active = $acceptanceService->activeAcceptance($pile);
+        abort_if($active === null, 404);
+        $acceptanceService->reviewEngineer($active, $request->user());
+
+        return back()->with('status', 'Engineer review selesai — siap untuk keputusan final.');
+    }
+
+    public function decideAcceptance(Request $request, BoredPile $pile, CurrentCompany $current, PileAcceptanceService $acceptanceService)
+    {
+        abort_unless($pile->project()->where('company_id', $current->id())->exists(), 404);
+        abort_unless($request->user()->hasPermission('approval.decide', $current->id()), 403);
+        $data = $request->validate([
+            'decision' => ['required', 'in:accepted,rejected,conditional'],
+            'conditions' => ['nullable', 'string', 'max:2000'],
+            'rejection_reason' => ['nullable', 'string', 'max:2000'],
+        ]);
+        $active = $acceptanceService->activeAcceptance($pile);
+        abort_if($active === null, 404);
+        $acceptanceService->decide($active, $data['decision'], $request->user(), $data['conditions'] ?? null, $data['rejection_reason'] ?? null);
+
+        return back()->with('status', 'Keputusan acceptance terekam dan diaudit.');
     }
 }

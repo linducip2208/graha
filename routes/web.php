@@ -28,6 +28,7 @@ use App\Http\Controllers\PilePassportController;
 use App\Http\Controllers\ProcurementController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectCostingController;
+use App\Http\Controllers\ProjectHandoverController;
 use App\Http\Controllers\QmsController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RfqController;
@@ -132,6 +133,10 @@ Route::middleware(['auth', 'company', 'permission:project.view'])->prefix('admin
     Route::post('/bored-piles/{pile}/photos', [PilePassportController::class, 'uploadPhoto'])->middleware('permission:project.manage')->name('piles.photos.store');
     Route::post('/bored-piles/{pile}/as-built/store', [PilePassportController::class, 'storeAsBuilt'])->middleware('permission:project.manage')->name('piles.as-built.store');
     Route::post('/bored-piles/{pile}/dossier/store', [PilePassportController::class, 'storeDossier'])->middleware('permission:project.manage')->name('piles.dossier.store');
+    Route::post('/bored-piles/{pile}/acceptance/request', [PilePassportController::class, 'requestAcceptance'])->middleware('permission:project.manage')->name('piles.acceptance.request');
+    Route::post('/bored-piles/{pile}/acceptance/qa-review', [PilePassportController::class, 'reviewQa'])->middleware('permission:qms.verify')->name('piles.acceptance.qa');
+    Route::post('/bored-piles/{pile}/acceptance/engineer-review', [PilePassportController::class, 'reviewEngineer'])->middleware('permission:approval.decide')->name('piles.acceptance.engineer');
+    Route::post('/bored-piles/{pile}/acceptance/decide', [PilePassportController::class, 'decideAcceptance'])->middleware('permission:approval.decide')->name('piles.acceptance.decide');
     Route::get('/files/{file}/preview', [StoredFileController::class, 'preview'])->name('files.preview');
     Route::get('/files/{file}/download', [StoredFileController::class, 'download'])->name('files.download');
     Route::get('/bored-piles/{pile}/as-built', [PileGenealogyController::class, 'asBuilt'])->name('piles.as-built');
@@ -141,6 +146,7 @@ Route::middleware(['auth', 'company', 'permission:project.view'])->prefix('admin
     Route::post('/bored-piles/{pile}/transition', [ProjectController::class, 'transition'])->middleware('permission:project.manage');
     Route::post('/bored-piles/{pile}/concrete', [ProjectController::class, 'concrete'])->middleware('permission:project.manage');
     Route::post('/projects/{project}/constraints', [ProjectController::class, 'storeConstraint'])->middleware('permission:project.manage');
+    Route::post('/projects/{project}/handover-package', [ProjectHandoverController::class, 'build'])->name('projects.handover.build');
     Route::post('/constraints/{constraint}/status', [ProjectController::class, 'updateConstraintStatus'])->middleware('permission:project.manage');
     Route::post('/projects/{project}/wbs', [ProjectController::class, 'storeWbs'])->middleware('permission:project.manage');
     Route::post('/projects/{project}/procurement-plans', [ProjectController::class, 'storePlan'])->middleware('permission:procurement.manage');

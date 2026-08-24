@@ -3,6 +3,7 @@
 namespace App\Services\Storage;
 
 use App\Models\BoredPile;
+use App\Models\Project;
 use App\Models\StoredFile;
 use App\Models\User;
 use App\Services\AuditTrail;
@@ -177,5 +178,45 @@ class EvidenceStorageService
             'image/webp' => 'webp',
             default => 'bin',
         };
+    }
+
+    /** Arsip level project (mis. handover package ZIP) — tanpa relasi pile tunggal. */
+    public function storeProjectArchive(Project $project, string $subCategory, string $filename, string $contents, User $actor, array $link = []): StoredFile
+    {
+        $sha = hash('sha256', $contents);
+        $uuid = (string) Str::uuid();
+        $key = sprintf('companies/%s/projects/%s/%s/%s.zip', $project->company?->uuid ?? 'c'.$project->company_id, $project->uuid, $subCategory, $uuid);
+        $disk = (string) config('objectstorage.evidence_disk', 'local');
+
+        return DB::transaction(function () use ($project, $subCategory, $filename, $contents, $actor, $link, $sha, $uuid, $key, $disk) {
+            $stored = StoredFile::create([
+                'uuid' => $uuid,
+                'company_id' => $project->company_id,
+                'project_id' => $project->id,
+                'category' => $link['category'] ?? 'handover',
+                'sub_category' => $subCategory,
+                'disk' => $disk,
+                'object_key' => $key,
+                'original_name' => $filename,
+                'extension' => 'zip',
+                'mime_type' => 'application/zip',
+                'size_bytes' => strlen($contents),
+                'sha256' => $sha,
+                'status' => 'ready',
+                'uploaded_by' => $actor->id,
+                'document_id' => $link['document_id'] ?? null,
+                'document_version_id' => $link['document_version_id'] ?? null,
+            ]);
+            try {
+                $this->storage->put($key, $contents, $disk);
+            } catch (\Throwable $e) {
+                $stored->delete();
+
+                throw $e;
+            }
+            $this->audit->record($project->company_id, $actor->id, $link['audit_event'] ?? 'handover_package_generated', $stored);
+
+            return $stored;
+        }, 3);
     }
 }
