@@ -130,6 +130,8 @@ Route::middleware(['auth', 'company', 'permission:project.view'])->prefix('admin
     Route::get('/bored-piles/{pile}/genealogy', [PileGenealogyController::class, 'show'])->name('piles.genealogy');
     Route::get('/bored-piles/{pile}/passport', [PilePassportController::class, 'show'])->name('piles.passport');
     Route::post('/bored-piles/{pile}/photos', [PilePassportController::class, 'uploadPhoto'])->middleware('permission:project.manage')->name('piles.photos.store');
+    Route::post('/bored-piles/{pile}/as-built/store', [PilePassportController::class, 'storeAsBuilt'])->middleware('permission:project.manage')->name('piles.as-built.store');
+    Route::post('/bored-piles/{pile}/dossier/store', [PilePassportController::class, 'storeDossier'])->middleware('permission:project.manage')->name('piles.dossier.store');
     Route::get('/files/{file}/preview', [StoredFileController::class, 'preview'])->name('files.preview');
     Route::get('/files/{file}/download', [StoredFileController::class, 'download'])->name('files.download');
     Route::get('/bored-piles/{pile}/as-built', [PileGenealogyController::class, 'asBuilt'])->name('piles.as-built');

@@ -5,6 +5,10 @@
 <a href="{{ route('piles.passport', $pile) }}" class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white">Passport</a>
 <a href="{{ route('piles.genealogy', $pile) }}" class="rounded-xl border px-4 py-2 text-sm font-semibold">Genealogy</a>
 <a href="{{ route('piles.as-built', $pile) }}" class="rounded-xl border px-4 py-2 text-sm font-semibold">As-Built PDF</a>
+@can('project.manage')
+<form method="post" action="{{ route('piles.as-built.store', $pile) }}" class="inline">@csrf<button class="rounded-xl border px-4 py-2 text-sm font-semibold hover:bg-slate-50">Simpan As-Built ke Registry</button></form>
+<form method="post" action="{{ route('piles.dossier.store', $pile) }}" class="inline">@csrf<button class="rounded-xl bg-emerald-700 px-4 py-2 text-sm font-bold text-white">Buat Acceptance Dossier</button></form>
+@endcan
 </div>
 </x-ui.page-header>
 

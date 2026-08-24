@@ -6,6 +6,7 @@ use App\Models\BoredPile;
 use App\Models\StoredFile;
 use App\Services\AuditTrail;
 use App\Services\BoredPileGenealogyService;
+use App\Services\PileDocumentService;
 use App\Services\PileQrService;
 use App\Services\Storage\EvidenceStorageService;
 use App\Support\Tenancy\CurrentCompany;
@@ -110,5 +111,25 @@ class PilePassportController extends Controller
             ->where('company_user.is_active', true)->exists(), 404);
 
         return redirect()->route('piles.passport', $pile);
+    }
+
+    /** Simpan As-Built sebagai dokumen berversi di registry + object storage. */
+    public function storeAsBuilt(Request $request, BoredPile $pile, CurrentCompany $current, PileDocumentService $documents)
+    {
+        abort_unless($pile->project()->where('company_id', $current->id())->exists(), 404);
+        abort_unless($request->user()->hasPermission('project.manage', $current->id()), 403);
+        $version = $documents->storeAsBuilt($pile, $request->user())->loadMissing('document');
+
+        return back()->with('status', "As-Built tersimpan: {$version->document->number} v{$version->version} · SHA-256 ".substr($version->sha256, 0, 16).'…');
+    }
+
+    /** Buat Acceptance Dossier PDF dan daftarkan ke registry. */
+    public function storeDossier(Request $request, BoredPile $pile, CurrentCompany $current, PileDocumentService $documents)
+    {
+        abort_unless($pile->project()->where('company_id', $current->id())->exists(), 404);
+        abort_unless($request->user()->hasPermission('project.manage', $current->id()), 403);
+        $version = $documents->storeAcceptanceDossier($pile, $request->user())->loadMissing('document');
+
+        return back()->with('status', "Acceptance Dossier tersimpan: {$version->document->number} v{$version->version} · SHA-256 ".substr($version->sha256, 0, 16).'…');
     }
 }

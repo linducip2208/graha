@@ -21,8 +21,10 @@ footer{position:fixed;bottom:-14px;left:0;right:0;font-size:9px;color:#94a3b8;te
 @if(!$loop->first)<div class="page-break"></div>@endif
 <div class="head"><div>
 <h1>As-Built Bored Pile — {{ $p->pile_number }}</h1>
-<div class="muted">{{ $p->project->customer?->name }} · {{ $p->project->code }} — {{ $p->project->name }}</div>
-</div><div class="muted" style="text-align:right">Dicetak {{ now()->format('d/m/Y H:i') }}<br>Graha Pondasi ERP</div></div>
+<div class="muted">{{ $p->project->customer?->name }} — {{ $p->project->code }} — {{ $p->project->name }}</div>
+</div><div class="muted" style="text-align:right">
+@if(!empty($experience['logo_data_uri']))<img src="{{ $experience['logo_data_uri'] }}" style="height:34px;object-fit:contain;margin-bottom:4px"><br>@endif
+Dicetak {{ now()->format('d/m/Y H:i') }}<br>{{ ($experience['config']['company_display_name'] ?? null) ?: config('app.name') }}</div></div>
 
 <h2>Identitas & Volume</h2>
 <div class="kv">
@@ -80,6 +82,6 @@ footer{position:fixed;bottom:-14px;left:0;right:0;font-size:9px;color:#94a3b8;te
 </div>
 
 <div class="sign"><div>Dibuat oleh,<br><br><br>{{ $p->project->pm_name ?? 'Site Engineer' }}</div><div>Disetujui oleh,<br><br><br>{{ $p->project->client_name ?? 'Konsultan/MK' }}</div></div>
-<footer>Dokumen dihasilkan otomatis dari Graha Pondasi ERP · data per {{ now()->format('d/m/Y') }} · ID pile #{{ $p->id }}</footer>
+<footer>Dokumen dihasilkan otomatis dari {{ ($experience['config']['system_name'] ?? null) ?: config('app.name') }} - data per {{ now()->format('d/m/Y') }} | ID pile #{{ $p->id }}@if(!empty($experience['config']['footer_text'])) - {{ $experience['config']['footer_text'] }}@endif</footer>
 @endforeach
 </body></html>
