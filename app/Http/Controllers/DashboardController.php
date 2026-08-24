@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ApprovalRequest;
 use App\Models\BoredPile;
+use App\Models\CompanyExperience;
 use App\Models\CompanySetting;
 use App\Models\CorrectiveAction;
 use App\Models\HseIncident;
@@ -109,10 +110,30 @@ class DashboardController extends Controller
             'poValue' => PurchaseOrder::where('company_id', $companyId)->whereIn('status', ['approved', 'issued', 'partially_received', 'received'])->sum('total'),
         ] : null;
 
+        // Dashboard Builder (ADR-063): susun ulang $stats sesuai config company
+        // (id widget = label stat di registry). Tanpa config -> layout legacy.
+        $widgetConfig = CompanyExperience::find($companyId)?->dashboard_config;
+        $widths = [];
+        if (is_array($widgetConfig) && $widgetConfig !== []) {
+            $registry = config('dashboard-widgets');
+            $ordered = collect($widgetConfig)
+                ->filter(fn ($w) => isset($registry[$w['id']]))
+                ->filter(fn ($w) => ($perm = $registry[$w['id']]['permission']) === null || $can($perm))
+                ->pluck('id');
+            $stats = collect($ordered)
+                ->mapWithKeys(fn ($id) => [$registry[$id]['label'] => $stats[$registry[$id]['label']] ?? ['value' => '0', 'hint' => '']])
+                ->union(collect($stats)->diffKeys(collect($ordered)->mapWithKeys(fn ($id) => [$registry[$id]['label'] => true])->all()))
+                ->all();
+            foreach ($ordered as $id) {
+                $widths[$registry[$id]['label']] = $registry[$id]['width'];
+            }
+        }
+
         return view('dashboard', [
             'company' => $current->get(), 'stats' => $stats, 'revenueTrend' => $revenueTrend, 'pileStatus' => $pileStatus,
             'approvals' => $approvals, 'journals' => $journals, 'aging' => $aging,
             'executive' => $executive, 'projectHealth' => $projectHealth, 'procurementQueue' => $procurementQueue,
+            'widths' => $widths,
         ]);
     }
 

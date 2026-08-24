@@ -17,7 +17,10 @@ class Term
             return [];
         }
 
-        return (array) (CompanyExperience::find($companyId)?->terminology ?? []);
+        $row = CompanyExperience::find($companyId);
+        $pack = $row?->industry_pack ? (array) (config("industry-packs.$row->industry_pack.terminology") ?? []) : [];
+
+        return array_merge($pack, (array) ($row?->terminology ?? []));
     }
 
     public static function t(int $companyId, string $text): string

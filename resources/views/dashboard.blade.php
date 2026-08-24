@@ -5,7 +5,7 @@
 
 <div class="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
 @forelse($stats as $label => $stat)
-<x-ui.stat-card :label="$label" :value="is_numeric($stat) ? number_format($stat, 0, ',', '.') : (is_array($stat) ? (is_string($stat['value']) && str_starts_with($stat['value'], 'Rp') ? $stat['value'] : number_format((float) $stat['value'], 0, ',', '.')) : '-')" :hint="$stat['hint'] ?? ''" />
+<x-ui.stat-card :label="$label" :value="is_numeric($stat) ? number_format($stat, 0, ',', '.') : (is_array($stat) ? (is_string($stat['value']) && str_starts_with($stat['value'], 'Rp') ? $stat['value'] : number_format((float) $stat['value'], 0, ',', '.')) : '-')" :hint="$stat['hint'] ?? ''" :class="($widths[$label] ?? 3) >= 6 ? 'sm:col-span-2 xl:col-span-2' : ''" />
 @empty
 <x-ui.empty icon="dashboard" title="Belum ada widget untuk kewenangan Anda" description="Hubungi Company Admin bila akses operasional diperlukan." />
 @endforelse

@@ -10,7 +10,8 @@ class Navigation
 {
     public static function groups(User $user, ?int $companyId): Collection
     {
-        $visibleModules = collect(config('modules.visible', []));
+        $visibleModules = Edition::visibleModules((int) $companyId)
+            ?? collect(config('modules.visible', []));
         // Navigation Composer (ADR-061): override HANYA presentasi — permission
         // tetap difilter di bawah, direct URL tetap berlaku normal.
         $cfg = $companyId ? (array) (CompanyExperience::find($companyId)?->nav_config ?? []) : [];

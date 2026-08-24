@@ -82,6 +82,24 @@
 @endforeach
 </div>
 </fieldset>
+<fieldset class="rounded-xl border p-4"><legend class="px-2 text-sm font-bold">Industry Pack & Edition</legend>
+<div class="grid gap-3 sm:grid-cols-2">
+<label class="text-xs font-semibold">Industry Pack<select name="industry_pack" class="mt-1 w-full rounded-xl border p-2.5"><option value="">— default —</option>@foreach(config('industry-packs') as $k => $p)<option value="{{ $k }}" @selected(($cfg?->industry_pack) === $k)>{{ $p['label'] }}</option>@endforeach</select></label>
+<label class="text-xs font-semibold">Edition<select name="edition" class="mt-1 w-full rounded-xl border p-2.5"><option value="">— semua modul —</option>@foreach(config('editions') as $k => $e)<option value="{{ $k }}" @selected(($cfg?->edition) === $k)>{{ $e['label'] }}</option>@endforeach</select></label>
+</div>
+</fieldset>
+
+<fieldset class="rounded-xl border p-4"><legend class="px-2 text-sm font-bold">Dashboard Builder</legend>
+<p class="text-[11px] text-slate-400">Kosongkan = layout legacy. Centang widget yang ingin tampil; lebar kolom grid 12.</p>
+<div class="grid gap-1 sm:grid-cols-3">@foreach(config('dashboard-widgets') as $wid => $w)
+<label class="flex items-center gap-2 rounded-lg border p-2 text-xs cursor-pointer has-checked:border-sky-500">
+<input type="checkbox" name="dash_enabled[{{ $wid }}]" value="1" @checked(collect($cfg?->dashboard_config ?? [])->pluck('id')->contains($wid))>
+<span class="flex-1">{{ $w['label'] }}</span>
+<select name="dash_width[{{ $wid }}]" class="rounded border p-0.5 text-[10px]">@foreach([3,4,6,12] as $wd)<option value="{{ $wd }}" @selected(collect($cfg?->dashboard_config ?? [])->firstWhere('id',$wid)['w'] ?? $w['width'] === $wd)>w{{ $wd }}</option>@endforeach</select>
+</label>
+@endforeach
+</div>
+</fieldset>
 @php($versions = \App\Models\ExperienceVersion::where('company_id', app(\App\Support\Tenancy\CurrentCompany::class)->id())->orderByDesc('version')->limit(10)->get())
 <x-ui.card label="Versi Tampilan">
 <form method="post" action="/admin/experience/draft" class="mb-2 no-print">@csrf<x-ui.button variant="secondary" type="submit" class="!py-1.5 !text-xs">Simpan sebagai draft baru</x-ui.button></form>

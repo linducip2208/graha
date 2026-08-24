@@ -58,6 +58,10 @@ class ExperienceController extends Controller
             'nav_labels' => ['nullable', 'array'],
             'nav_labels.*' => ['nullable', 'max:60'],
             'terminology' => ['nullable', 'array'],
+            'industry_pack' => ['nullable', 'in:'.implode(',', array_keys(config('industry-packs')))],
+            'edition' => ['nullable', 'in:'.implode(',', array_keys(config('editions')))],
+            'dash_enabled' => ['nullable', 'array'],
+            'dash_width' => ['nullable', 'array'],
         ]);
         foreach (['primary_color', 'secondary_color', 'accent_color'] as $f) {
             if (isset($data[$f])) {
@@ -72,11 +76,25 @@ class ExperienceController extends Controller
             'labels' => collect($request->input('nav_labels', []))->filter(fn ($v) => filled($v))->all(),
         ];
         $terminology = collect($request->input('terminology', []))->filter(fn ($v) => filled($v))->map(fn ($v) => mb_substr((string) $v, 0, 60))->all();
+        $registry = config('dashboard-widgets');
+        $dash = [];
+        foreach (array_keys((array) ($request->input('dash_enabled', []) ?? [])) as $wid) {
+            if (isset($registry[$wid])) {
+                $dash[] = ['id' => $wid, 'w' => (int) (($request->input('dash_width')[$wid] ?? null) ?: $registry[$wid]['width'])];
+            }
+        }
 
         $row = CompanyExperience::updateOrCreate(['company_id' => $current->id()], [
             ...collect($data)->filter(fn ($v) => filled($v))->all(),
             'nav_config' => $navConfig,
             'terminology' => $terminology,
+            'industry_pack' => $data['industry_pack'] ?? null,
+            'edition' => $data['edition'] ?? null,
+            'dashboard_config' => $dash,
+            'terminology' => $terminology,
+            'industry_pack' => $data['industry_pack'] ?? null,
+            'edition' => $data['edition'] ?? null,
+            'dashboard_config' => $dash,
             'is_published' => true,
             'published_by' => $request->user()->id,
             'published_at' => now(),
