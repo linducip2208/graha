@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\BoredPile;
 use App\Models\BoredPileDrilling;
 use App\Models\BudgetBaseline;
 use App\Models\ConcreteDelivery;
 use App\Models\ConstraintLog;
 use App\Models\ContractChange;
+use App\Models\Customer;
 use App\Models\Item;
 use App\Models\MaterialRequest;
 use App\Models\PileTest;
@@ -22,6 +24,7 @@ use App\Models\Vendor;
 use App\Services\BoredPileService;
 use App\Services\PlanningSupportService;
 use App\Services\ProjectCostingService;
+use App\Services\ProjectHealthService;
 use App\Support\Tenancy\CurrentCompany;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -33,27 +36,54 @@ class ProjectController extends Controller
     public function index(Request $request, CurrentCompany $current)
     {
         $companyId = $current->id();
+        $view = $request->query('view'); // portfolio (default) | kanban | timeline
 
-        // Saved view via query string: filter status + kata kunci dapat dibagikan sebagai URL.
-        $query = Project::where('company_id', $companyId)->withCount('boredPiles')->latest();
+        // Saved view via query string: filter status + klien + kata kunci dapat dibagikan sebagai URL.
+        $query = Project::where('company_id', $companyId)->withCount('boredPiles')->with('customer:id,code,name')->latest();
         if ($status = $request->query('status')) {
             $query->where('status', $status);
+        }
+        if ($customer = $request->query('customer')) {
+            $query->where('customer_id', $customer);
         }
         if ($term = trim((string) $request->query('q'))) {
             $query->where(fn ($w) => $w->where('code', 'like', "%{$term}%")->orWhere('name', 'like', "%{$term}%"));
         }
         $projects = $query->get();
+
+        // Project health dari engine existing (threshold CompanySetting) — tanpa kalkulasi baru.
+        $healthMap = app(ProjectHealthService::class)->map($companyId);
+        if ($health = $request->query('health')) {
+            if (in_array($health, ['green', 'yellow', 'red'], true)) {
+                $projects = $projects->filter(fn (Project $p) => ($healthMap[$p->id]['health'] ?? null) === $health)->values();
+            }
+        }
+
         $allProjects = Project::where('company_id', $companyId)->withCount('boredPiles')->latest()->get();
         $selected = $allProjects->firstWhere('id', (int) $request->query('project')) ?? $allProjects->first();
+
+        // KPI portofolio dari data riil (tanpa data rekaan).
+        $activeProjects = $projects->whereIn('status', ['active', 'in_progress']);
+        $physicalValues = $activeProjects->pluck('id')->map(fn ($id) => $healthMap[$id]['physical'] ?? null)->filter();
+        $kpi = [
+            'total' => $projects->count(),
+            'active' => $activeProjects->count(),
+            'contract_value' => (float) $projects->sum('contract_value'),
+            'critical' => $activeProjects->pluck('id')->count(fn ($id) => ($healthMap[$id]['health'] ?? null) === 'red'),
+            'watch' => $activeProjects->pluck('id')->count(fn ($id) => ($healthMap[$id]['health'] ?? null) === 'yellow'),
+            'avg_progress' => $physicalValues->isNotEmpty() ? round($physicalValues->avg(), 1) : null,
+            'pile_total' => (int) $projects->sum('bored_piles_count'),
+        ];
 
         return view('projects.index', [
             'projects' => $projects,
             'allProjects' => $allProjects,
             'statusCounts' => $allProjects->countBy('status'),
-            'zones' => ProjectZone::whereHas('project', fn ($q) => $q->where('company_id', $companyId))->with('project')->get(),
-            'piles' => BoredPile::whereHas('project', fn ($q) => $q->where('company_id', $companyId))->with(['project', 'zone'])->latest()->paginate(30),
-            'schedule' => $selected ? $this->buildSchedule($selected) : null,
-            'kanban' => $request->query('view') === 'kanban' ? $this->kanban($projects) : null,
+            'customers' => Customer::where('company_id', $companyId)->orderBy('name')->get(['id', 'code', 'name']),
+            'healthMap' => $healthMap,
+            'kpi' => $kpi,
+            'schedule' => $view === 'timeline' && $selected ? $this->buildSchedule($selected) : null,
+            'kanban' => $view === 'kanban' ? $this->kanban($projects) : null,
         ]);
     }
 
@@ -85,6 +115,8 @@ class ProjectController extends Controller
         $piles = BoredPile::where('project_id', $project->id)->with(['zone', 'activities'])->orderBy('pile_number')->get();
 
         $data = ['project' => $project, 'piles' => $piles, 'activeTab' => $tab];
+        // Health dari engine existing (threshold CompanySetting) — dipakai badge header.
+        $data['healthRow'] = app(ProjectHealthService::class)->map($companyId)[$project->id] ?? null;
 
         if ($tab === 'overview') {
             $data['costing'] = $can('finance.view') ? app(ProjectCostingService::class)->summary($project) : null;
@@ -159,12 +191,33 @@ class ProjectController extends Controller
             $data['billings'] = ProgressBilling::where('project_id', $project->id)->with('journal')->latest('billing_date')->get();
         }
 
-        if ($tab === 'quality' && $can('qms.view')) {
-            $data['ncrs'] = Nonconformity::where('project_id', $project->id)->with('actions')->latest()->get();
+        if ($tab === 'quality' || $tab === 'hse') {
+            if ($can('qms.view')) {
+                $data['ncrs'] = Nonconformity::where('project_id', $project->id)->with('actions')->latest()->get();
+            }
+            if ($can('hse.view')) {
+                $data['incidents'] = HseIncident::where('project_id', $project->id)->latest()->get();
+            }
         }
 
-        if ($tab === 'hse' && $can('hse.view')) {
-            $data['incidents'] = HseIncident::where('project_id', $project->id)->latest()->get();
+        if ($tab === 'activity') {
+            $pileIds = $piles->pluck('id');
+            $data['activity'] = AuditLog::where('company_id', $companyId)
+                ->where(function ($q) use ($project, $pileIds) {
+                    $q->where(function ($w) use ($project) {
+                        $w->where('auditable_type', Project::class)->where('auditable_id', $project->id);
+                    })->orWhere(function ($w) use ($pileIds) {
+                        $w->where('auditable_type', BoredPile::class)->whereIn('auditable_id', $pileIds);
+                    });
+                })
+                ->with('actor:id,name')
+                ->orderByDesc('created_at')
+                ->limit(30)
+                ->get();
+        }
+
+        if ($tab === 'piles') {
+            $data['zones'] = $project->zones()->orderBy('code')->get();
         }
 
         return view('projects.show', $data);

@@ -7,6 +7,7 @@ use App\Models\ExperienceVersion;
 use App\Services\ExperienceVersionService;
 use App\Services\ThemeService;
 use App\Support\Experience\ThemePresets;
+use App\Support\Navigation;
 use App\Support\Tenancy\CurrentCompany;
 use App\Support\Term;
 use Illuminate\Http\Request;
@@ -33,7 +34,12 @@ class ExperienceController extends Controller
             'terminologyMap' => (array) ($experienceRow?->terminology ?? []),
             'launcherConfig' => array_merge(['style' => 'visual', 'covers_enabled' => true, 'density' => 'comfortable'], (array) ($experienceRow?->launcher_config ?? [])),
             'launcherCovers' => (array) ($experienceRow?->launcher_covers ?? []),
-            'launcherWorkspaceKeys' => collect(config('modules.nav'))->map(fn ($g) => ['key' => $g['key'] ?? str($g['label'])->slug(), 'label' => $g['label']]),
+            // Cover manager hanya untuk workspace yang EFFECTIVE bagi user ini
+            // (permission + edition + navigation composer) — bukan seluruh config.
+            'launcherWorkspaceKeys' => Navigation::groups($request->user(), $companyId)
+                ->map(fn ($g) => ['key' => (string) ($g['key'] ?? str($g['label'])->slug()), 'label' => (string) preg_replace('/^[^\p{L}\d]+/u', '', $g['label'])])
+                ->values(),
+            'launcherRegistry' => (array) config('app-launcher.workspaces', []),
         ]);
     }
 
@@ -42,7 +48,7 @@ class ExperienceController extends Controller
     {
         abort_unless($request->user()->hasPermission('finance.manage', $current->id()), 403);
         $data = $request->validate([
-            'style' => ['required', 'in:visual,compact'],
+            'style' => ['required', 'in:visual,compact,list'],
             'covers_enabled' => ['required', 'boolean'],
             'density' => ['required', 'in:comfortable,compact'],
         ]);

@@ -1,6 +1,6 @@
 <x-layouts.app title="Ikhtisar Keuangan">
-<section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-<h1 class="text-2xl font-bold tracking-tight">Ikhtisar Keuangan</h1>
+<div class="page-container">
+<x-ui.page-header title="Ikhtisar Keuangan" />
 <p class="mt-2 text-slate-500">Posisi kas, piutang, utang, dan pendapatan dalam satu layar —” sumber data dari jurnal posted.</p>
 @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800">{{ session('status') }}</div>@endif
 
@@ -42,5 +42,5 @@
 </tbody></table></div>
 </article>
 </div>
-</section>
+</div>
 </x-layouts.app>

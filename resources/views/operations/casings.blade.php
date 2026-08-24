@@ -1,5 +1,11 @@
-<x-layouts.app title="Casing Pile"><section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-<h1 class="text-2xl font-bold tracking-tight">Casing Pile</h1>
+<x-layouts.app title="Casing Pile"><div class="page-container">
+<x-ui.page-header title="Casing Pile" />
+<div class="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-3">
+<x-ui.stat-card label="Total Unit Casing" value="{{ number_format($units->count()) }}" icon="archive" tone="brand" :value-class="'text-[24px] leading-tight'" />
+<x-ui.stat-card label="Milik Sendiri" value="{{ number_format($units->where('ownership', 'owned')->count()) }}" icon="briefcase" tone="info" :value-class="'text-[24px] leading-tight'" />
+<x-ui.stat-card label="Sewa / Rental" value="{{ number_format($units->where('ownership', 'rented')->count()) }}" icon="swap" tone="violet" :value-class="'text-[24px] leading-tight'" />
+</div>
+
 <p class="mt-2 text-slate-500">Register casing (milik/sewa): instalasi, ekstraksi, ditinggal di titik, kerusakan, perbaikan, hilang — setiap perpindahan punya riwayat dan biaya tercatat.</p>
 @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4">{{ session('status') }}</div>@endif
 @if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{{ $errors->first() }}</div>@endif
@@ -51,4 +57,4 @@
 @endforelse
 </x-ui.card>
 @empty<x-ui.empty icon="archive" title="Belum ada casing" description="Daftarkan casing pertama untuk mulai melacak siklus pemakaiannya." />@endforelse</div>
-</section></x-layouts.app>
+</div></x-layouts.app>

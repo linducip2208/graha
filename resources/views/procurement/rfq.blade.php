@@ -1,5 +1,5 @@
-<x-layouts.app title="RFQ & Perbandingan Harga"><section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-<h1 class="text-2xl font-bold tracking-tight">RFQ & Perbandingan Harga</h1>
+<x-layouts.app title="RFQ & Perbandingan Harga"><div class="page-container">
+<x-ui.page-header title="RFQ & Perbandingan Harga" />
 <p class="mt-2 text-slate-500">Alur pra-PO: buka RFQ → undang vendor → terima quotation → bandingkan total/skor/lead time → pilih pemenang (RFQ otomatis tertutup).</p>
 @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4">{{ session('status') }}</div>@endif
 @if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{{ $errors->first() }}</div>@endif
@@ -48,4 +48,4 @@
 @else
 <x-ui.empty icon="swap" title="Belum ada RFQ" description="Buat RFQ pertama untuk memulai proses pengadaan kompetitif sebelum PO." />
 @endif
-</section></x-layouts.app>
+</div></x-layouts.app>

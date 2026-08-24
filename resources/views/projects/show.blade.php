@@ -1,28 +1,43 @@
-<x-layouts.app title="{{ $project->code }} —” {{ $project->name }}">
+<x-layouts.app title="{{ $project->code }} — {{ $project->name }}">
+
 @php($tabs = [
-    'overview' => 'Ringkasan',
-    'planning' => 'Perencanaan',
+    'overview' => 'Overview',
+    'planning' => 'Planning',
     'piles' => 'Bored Pile',
-    'fieldops' => 'Field Ops',
+    'fieldops' => 'Field Operations',
+    'foundation' => 'Foundation Control',
     'materials' => 'Material',
     'procurement' => 'Procurement',
     'contracts' => 'Kontrak',
     'cost' => 'Biaya & EAC',
     'billing' => 'Billing',
-    'quality' => 'Quality',
-    'hse' => 'HSE',
+    'quality' => 'Quality & HSE',
+    'activity' => 'Activity',
 ])
-<section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-<p class="text-xs font-bold uppercase tracking-widest text-[var(--brand-primary)]">{{ $project->code }} Ã‚Â· {{ $project->location }}</p>
+<div class="page-container">
+{{-- ===== PROJECT HEADER ===== --}}
+<header class="flex flex-wrap items-start justify-between gap-4">
+<div class="min-w-0">
+<p class="text-xs font-bold uppercase tracking-widest text-[var(--brand-primary)]">{{ $project->code }} · {{ $project->customer?->name ?? 'Tanpa klien' }}</p>
 <h1 class="mt-1 text-2xl font-bold tracking-tight">{{ $project->name }}</h1>
 <div class="mt-2 flex flex-wrap items-center gap-3 text-sm text-slate-500">
-<span class="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase">{{ str_replace('_', ' ', $project->status) }}</span>
-@if($project->planned_start)<span>Rencana: {{ $project->planned_start->format('d/m/Y') }} ? {{ $project->planned_end?->format('d/m/Y') }}</span>@endif
+<span class="chip chip-default">{{ str_replace('_', ' ', $project->status) }}</span>
+@if($healthRow)
+@if($healthRow['health'] === 'red')<span class="inline-flex items-center gap-1.5 text-xs font-bold text-red-600"><span class="h-2 w-2 rounded-full bg-red-500"></span>Critical</span>
+@elseif($healthRow['health'] === 'yellow')<span class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600"><span class="h-2 w-2 rounded-full bg-amber-500"></span>Watch</span>
+@else<span class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600"><span class="h-2 w-2 rounded-full bg-emerald-500"></span>Healthy</span>@endif
+@endif
+@if($project->location)<span>{{ $project->location }}</span>@endif
+@if($project->planned_start)<span>Rencana: {{ $project->planned_start->format('d/m/Y') }} → {{ $project->planned_end?->format('d/m/Y') }}</span>@endif
 @if($project->contract_value)<span>Kontrak: <strong class="font-mono">Rp {{ number_format((float) $project->contract_value, 0, ',', '.') }}</strong></span>@endif
-<a href="{{ route('projects.foundation-control', $project) }}" class="rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-bold text-white no-print">Foundation Control Tower →</a>
 </div>
+</div>
+<div class="flex flex-wrap gap-2 no-print">
+<a href="{{ route('projects.foundation-control', $project) }}" class="btn-brand inline-flex min-h-[42px] items-center gap-2 rounded-xl px-4 text-sm font-bold shadow-sm"><x-ui.icon name="shield" class="h-4 w-4" />Foundation Control Tower</a>
+</div>
+</header>
 
-<x-ui.tabs :tabs="$tabs" :active="$activeTab" class="mt-6" />
+<x-ui.tabs :tabs="$tabs" :active="$activeTab === 'hse' ? 'quality' : $activeTab" class="mt-6" />
 
 @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800 print:hidden">{{ session('status') }}</div>@endif
 
@@ -31,10 +46,10 @@
 <div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
 <article class="rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">Progress Fisik</p><p class="mt-1 text-2xl font-bold tracking-tight">{{ number_format($physicalPercent, 1) }}%</p>@if($plannedPercent !== null)<div class="mt-2 h-2 rounded-full bg-slate-100"><div class="h-2 rounded-full bg-gradient-to-r from-sky-500 to-cyan-500" style="width: {{ min(100, $physicalPercent) }}%"></div></div><p class="mt-1 text-xs text-slate-500">Rencana s.d. hari ini: {{ number_format($plannedPercent, 1) }}%</p>@endif</article>
 @if(isset($cpi))
-<article class="rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">CPI (Indeks Biaya)</p><p class="mt-1 text-2xl font-bold tracking-tight {{ $cpi >= 1 ? 'text-emerald-600' : 'text-red-600' }}">{{ number_format($cpi, 2) }}</p><p class="mt-1 text-xs text-slate-500">{{ $cpi >= 1 ? 'Biaya di bawah nilai kerja' : 'Biaya melebihi nilai kerja' }} Â· EV/AC</p></article>
+<article class="rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">CPI (Indeks Biaya)</p><p class="mt-1 text-2xl font-bold tracking-tight {{ $cpi >= 1 ? 'text-emerald-600' : 'text-red-600' }}">{{ number_format($cpi, 2) }}</p><p class="mt-1 text-xs text-slate-500">{{ $cpi >= 1 ? 'Biaya di bawah nilai kerja' : 'Biaya melebihi nilai kerja' }} · EV/AC</p></article>
 @endif
 @if(isset($spi) && $spi !== null)
-<article class="rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">SPI (Indeks Jadwal)</p><p class="mt-1 text-2xl font-bold tracking-tight {{ $spi >= 1 ? 'text-emerald-600' : 'text-amber-600' }}">{{ number_format($spi, 2) }}</p><p class="mt-1 text-xs text-slate-500">{{ $spi >= 1 ? 'Progres sejalan jadwal' : 'Progres tertinggal jadwal' }} Â· EV/PV</p></article>
+<article class="rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">SPI (Indeks Jadwal)</p><p class="mt-1 text-2xl font-bold tracking-tight {{ $spi >= 1 ? 'text-emerald-600' : 'text-amber-600' }}">{{ number_format($spi, 2) }}</p><p class="mt-1 text-xs text-slate-500">{{ $spi >= 1 ? 'Progres sejalan jadwal' : 'Progres tertinggal jadwal' }} · EV/PV</p></article>
 @endif<article class="rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">Total Titik Pile</p><p class="mt-1 text-2xl font-bold tracking-tight">{{ $piles->count() }}</p><p class="text-xs text-slate-500">Selesai: {{ $piles->where('status', 'completed')->count() }}</p></article>
 @if($costing)
 <article class="rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">EAC (Estimasi Akhir)</p><p class="mt-1 text-xl font-black">Rp {{ number_format((float) $costing['eac'], 0, ',', '.') }}</p><p class="text-xs {{ (float) $costing['variance'] < 0 ? 'text-red-600 font-bold' : 'text-emerald-700' }}">Varians vs RAB: Rp {{ number_format((float) $costing['variance'], 0, ',', '.') }}</p></article>
@@ -75,7 +90,7 @@
 </tbody></table></div>
 </article>
 <article class="mt-6 rounded-2xl border bg-white p-6 shadow-sm">
-<div class="flex flex-wrap items-center justify-between gap-2"><h2 class="font-bold">Constraint Log</h2><span class="text-xs text-slate-400">{{ $constraints->where('status','open')->count() }} open Â· {{ $constraints->where('status','in_progress')->count() }} berjalan Â· {{ $constraints->where('status','resolved')->count() }} selesai</span></div>
+<div class="flex flex-wrap items-center justify-between gap-2"><h2 class="font-bold">Constraint Log</h2><span class="text-xs text-slate-400">{{ $constraints->where('status','open')->count() }} open · {{ $constraints->where('status','in_progress')->count() }} berjalan · {{ $constraints->where('status','resolved')->count() }} selesai</span></div>
 <form method="post" action="/admin/projects/{{ $project->id }}/constraints" class="mt-3 grid gap-2 md:grid-cols-[140px_1fr_150px_150px_auto] no-print">@csrf
 <select name="type" required class="rounded-xl border p-2.5 text-sm"><option value="">Jenis</option>@foreach(['drawing','material','equipment','manpower','permit','client','weather','subcontractor','technical'] as $ct)<option value="{{ $ct }}">{{ ucfirst($ct) }}</option>@endforeach</select>
 <input name="title" required placeholder="Judul kendala (wajib)" class="rounded-xl border p-2.5 text-sm">
@@ -90,7 +105,7 @@
 <strong>{{ $log->title }}</strong>
 <span class="rounded-full px-2 py-0.5 text-[11px] font-bold {{ $log->status === 'resolved' ? 'bg-emerald-50 text-emerald-700' : ($log->status === 'in_progress' ? 'bg-sky-50 text-[var(--brand-primary)]' : 'bg-red-50 text-red-700') }}">{{ strtoupper($log->status) }}</span>
 </div>
-<p class="text-xs text-slate-500">{{ ucfirst($log->type) }} Â· dibuat {{ $log->raised_at?->format('d/m/Y') }}{{ $log->target_date ? ' Â· target '.$log->target_date->format('d/m/Y') : '' }}{{ $log->pile ? ' Â· pile '.$log->pile->pile_number : '' }} oleh {{ $log->recorder?->name }}</p>
+<p class="text-xs text-slate-500">{{ ucfirst($log->type) }} · dibuat {{ $log->raised_at?->format('d/m/Y') }}{{ $log->target_date ? ' · target '.$log->target_date->format('d/m/Y') : '' }}{{ $log->pile ? ' · pile '.$log->pile->pile_number : '' }} oleh {{ $log->recorder?->name }}</p>
 @if($log->description)<p class="mt-1 text-xs">{{ \Illuminate\Support\Str::limit($log->description, 180) }}</p>@endif
 @if($log->status !== 'resolved')
 <form method="post" action="/admin/constraints/{{ $log->id }}/status" class="mt-2 flex flex-wrap gap-2 no-print">@csrf
@@ -100,17 +115,26 @@
 </form>
 @elseif($log->resolution_notes)<p class="mt-1 text-xs text-emerald-700">Selesai: {{ \Illuminate\Support\Str::limit($log->resolution_notes, 120) }}</p>@endif
 </div>
-@empty<p class="text-sm text-slate-400">Belum ada kendala tercatat —” catat hambatan gambar/material/izin agar tidak menghantam jadwal diam-diam.</p>@endforelse
+@empty<p class="text-sm text-slate-400">Belum ada kendala tercatat — catat hambatan gambar/material/izin agar tidak menghantam jadwal diam-diam.</p>@endforelse
 </div>
 </article>
 @endif
 
 @if($activeTab === 'piles')
-<section class="mt-6 overflow-x-auto rounded-2xl border bg-white">
+<section class="mt-6">
+<div class="flex flex-wrap items-center justify-between gap-2">
+<p class="text-sm text-slate-500">{{ $piles->count() }} titik pile · selesai {{ $piles->where('status', 'completed')->count() }} · berjalan {{ $piles->whereNotIn('status', ['completed'])->count() }}</p>
+<div class="flex gap-2 no-print">
+<button type="button" class="inline-flex min-h-[40px] items-center gap-2 rounded-xl border border-[var(--border-default)] px-4 text-sm font-bold hover:bg-[var(--surface-muted)]" data-drawer-open="zone-create-drawer"><x-ui.icon name="plus" class="h-4 w-4" />Tambah Zona</button>
+<button type="button" class="btn-brand inline-flex min-h-[40px] items-center gap-2 rounded-xl px-4 text-sm font-bold shadow-sm" data-drawer-open="pile-create-drawer"><x-ui.icon name="plus" class="h-4 w-4" />Tambah Titik Bored Pile</button>
+</div>
+</div>
+<div class="mt-4 overflow-x-auto rounded-2xl border bg-white">
 <table class="w-full text-sm table-sticky"><thead><tr><th>Pile</th><th>Zona</th><th>Diameter</th><th>Depth</th><th>Beton</th><th>Status</th><th>Genealogi</th></tr></thead><tbody>@forelse($piles as $pile)
-<tr><td class="font-mono font-bold">{{ $pile->pile_number }}</td><td>{{ $pile->zone?->code }}</td><td>{{ $pile->diameter_mm }} mm</td><td>{{ $pile->actual_depth_m ?? $pile->planned_depth_m }} m</td><td>{{ $pile->actual_concrete_m3 ?? '-' }} mÃ‚Â³</td><td>{{ str_replace('_', ' ', strtoupper($pile->status)) }}</td><td><a href="{{ route('piles.genealogy', $pile) }}" class="font-bold text-[var(--brand-primary)] hover:underline">Genealogi</a> Â· <a href="{{ route('piles.as-built', $pile) }}" class="text-slate-500 hover:underline">PDF</a></td></tr>
+<tr><td class="font-mono font-bold">{{ $pile->pile_number }}</td><td>{{ $pile->zone?->code }}</td><td>{{ $pile->diameter_mm }} mm</td><td>{{ $pile->actual_depth_m ?? $pile->planned_depth_m }} m</td><td>{{ $pile->actual_concrete_m3 ?? '-' }} m³</td><td>{{ str_replace('_', ' ', strtoupper($pile->status)) }}</td><td><a href="{{ route('piles.genealogy', $pile) }}" class="font-bold text-[var(--brand-primary)] hover:underline">Genealogi</a> · <a href="{{ route('piles.as-built', $pile) }}" class="text-slate-500 hover:underline">PDF</a></td></tr>
 @empty<tr><td colspan="7" class="p-8 text-center text-slate-500">Belum ada titik bored pile pada proyek ini.</td></tr>@endforelse
 </tbody></table>
+</div>
 </section>
 @endif
 
@@ -125,6 +149,32 @@
 <x-ui.card class="overflow-x-auto" bodyClass="p-6"><h2 class="font-bold">Pile Testing</h2><table class="mt-3 w-full text-sm table-sticky"><thead><tr><th>Nomor</th><th>Jenis</th><th>Jadwal</th><th>Hasil</th></tr></thead><tbody>@forelse($tests ?? [] as $test)
 <tr><td class="font-mono text-xs">{{ $test->number }}</td><td>{{ strtoupper($test->test_type) }}</td><td>{{ $test->scheduled_date?->format('d/m/Y') }}</td><td>{{ strtoupper($test->result_status) }}</td></tr>
 @empty<tr><td colspan="4" class="p-6 text-center text-slate-500">Belum ada jadwal testing.</td></tr>@endforelse</tbody></table></x-ui.card>
+</section>
+@endif
+
+@if($activeTab === 'foundation')
+<section class="mt-6 space-y-5">
+<div class="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+<x-ui.stat-card label="Total Titik Pile" value="{{ number_format($piles->count()) }}" icon="cube" tone="brand" :value-class="'text-[24px] leading-tight'" />
+<x-ui.stat-card label="Selesai" value="{{ number_format($piles->where('status', 'completed')->count()) }}" icon="check" tone="success" :value-class="'text-[24px] leading-tight'" />
+<x-ui.stat-card label="Sedang Berjalan" value="{{ number_format($piles->whereNotIn('status', ['completed', 'planned'])->count()) }}" icon="clock" tone="warning" :value-class="'text-[24px] leading-tight'" />
+<x-ui.stat-card label="Overbreak Terlampaui" value="{{ number_format($piles->where('overbreak_exceeded', true)->count()) }}" icon="triangle-alert" tone="{{ $piles->where('overbreak_exceeded', true)->isNotEmpty() ? 'danger' : 'success' }}" :value-class="'text-[24px] leading-tight'" />
+</div>
+<article class="rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-6 shadow-[var(--shadow-xs)]">
+<h2 class="font-bold">Foundation Control Tower</h2>
+<p class="mt-1 text-sm text-slate-500">Kendali fondasi end-to-end: drilling, cage, concreting, testing, acceptance, as-built, dan dossier — semua fitur detail pile berada di Control Tower.</p>
+<div class="mt-4 flex flex-wrap gap-2">
+<a href="{{ route('projects.foundation-control', $project) }}" class="btn-brand rounded-xl px-4 py-2.5 text-sm font-bold">Buka Foundation Control →</a>
+<a href="{{ route('piles.as-built.batch', $project) }}" class="rounded-xl border px-4 py-2.5 text-sm font-bold hover:bg-[var(--surface-muted)]">Batch As-Built PDF</a>
+
+</div>
+</article>
+<div class="overflow-x-auto rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-[var(--shadow-xs)]">
+<table class="w-full text-sm"><thead><tr><th>Pile</th><th>Status</th><th>Overbreak</th><th class="text-right">Detail Pile</th></tr></thead><tbody>@foreach($piles as $pile)
+<tr><td class="font-mono font-bold">{{ $pile->pile_number }}</td><td>{{ str_replace('_', ' ', $pile->status) }}</td><td class="{{ $pile->overbreak_exceeded ? 'font-bold text-red-600' : '' }}">{{ $pile->overbreak_percent ?? '-' }}%</td>
+<td class="text-right"><a href="{{ route('piles.passport', $pile) }}" class="font-bold text-[var(--brand-primary)] hover:underline">Passport</a> · <a href="{{ route('piles.genealogy', $pile) }}" class="text-slate-500 hover:underline">Genealogi</a></td></tr>
+@endforeach</tbody></table>
+</div>
 </section>
 @endif
 
@@ -164,16 +214,16 @@
 </form>
 </td>
 </tr>
-@empty<tr><td colspan="7" class="p-4 text-center text-slate-400">Belum ada rencana pengadaan —” susun kebutuhan material/jasa per tanggal dibutuhkan.</td></tr>@endforelse
+@empty<tr><td colspan="7" class="p-4 text-center text-slate-400">Belum ada rencana pengadaan — susun kebutuhan material/jasa per tanggal dibutuhkan.</td></tr>@endforelse
 </tbody></table></div>
 </x-ui.card>
 @endif
 @if($activeTab === 'procurement' && isset($purchaseOrders))
 <section class="mt-6 space-y-6">
-<x-ui.card class="overflow-x-auto" bodyClass="p-6"><h2 class="font-bold">Purchase Order Proyek</h2><table class="mt-3 w-full text-sm table-sticky"><thead><tr><th>PO</th><th>Vendor</th><th class="text-right">Nilai</th><th>Status</th><th>Genealogi</th></tr></thead><tbody>@forelse($purchaseOrders ?? [] as $po)
+<x-ui.card class="overflow-x-auto" bodyClass="p-6"><h2 class="font-bold">Purchase Order Proyek</h2><table class="mt-3 w-full text-sm table-sticky"><thead><tr><th>PO</th><th>Vendor</th><th class="text-right">Nilai</th><th>Status</th></tr></thead><tbody>@forelse($purchaseOrders ?? [] as $po)
 <tr><td class="font-mono text-xs">{{ $po->number }} v{{ $po->version }}</td><td>{{ $po->vendor?->name }}</td><td class="text-right font-mono">{{ number_format((float) $po->total, 0, ',', '.') }}</td><td>{{ strtoupper(str_replace('_', ' ', $po->status)) }}</td></tr>
 @empty<tr><td colspan="4" class="p-6 text-center text-slate-500">Belum ada PO untuk proyek ini.</td></tr>@endforelse</tbody></table></x-ui.card>
-<x-ui.card class="overflow-x-auto" bodyClass="p-6"><h2 class="font-bold">RFQ Proyek</h2><table class="mt-3 w-full text-sm table-sticky"><thead><tr><th>Nomor</th><th>Judul</th><th>Vendor Diundang</th><th>Status</th><th>Genealogi</th></tr></thead><tbody>@forelse($rfqs ?? [] as $rfq)
+<x-ui.card class="overflow-x-auto" bodyClass="p-6"><h2 class="font-bold">RFQ Proyek</h2><table class="mt-3 w-full text-sm table-sticky"><thead><tr><th>Nomor</th><th>Judul</th><th>Vendor Diundang</th><th>Status</th></tr></thead><tbody>@forelse($rfqs ?? [] as $rfq)
 <tr><td class="font-mono text-xs">{{ $rfq->number }}</td><td>{{ $rfq->title }}</td><td>{{ $rfq->vendors_count }}</td><td>{{ strtoupper($rfq->status) }}</td></tr>
 @empty<tr><td colspan="4" class="p-6 text-center text-slate-500">Belum ada RFQ.</td></tr>@endforelse</tbody></table></x-ui.card>
 </section>
@@ -181,16 +231,16 @@
 
 @if($activeTab === 'contracts' && isset($contractChanges))
 <section class="mt-6 overflow-x-auto rounded-2xl border bg-white">
-<table class="w-full text-sm table-sticky"><thead><tr><th>Nomor</th><th>Jenis</th><th>Judul</th><th class="text-right">Nilai</th><th>Status</th><th>Genealogi</th></tr></thead><tbody>@forelse($contractChanges ?? [] as $change)
+<table class="w-full text-sm table-sticky"><thead><tr><th>Nomor</th><th>Jenis</th><th>Judul</th><th class="text-right">Nilai</th><th>Status</th></tr></thead><tbody>@forelse($contractChanges ?? [] as $change)
 <tr onclick="location.href='/admin/contracts/{{ $change->id }}'" class="cursor-pointer hover:bg-slate-50 dark:hover:!bg-slate-800"><td class="font-mono text-xs">{{ $change->number }}</td><td>{{ \App\Models\ContractChange::TYPES[$change->type] ?? $change->type }}</td><td class="max-w-[220px] truncate">{{ $change->title }}</td><td class="text-right font-mono">{{ number_format((float) $change->amount, 0, ',', '.') }}</td><td>{{ str_replace('_', ' ', $change->status) }}</td></tr>
-@empty<tr><td colspan="5" class="p-8 text-center text-slate-500">Belum ada perubahan kontrak. Kelola di menu Komersial ? Administrasi Kontrak.</td></tr>@endforelse
+@empty<tr><td colspan="5" class="p-8 text-center text-slate-500">Belum ada perubahan kontrak. Kelola di menu Komersial → Administrasi Kontrak.</td></tr>@endforelse
 </tbody></table>
 </section>
 @endif
 
 @if($activeTab === 'cost' && isset($baselines))
 <x-ui.card class="lg:col-span-3" bodyClass="p-6">
-<div class="flex flex-wrap items-center justify-between gap-2"><h2 class="font-bold">Budget Baseline (versi)</h2><span class="text-xs text-slate-400">Baseline aktif: {{ $costing['baseline_version'] ? 'v'.$costing['baseline_version'] : 'belum ada —” memakai estimated cost proyek' }}</span></div>
+<div class="flex flex-wrap items-center justify-between gap-2"><h2 class="font-bold">Budget Baseline (versi)</h2><span class="text-xs text-slate-400">Baseline aktif: {{ $costing['baseline_version'] ? 'v'.$costing['baseline_version'] : 'belum ada — memakai estimated cost proyek' }}</span></div>
 <form method="post" action="/admin/project-costing/baselines" class="mt-3 grid gap-2 no-print">@csrf
 <input type="hidden" name="project_id" value="{{ $project->id }}">
 <textarea name="lines" required rows="3" placeholder="kode|uraian|qty|harga_satuan per baris&#10;MAT-BETON|Beton fc25|38|1500000" class="rounded-xl border p-2.5 font-mono text-xs"></textarea>
@@ -208,7 +258,7 @@
 </form>
 @endif
 </div>
-@empty<p class="text-sm text-slate-400">Belum ada baseline —” buat v0 untuk mengunci anggaran awal proyek.</p>@endforelse
+@empty<p class="text-sm text-slate-400">Belum ada baseline — buat v0 untuk mengunci anggaran awal proyek.</p>@endforelse
 </div>
 </x-ui.card>
 @endif
@@ -225,33 +275,91 @@
 
 @if($activeTab === 'billing' && isset($billings))
 <section class="mt-6 overflow-x-auto rounded-2xl border bg-white">
-<table class="w-full text-sm table-sticky"><thead><tr><th>Nomor</th><th>Tanggal</th><th class="text-right">Bruto</th><th class="text-right">Retensi</th><th>Status</th><th>Genealogi</th></tr></thead><tbody>@forelse($billings ?? [] as $billing)
+<table class="w-full text-sm table-sticky"><thead><tr><th>Nomor</th><th>Tanggal</th><th class="text-right">Bruto</th><th class="text-right">Retensi</th><th>Status</th></tr></thead><tbody>@forelse($billings ?? [] as $billing)
 <tr><td class="font-mono text-xs">{{ $billing->number }}</td><td>{{ $billing->billing_date?->format('d/m/Y') }}</td><td class="text-right font-mono">{{ number_format((float) $billing->gross_amount, 0, ',', '.') }}</td><td class="text-right font-mono">{{ number_format((float) $billing->retention_amount, 0, ',', '.') }}</td><td>{{ strtoupper($billing->status) }}</td></tr>
 @empty<tr><td colspan="5" class="p-8 text-center text-slate-500">Belum ada progress billing.</td></tr>@endforelse
 </tbody></table>
 </section>
 @endif
 
-@if($activeTab === 'quality' && isset($ncrs))
+@if(in_array($activeTab, ['quality', 'hse']) && (isset($ncrs) || isset($incidents)))
 <section class="mt-6 space-y-3">
+@if(isset($ncrs))
+<h2 class="text-sm font-black uppercase tracking-widest text-slate-500">NCR & CAPA</h2>
 @forelse($ncrs ?? [] as $ncr)
-<article class="rounded-2xl border bg-white p-5 shadow-sm"><div class="flex flex-wrap items-center justify-between gap-2"><strong>{{ $ncr->number }}</strong><span class="text-xs uppercase text-slate-500">{{ $ncr->source_type }} Ã‚Â· severitas {{ $ncr->severity }}</span><x-ui.badge :status="$ncr->status === 'closed' ? 'posted' : 'pending_approval'" :label="$ncr->status" /></div><p class="mt-2 text-sm text-slate-600">{{ $ncr->description }}</p>
-@if($ncr->actions->isNotEmpty())<ul class="mt-2 space-y-1 text-xs text-slate-500">@foreach($ncr->actions as $action)<li>? {{ str($action->action)->limit(90) }} —” {{ $action->status }} @if($action->due_at)(tenggat {{ $action->due_at->format('d/m/Y') }})@endif</li>@endforeach</ul>@endif</article>
+<article class="rounded-2xl border bg-white p-5 shadow-sm"><div class="flex flex-wrap items-center justify-between gap-2"><strong>{{ $ncr->number }}</strong><span class="text-xs uppercase text-slate-500">{{ $ncr->source_type }} · severitas {{ $ncr->severity }}</span><x-ui.badge :status="$ncr->status === 'closed' ? 'posted' : 'pending_approval'" :label="$ncr->status" /></div><p class="mt-2 text-sm text-slate-600">{{ $ncr->description }}</p>
+@if($ncr->actions->isNotEmpty())<ul class="mt-2 space-y-1 text-xs text-slate-500">@foreach($ncr->actions as $action)<li>• {{ str($action->action)->limit(90) }} — {{ $action->status }} @if($action->due_at)(tenggat {{ $action->due_at->format('d/m/Y') }})@endif</li>@endforeach</ul>@endif</article>
 @empty
 <x-ui.empty icon="shield" title="Tidak ada NCR pada proyek ini" description="Kualitas pekerjaan dalam kendali." />
 @endforelse
-</section>
 @endif
-
-@if($activeTab === 'hse' && isset($incidents))
-<section class="mt-6 space-y-3">
+@if(isset($incidents))
+<h2 class="mt-6 text-sm font-black uppercase tracking-widest text-slate-500">HSE Incident</h2>
 @forelse($incidents ?? [] as $incident)
-<article class="rounded-2xl border bg-white p-5 shadow-sm"><div class="flex flex-wrap items-center justify-between gap-2"><strong>{{ $incident->number }}</strong><span class="text-xs uppercase text-slate-500">{{ $incident->type }} Ã‚Â· {{ $incident->severity }} Ã‚Â· {{ $incident->occurred_at?->format('d/m/Y H:i') }}</span><x-ui.badge :status="$incident->status === 'closed' ? 'posted' : 'exception'" :label="$incident->status" /></div><p class="mt-2 text-sm text-slate-600">{{ $incident->description }}</p></article>
+<article class="rounded-2xl border bg-white p-5 shadow-sm"><div class="flex flex-wrap items-center justify-between gap-2"><strong>{{ $incident->number }}</strong><span class="text-xs uppercase text-slate-500">{{ $incident->type }} · {{ $incident->severity }} · {{ $incident->occurred_at?->format('d/m/Y H:i') }}</span><x-ui.badge :status="$incident->status === 'closed' ? 'posted' : 'exception'" :label="$incident->status" /></div><p class="mt-2 text-sm text-slate-600">{{ $incident->description }}</p></article>
 @empty
 <x-ui.empty icon="triangle-alert" title="Tidak ada incident tercatat" description="Riwayat HSE proyek ini bersih." />
 @endforelse
-</section>
 @endif
 </section>
-</x-layouts.app>
+@endif
 
+@if($activeTab === 'activity' && isset($activity))
+<section class="mt-6 overflow-hidden rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-[var(--shadow-xs)]">
+<table class="w-full text-sm">
+<thead><tr><th>Waktu</th><th>Aktivitas</th><th>Objek</th><th>Aktor</th></tr></thead>
+<tbody>
+@forelse($activity as $log)
+<tr>
+<td class="whitespace-nowrap text-[var(--text-muted)]">{{ optional($log->created_at)->format('d M Y H:i') }}</td>
+<td class="font-mono text-xs font-bold">{{ $log->event }}</td>
+<td class="whitespace-nowrap">{{ class_basename($log->auditable_type) }}{{ $log->auditable ? ' · '.($log->auditable->pile_number ?? $log->auditable->code ?? '#'.$log->auditable_id) : ' #'.$log->auditable_id }}</td>
+<td class="whitespace-nowrap">{{ $log->actor?->name ?? 'Sistem' }}</td>
+</tr>
+@empty
+<tr><td colspan="4" class="p-8 text-center text-slate-500">Belum ada aktivitas tercatat untuk proyek ini.</td></tr>
+@endforelse
+</tbody>
+</table>
+</section>
+@endif
+</div>
+
+@if($activeTab === 'piles')
+<x-ui.drawer id="zone-create-drawer" title="Tambah Zona" description="Zona/wilayah kerja untuk pengelompokan titik bored pile proyek ini.">
+<form method="post" action="/admin/project-zones" class="grid gap-4">@csrf
+<input type="hidden" name="project_id" value="{{ $project->id }}">
+<x-ui.field label="Kode zona" name="code" required><input name="code" required maxlength="30" placeholder="mis. ZN-A" class="w-full rounded-xl border border-[var(--border-default)] px-3.5"></x-ui.field>
+<x-ui.field label="Nama zona" name="name" required><input name="name" required maxlength="150" placeholder="mis. Zona Blok Utara" class="w-full rounded-xl border border-[var(--border-default)] px-3.5"></x-ui.field>
+<div class="flex justify-end gap-2 pt-2">
+<button type="button" class="min-h-[42px] rounded-xl border border-[var(--border-default)] px-4 text-sm font-bold hover:bg-[var(--surface-muted)]" data-drawer-close>Batal</button>
+<button class="btn-brand min-h-[42px] rounded-xl px-5 text-sm font-bold">Simpan Zona</button>
+</div>
+</form>
+</x-ui.drawer>
+
+<x-ui.drawer id="pile-create-drawer" title="Tambah Titik Bored Pile" description="Titik pile baru untuk {{ $project->code }} — {{ $project->name }}.">
+<form method="post" action="/admin/bored-piles" class="grid gap-4">@csrf
+<input type="hidden" name="project_id" value="{{ $project->id }}">
+<x-ui.field label="Zona" name="project_zone_id" required>
+<select name="project_zone_id" required class="w-full rounded-xl border border-[var(--border-default)] px-3.5">
+<option value="">Pilih zona</option>
+@foreach($zones ?? [] as $z)
+<option value="{{ $z->id }}">{{ $z->code }} — {{ $z->name }}</option>
+@endforeach
+</select>
+</x-ui.field>
+<div class="grid grid-cols-3 gap-3">
+<x-ui.field label="Pile no." name="pile_number" required><input name="pile_number" required maxlength="60" placeholder="BP-001" class="w-full rounded-xl border border-[var(--border-default)] px-3.5"></x-ui.field>
+<x-ui.field label="Diameter (mm)" name="diameter_mm" required><input type="number" step=".01" name="diameter_mm" required placeholder="800" class="w-full rounded-xl border border-[var(--border-default)] px-3.5"></x-ui.field>
+<x-ui.field label="Depth rencana (m)" name="planned_depth_m" required><input type="number" step=".001" name="planned_depth_m" required placeholder="24.000" class="w-full rounded-xl border border-[var(--border-default)] px-3.5"></x-ui.field>
+</div>
+<p class="help-text">Belum ada zona? Tutup drawer ini, tambah zona terlebih dahulu.</p>
+<div class="flex justify-end gap-2 pt-2">
+<button type="button" class="min-h-[42px] rounded-xl border border-[var(--border-default)] px-4 text-sm font-bold hover:bg-[var(--surface-muted)]" data-drawer-close>Batal</button>
+<button class="btn-brand min-h-[42px] rounded-xl px-5 text-sm font-bold">Simpan Titik Pile</button>
+</div>
+</form>
+</x-ui.drawer>
+@endif
+</x-layouts.app>

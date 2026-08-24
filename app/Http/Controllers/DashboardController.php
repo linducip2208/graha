@@ -6,7 +6,6 @@ use App\Models\ApprovalRequest;
 use App\Models\AuditLog;
 use App\Models\BoredPile;
 use App\Models\CompanyExperience;
-use App\Models\CompanySetting;
 use App\Models\CorrectiveAction;
 use App\Models\HseIncident;
 use App\Models\JobSafetyAnalysis;
@@ -21,7 +20,7 @@ use App\Models\ReinforcementCage;
 use App\Models\Rfq;
 use App\Models\StockBalance;
 use App\Models\Tender;
-use App\Services\ProjectCostingService;
+use App\Services\ProjectHealthService;
 use App\Services\ReceivablePayableAgingService;
 use App\Support\Tenancy\CurrentCompany;
 use Carbon\Carbon;
@@ -209,39 +208,6 @@ class DashboardController extends Controller
     /** Project health: physical vs planned %, EAC variance, status hijau/kuning/merah via threshold configurable. */
     private function projectHealth(int $companyId): Collection
     {
-        $yellow = max(1.0, (float) CompanySetting::val($companyId, 'project_health_yellow_percent'));
-        $red = max($yellow + 0.1, (float) CompanySetting::val($companyId, 'project_health_red_percent'));
-
-        $projects = Project::where('company_id', $companyId)->whereIn('status', ['active', 'in_progress'])->orderBy('code')->get();
-        if ($projects->isEmpty()) {
-            return collect();
-        }
-
-        // Batch aggregate: hindari N+1 pada portofolio (1 kueri per agregat, bukan per proyek).
-        $billedByProject = ProgressBilling::whereIn('project_id', $projects->pluck('id'))->where('status', 'posted')
-            ->groupBy('project_id')->selectRaw('project_id, SUM(gross_amount) as total')->pluck('total', 'project_id');
-        $summaries = app(ProjectCostingService::class)->summariesFor($projects);
-
-        return $projects->map(function (Project $project) use ($summaries, $billedByProject, $yellow, $red) {
-            $summary = $summaries[$project->id];
-            $contract = (float) ($project->contract_value ?: 0);
-            $physical = 0.0;
-            if ($contract > 0 && $project->planned_start && $project->planned_end) {
-                $totalDays = max(1, $project->planned_start->diffInDays($project->planned_end));
-                $elapsedDays = min($totalDays, max(0, $project->planned_start->diffInDays(now())));
-                $billed = (float) ($billedByProject[$project->id] ?? 0);
-                $physical = round(min(100.0, $billed * 100 / $contract), 1);
-                $planned = round($elapsedDays * 100 / $totalDays, 1);
-            } else {
-                $planned = 100.0;
-            }
-            $variancePct = $physical - $planned;
-            $health = abs($variancePct) >= $red ? 'red' : (abs($variancePct) >= $yellow ? 'yellow' : 'green');
-            $margin = bccomp((string) $contract, '0', 2) === 1
-                ? round((float) bcdiv(bcmul(bcsub((string) $contract, $summary['eac'], 2), '100', 4), (string) $contract, 4), 1)
-                : null;
-
-            return ['project' => $project, 'physical' => $physical, 'planned' => $planned, 'variance' => $variancePct, 'eac' => (float) $summary['eac'], 'margin' => $margin, 'health' => $health];
-        });
+        return app(ProjectHealthService::class)->portfolio($companyId);
     }
 }

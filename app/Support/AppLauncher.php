@@ -58,8 +58,10 @@ class AppLauncher
     {
         $covers = CompanyExperience::find($companyId)?->launcher_covers ?? [];
 
+        // Path tersimpan sebagai 'branding/{id}/launcher-covers/<file>' oleh
+        // ExperienceVersionService (atau 'launcher-covers/<file>' pada data lama).
         return collect((array) $covers)
-            ->filter(fn ($path) => is_string($path) && str_starts_with($path, 'launcher-covers/'))
+            ->filter(fn ($path) => is_string($path) && str_contains($path, 'launcher-covers/'))
             ->map(fn ($path) => '/branding/'.$companyId.'/'.basename($path))
             ->all();
     }

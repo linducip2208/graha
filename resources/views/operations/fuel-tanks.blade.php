@@ -1,5 +1,10 @@
-<x-layouts.app title="Tangki BBM & Rekonsiliasi"><section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-<h1 class="text-2xl font-bold tracking-tight">Tangki BBM & Rekonsiliasi</h1>
+<x-layouts.app title="Tangki BBM & Rekonsiliasi"><div class="page-container">
+<x-ui.page-header title="Tangki BBM & Rekonsiliasi" />
+<div class="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-3">
+<x-ui.stat-card label="Total Tangki BBM" value="{{ number_format($tanks->count()) }}" icon="percent" tone="brand" :value-class="'text-[24px] leading-tight'" />
+<x-ui.stat-card label="Equipment Terdaftar" value="{{ number_format($equipments->count()) }}" icon="wrench" tone="info" :value-class="'text-[24px] leading-tight'" />
+</div>
+
 <p class="mt-2 text-slate-500">Kartu stok tangki solar: penerimaan, pengeluaran ke alat, dan rekonsiliasi fisik — selisih otomatis dicatat sebagai penyesuaian ter-audit.</p>
 @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4">{{ session('status') }}</div>@endif
 @if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{{ $errors->first() }}</div>@endif
@@ -41,4 +46,4 @@
 <tr><td>{{ $tr->occurred_at->format('d/m/Y H:i') }}</td><td>{{ str($tr->type)->replace('_',' ') }}</td><td>{{ $tr->equipment?->code ?? $tr->project?->code ?? '-' }}</td><td>{{ $tr->reference ?? '-' }}</td><td class="text-right font-mono {{ str_starts_with((string) $tr->liters, '-') ? 'text-red-600' : 'text-emerald-700' }}">{{ $tr->liters }}</td></tr>
 @empty<tr><td colspan="5" class="p-8 text-center">Belum ada transaksi.</td></tr>@endforelse</tbody></table></div>
 @endif
-</section></x-layouts.app>
+</div></x-layouts.app>

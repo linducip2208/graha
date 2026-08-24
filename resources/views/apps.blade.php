@@ -47,18 +47,19 @@
 </div>
 @endif
 
-{{-- ===== WORKSPACE: VISUAL (kartu per workspace, cover 16:9) ===== --}}
-<div id="launcher-visual" data-view-pane class="mt-10 space-y-10">
-@foreach($workspaces as $ws)
+{{-- ===== WORKSPACE: VISUAL (grid 3 kolom desktop, kartu cover 16:9) ===== --}}
+<div id="launcher-visual" data-view-pane class="mt-10">
 <section data-workspace-section>
-<h2 class="border-b pb-2 text-base font-black tracking-tight">{{ $ws['label'] }}</h2>
-<div class="mt-4 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-<article class="launcher-card card-lift group overflow-hidden rounded-[var(--radius-card)] border bg-white shadow-[var(--shadow-card)]" data-search="{{ strtolower($ws['label'].' '.$ws['description'].' '.implode(' ', $ws['capabilities'])) }}">
-<a href="{{ $ws['href'] }}" class="block focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)]" aria-label="Buka workspace {{ $ws['label'] }}">
+<h2 class="border-b pb-2 text-base font-black tracking-tight">Workspace</h2>
+<div class="mt-5 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+@foreach($workspaces as $ws)
+<article class="launcher-card card-lift group overflow-hidden rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-[var(--shadow-card)]" data-search="{{ strtolower($ws['label'].' '.$ws['description'].' '.implode(' ', $ws['capabilities'])) }}">
+<a href="{{ $ws['href'] }}" class="block focus-visible:outline-2 focus-visible:outline-[var(--brand-primary)]" aria-label="Buka workspace {{ $ws['label'] }}" tabindex="-1">
 <div class="relative aspect-[16/9] overflow-hidden bg-gradient-to-br from-slate-800 via-[#101a2c] to-[var(--brand-secondary,#0369A1)]">
 @if(!empty($ws['cover']) && ($cfg['covers_enabled'] ?? true))
-<img src="{{ asset($ws['cover']) }}" alt="" width="1200" height="675" loading="lazy" decoding="async" class="absolute inset-0 h-full w-full object-cover transition duration-200 group-hover:scale-[1.03]" onerror="this.remove()">
+<img src="{{ asset($ws['cover']) }}" alt="" width="1200" height="675" loading="lazy" decoding="async" class="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-[1.04]" onerror="this.remove()">
 @endif
+<div class="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-transparent"></div>
 <span class="absolute right-3 top-3 grid h-11 w-11 place-items-center rounded-xl bg-white/15 text-white backdrop-blur-sm"><x-ui.icon :name="$ws['icon']" class="h-5 w-5" /></span>
 </div>
 </a>
@@ -77,9 +78,9 @@
 </div>
 </div>
 </article>
+@endforeach
 </div>
 </section>
-@endforeach
 </div>
 
 {{-- ===== WORKSPACE: COMPACT ===== --}}

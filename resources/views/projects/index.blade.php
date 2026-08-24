@@ -1,17 +1,66 @@
-<x-layouts.app title="Project & Bored Pile"><section class="mx-auto max-w-7xl px-6 py-10"><h1 class="text-2xl font-bold tracking-tight">Project & Bored Pile</h1>@if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4">{{ session('status') }}</div>@endif @if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{{ $errors->first() }}</div>@endif
-<div class="mt-8 flex flex-wrap items-center gap-2 no-print"><a href="{{ request()->fullUrlWithQuery(['view' => null]) }}" @class(['rounded-xl border px-4 py-2 text-sm font-semibold', 'bg-[var(--brand-primary)] text-white' => !request('view'), 'bg-white' => request('view')])>Tabel</a><a href="/admin/projects?view=kanban" @class(['rounded-xl border px-4 py-2 text-sm font-semibold', 'bg-[var(--brand-primary)] text-white' => request('view') === 'kanban', 'bg-white' => request('view') !== 'kanban'])>Kanban</a><form method="get" class="ml-auto flex gap-2"><input name="q" value="{{ request('q') }}" placeholder="Cari kode/nama proyek…" class="w-56 rounded-xl border p-2 text-sm">@if(request('view'))<input type="hidden" name="view" value="{{ request('view') }}">@endif<button class="rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white">Cari</button></form></div>
-<x-ui.filter-bar action="/admin/projects" class="mt-3 flex flex-wrap items-center gap-2"><span class="text-xs font-bold uppercase tracking-wide text-slate-500">Status:</span>@foreach(['draft' => 'Direncanakan', 'in_progress' => 'Berjalan', 'active' => 'Aktif', 'closed' => 'Selesai'] as $s => $label)<a href="/admin/projects?status={{ $s }}{{ request('view') ? '&view='.request('view') : '' }}" @class(['rounded-full border px-3 py-1 text-xs font-semibold', 'bg-[var(--brand-primary)] text-white' => request('status') === $s, 'bg-white text-slate-600' => request('status') !== $s])>{{ $label }} <span class="font-mono">{{ $statusCounts[$s] ?? 0 }}</span></a>@endforeach
-<input name="q" value="{{ request('q') }}" placeholder="Cari kode/nama..." class="w-48 rounded-full border px-3 py-1 text-xs">
-<x-ui.button variant="secondary" type="submit" class="!rounded-full !px-3 !py-1 !text-xs">Cari</x-ui.button>
-</x-ui.filter-bar>
-@if($kanban)<x-ui.kanban :columns="$kanban" class="mt-6" />@endif
-@if(!$kanban && $projects->isNotEmpty())<div class="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">@foreach($projects as $p)<a href="/admin/projects/{{ $p->id }}" class="card-lift rounded-2xl border bg-white p-5 shadow-sm"><div class="flex items-center justify-between gap-2"><strong>{{ $p->code }}</strong><span class="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold uppercase text-slate-600">{{ str_replace('_',' ',$p->status) }}</span></div><p class="mt-1 text-sm text-slate-600">{{ $p->name }}</p><div class="mt-3 flex justify-between text-xs text-slate-500"><span>{{ $p->bored_piles_count }} titik pile</span>@if($p->contract_value)<span class="font-mono">Rp {{ number_format((float) $p->contract_value / 1_000_000, 0, ',', '.') }} jt</span>@endif</div></a>@endforeach</div>@endif
+<x-layouts.app title="Project Control Center">
+@php($view = request('view'))
+@php($healthLabels = ['green' => 'Healthy', 'yellow' => 'Watch', 'red' => 'Critical'])
+<div class="page-container">
+<x-ui.page-header title="Project" subtitle="Pantau portfolio proyek, progress, nilai kontrak, biaya, dan kesehatan proyek.">
+<x-slot:actions>
+<span class="chip chip-default">{{ number_format($kpi['pile_total']) }} titik pile</span>
+</x-slot:actions>
+</x-ui.page-header>
 
-@if($schedule && !request('view'))
-<div class="mt-8 rounded-2xl border bg-white p-6 shadow-sm" id="jadwal">
+@if(session('status'))<div class="mt-5 rounded-xl bg-emerald-50 p-4 text-sm font-semibold text-emerald-800">{{ session('status') }}</div>@endif
+@if($errors->any())<div class="mt-5 rounded-xl bg-red-50 p-4 text-sm font-semibold text-red-700">{{ $errors->first() }}</div>@endif
+
+<div class="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-6">
+<x-ui.stat-card label="Total Project" value="{{ number_format($kpi['total']) }}" icon="cube" tone="brand" :value-class="'text-[24px] leading-tight'" />
+<x-ui.stat-card label="Project Aktif" value="{{ number_format($kpi['active']) }}" icon="check" tone="info" :value-class="'text-[24px] leading-tight'" />
+<x-ui.stat-card label="Nilai Kontrak" value="Rp {{ number_format($kpi['contract_value'] / 1_000_000_000, 2, ',', '.') }} M" icon="banknote" tone="violet" :value-class="'text-[20px] leading-tight'" />
+<x-ui.stat-card label="Kritis (Health)" value="{{ number_format($kpi['critical']) }}" icon="triangle-alert" tone="{{ $kpi['critical'] > 0 ? 'danger' : 'success' }}" :value-class="'text-[24px] leading-tight'" />
+<x-ui.stat-card label="Watch (Health)" value="{{ number_format($kpi['watch']) }}" icon="clock" tone="{{ $kpi['watch'] > 0 ? 'warning' : 'success' }}" :value-class="'text-[24px] leading-tight'" />
+<x-ui.stat-card label="Rata-rata Progres" value="{{ $kpi['avg_progress'] !== null ? number_format($kpi['avg_progress'], 1).'%' : '-' }}" icon="chart" tone="brand" :value-class="'text-[24px] leading-tight'" />
+</div>
+
+{{-- ===== TOOLBAR TUNGGAL: filter + view switcher ===== --}}
+<form method="get" action="/admin/projects" class="mt-6 flex flex-wrap items-center gap-2 rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-3 shadow-[var(--shadow-xs)] no-print">
+<input type="search" name="q" value="{{ request('q') }}" placeholder="Cari project…" class="min-w-[200px] flex-1 rounded-xl border border-[var(--border-default)] bg-[var(--surface-input)] px-3.5 text-sm sm:max-w-xs">
+<select name="status" class="rounded-xl border border-[var(--border-default)] bg-[var(--surface-input)] px-3 text-sm">
+<option value="">Semua Status</option>
+@foreach(['draft' => 'Direncanakan', 'in_progress' => 'Berjalan', 'active' => 'Aktif', 'closed' => 'Selesai'] as $s => $label)
+<option value="{{ $s }}" @selected(request('status') === $s)>{{ $label }} ({{ $statusCounts[$s] ?? 0 }})</option>
+@endforeach
+</select>
+<select name="customer" class="rounded-xl border border-[var(--border-default)] bg-[var(--surface-input)] px-3 text-sm">
+<option value="">Semua Client</option>
+@foreach($customers as $c)
+<option value="{{ $c->id }}" @selected(request('customer') == $c->id)>{{ $c->name }}</option>
+@endforeach
+</select>
+<select name="health" class="rounded-xl border border-[var(--border-default)] bg-[var(--surface-input)] px-3 text-sm">
+<option value="">Semua Health</option>
+@foreach($healthLabels as $h => $hl)
+<option value="{{ $h }}" @selected(request('health') === $h)>{{ $hl }}</option>
+@endforeach
+</select>
+<button class="inline-flex min-h-[40px] items-center rounded-xl border border-[var(--border-default)] px-4 text-sm font-bold hover:bg-[var(--surface-muted)]">Terapkan</button>
+<a href="/admin/projects" class="inline-flex min-h-[40px] items-center rounded-xl px-3 text-sm font-bold text-[var(--text-muted)] hover:text-[var(--brand-primary)]">Reset</a>
+<div class="ml-auto flex gap-1 rounded-xl bg-[var(--surface-muted)] p-1">
+<a href="{{ request()->fullUrlWithQuery(['view' => null]) }}" @class(['rounded-lg px-3 py-1.5 text-xs font-bold', 'bg-[var(--surface-card)] shadow-sm text-[var(--brand-primary)]' => ! $view, 'text-slate-500' => $view])>Portfolio</a>
+<a href="{{ request()->fullUrlWithQuery(['view' => 'kanban']) }}" @class(['rounded-lg px-3 py-1.5 text-xs font-bold', 'bg-[var(--surface-card)] shadow-sm text-[var(--brand-primary)]' => $view === 'kanban', 'text-slate-500' => $view !== 'kanban'])>Kanban</a>
+<a href="{{ request()->fullUrlWithQuery(['view' => 'timeline']) }}" @class(['rounded-lg px-3 py-1.5 text-xs font-bold', 'bg-[var(--surface-card)] shadow-sm text-[var(--brand-primary)]' => $view === 'timeline', 'text-slate-500' => $view !== 'timeline'])>Timeline</a>
+</div>
+</form>
+
+{{-- ===== VIEW: KANBAN (existing, dipertahankan) ===== --}}
+@if($kanban)
+<x-ui.kanban :columns="$kanban" class="mt-6" />
+@endif
+
+{{-- ===== VIEW: TIMELINE (Gantt + Kurva-S existing, kontekstual) ===== --}}
+@if($view === 'timeline' && $schedule)
+<div class="mt-6 rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-6 shadow-[var(--shadow-xs)]" id="jadwal">
 <div class="flex flex-wrap items-center justify-between gap-3">
 <div><h2 class="font-black">Jadwal Proyek — Gantt & Kurva-S</h2><p class="mt-1 text-xs text-slate-500">Rentang aktivitas aktual tiap titik pile terhadap jendela rencana proyek.</p></div>
-@if($allProjects->count() > 1)<form method="get" class="no-print"><select name="project" onchange="this.form.submit()" class="rounded-xl border p-2 text-sm">@foreach($allProjects as $p)<option value="{{ $p->id }}" @selected($schedule['project']->id === $p->id)>{{ $p->code }} — {{ $p->name }}</option>@endforeach</select></form>@endif
+@if($allProjects->count() > 1)<form method="get" class="no-print"><input type="hidden" name="view" value="timeline"><select name="project" onchange="this.form.submit()" class="rounded-xl border p-2 text-sm">@foreach($allProjects as $p)<option value="{{ $p->id }}" @selected($schedule['project']->id === $p->id)>{{ $p->code }} — {{ $p->name }}</option>@endforeach</select></form>@endif
 </div>
 
 <h3 class="mt-5 text-xs font-bold uppercase tracking-widest text-slate-500">Gantt Titik Pile</h3>
@@ -44,9 +93,47 @@ options: { responsive: true, maintainAspectRatio: false, scales: { y: { ticks: {
 </script>
 @endif
 </div>
-
-<div class="mt-8 grid gap-6 lg:grid-cols-2"><form method="post" action="/admin/project-zones" class="grid gap-3 rounded-2xl border bg-white p-6 no-print">@csrf<h2 class="font-bold">Tambah Zona</h2><select name="project_id" required class="rounded-xl border p-3">@foreach($allProjects as $p)<option value="{{ $p->id }}">{{ $p->code }} — {{ $p->name }}</option>@endforeach</select><input name="code" placeholder="Kode zona" required class="rounded-xl border p-3"><input name="name" placeholder="Nama zona" required class="rounded-xl border p-3"><button class="rounded-xl bg-slate-800 p-3 text-white">Simpan zona</button></form>
-<form method="post" action="/admin/bored-piles" class="grid gap-3 rounded-2xl border bg-white p-6 no-print">@csrf<h2 class="font-bold">Tambah Titik Bored Pile</h2><select name="project_id" required class="rounded-xl border p-3">@foreach($allProjects as $p)<option value="{{ $p->id }}">{{ $p->name }}</option>@endforeach</select><select name="project_zone_id" required class="rounded-xl border p-3">@foreach($zones as $z)<option value="{{ $z->id }}">{{ $z->project->name }} / {{ $z->name }}</option>@endforeach</select><div class="grid grid-cols-3 gap-3"><input name="pile_number" placeholder="Pile no." required class="rounded-xl border p-3"><input name="diameter_mm" type="number" step=".01" placeholder="Diameter mm" required class="rounded-xl border p-3"><input name="planned_depth_m" type="number" step=".001" placeholder="Depth m" required class="rounded-xl border p-3"></div><button class="rounded-xl bg-[var(--brand-primary)] p-3 text-white">Simpan titik</button></form></div>
 @endif
 
-<div class="mt-8 overflow-x-auto rounded-2xl border bg-white"><table class="w-full text-sm table-sticky"><thead><tr><th>Proyek/Zona</th><th>Pile</th><th>Diameter</th><th>Depth</th><th>Beton</th><th>Overbreak</th><th>Status</th></tr></thead><tbody>@forelse($piles as $pile)<tr class="cursor-pointer hover:bg-slate-50 dark:hover:!bg-slate-800" onclick="location.href='/admin/projects/{{ $pile->project_id }}?tab=piles'"><td>{{ $pile->project->code }}/{{ $pile->zone->code }}</td><td class="font-mono">{{ $pile->pile_number }}</td><td>{{ $pile->diameter_mm }} mm</td><td>{{ $pile->actual_depth_m??$pile->planned_depth_m }} m</td><td>{{ $pile->actual_concrete_m3??'-' }}</td><td class="{{ $pile->overbreak_exceeded?'text-red-700 font-bold':'' }}">{{ $pile->overbreak_percent??'-' }}%</td><td>{{ str_replace('_',' ',strtoupper($pile->status)) }}</td></tr>@empty<tr><td colspan="7" class="p-8 text-center">Belum ada titik bored pile.</td></tr>@endforelse</tbody></table></div>{{ $piles->links() }}</section></x-layouts.app>
+{{-- ===== VIEW DEFAULT: PORTFOLIO TABLE ===== --}}
+@if(! $kanban && $view !== 'timeline')
+<article class="mt-6 overflow-hidden rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-[var(--shadow-xs)]">
+<div class="overflow-x-auto">
+<table class="w-full text-sm">
+<thead>
+<tr><th>Project</th><th>Client</th><th>Progres</th><th class="text-right">Nilai Kontrak</th><th>Mulai / Selesai</th><th class="text-right">Margin</th><th>Status</th><th>Health</th><th class="text-right">Aksi</th></tr>
+</thead>
+<tbody>
+@forelse($projects as $p)
+@php($h = $healthMap[$p->id] ?? null)
+<tr class="h-[54px]">
+<td class="max-w-[260px]"><a href="/admin/projects/{{ $p->id }}" class="font-bold text-[var(--brand-primary)] hover:underline">{{ $p->code }}</a><span class="block truncate text-xs text-slate-500">{{ $p->name }}</span></td>
+<td class="whitespace-nowrap">{{ $p->customer?->name ?? '—' }}</td>
+<td>
+<div class="flex items-center gap-2">
+<div class="h-1.5 w-20 overflow-hidden rounded-full bg-slate-100"><div class="h-1.5 rounded-full bg-[var(--brand-primary)]" style="width: {{ $h ? min(100, $h['physical']) : 0 }}%"></div></div>
+<span class="whitespace-nowrap font-mono text-xs font-bold">{{ $h ? number_format($h['physical'], 1).'%' : '-' }}</span>
+</div>
+</td>
+<td class="whitespace-nowrap text-right font-mono">{{ $p->contract_value ? 'Rp '.number_format((float) $p->contract_value / 1_000_000, 0, ',', '.').' jt' : '—' }}</td>
+<td class="whitespace-nowrap text-xs text-slate-500">{{ $p->planned_start?->format('d/m/y') ?? '—' }} → {{ $p->planned_end?->format('d/m/y') ?? '—' }}</td>
+<td class="whitespace-nowrap text-right font-mono {{ ($h['margin'] ?? null) !== null && $h['margin'] < 0 ? 'font-bold text-red-600' : '' }}">{{ ($h['margin'] ?? null) !== null ? number_format($h['margin'], 1).'%' : '—' }}</td>
+<td>@php($statusChip = ['active' => 'chip-approved', 'in_progress' => 'chip-approved', 'draft' => 'chip-draft', 'closed' => 'chip-default'][$p->status] ?? 'chip-default')<span class="chip {{ $statusChip }}">{{ str_replace('_', ' ', $p->status) }}</span></td>
+<td>
+@if(($h['health'] ?? null) === 'red')<span class="inline-flex items-center gap-1.5 text-xs font-bold text-red-600"><span class="h-2 w-2 rounded-full bg-red-500"></span>Critical</span>
+@elseif(($h['health'] ?? null) === 'yellow')<span class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-600"><span class="h-2 w-2 rounded-full bg-amber-500"></span>Watch</span>
+@elseif(($h['health'] ?? null) === 'green')<span class="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600"><span class="h-2 w-2 rounded-full bg-emerald-500"></span>Healthy</span>
+@else<span class="text-xs text-slate-400">—</span>@endif
+</td>
+<td class="whitespace-nowrap text-right"><a href="/admin/projects/{{ $p->id }}" class="font-bold text-[var(--brand-primary)] hover:underline">Buka →</a></td>
+</tr>
+@empty
+<tr><td colspan="9" class="p-2"><x-ui.empty icon="cube" title="Tidak ada project" description="Ubah filter, atau project baru muncul setelah tender dimenangkan dan dikonversi." /></td></tr>
+@endforelse
+</tbody>
+</table>
+</div>
+</article>
+@endif
+</div>
+</x-layouts.app>

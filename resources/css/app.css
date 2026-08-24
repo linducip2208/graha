@@ -58,6 +58,7 @@ table th,table td{padding:.8rem 1rem;text-align:left;border-bottom:1px solid #e2
 .chip-approved{background:#ecfdf5;color:#059669;border:1px solid #6ee7b7}
 .chip-draft{background:#fffbeb;color:#d97706;border:1px solid #fcd34d}
 .chip-signed{background:#f5f3ff;color:#7c3aed;border:1px solid #c4b5fd}
+.chip-default{background:var(--surface-muted);color:var(--text-secondary);border:1px solid var(--border-default)}
 .dark .tab-link{background:#16233c;border-color:#2a3a5c;color:#b6c2d4}
 .dark .tab-link.active{background:linear-gradient(90deg,#075985,#0e7490);color:#fff}
 .dark .chip-active{background:#0c3a52;color:#7dd3fc;border-color:#0ea5e9}

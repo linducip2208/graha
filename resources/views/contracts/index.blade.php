@@ -1,6 +1,13 @@
 <x-layouts.app title="Administrasi Kontrak">
-<section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-<h1 class="text-2xl font-bold tracking-tight">Administrasi Kontrak</h1>
+<div class="page-container">
+<x-ui.page-header title="Administrasi Kontrak" />
+<div class="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
+<x-ui.stat-card label="Total Perubahan Kontrak" value="{{ number_format($changes->count()) }}" icon="document" tone="brand" :value-class="'text-[24px] leading-tight'" />
+<x-ui.stat-card label="Draft" value="{{ number_format($changes->where('status', 'draft')->count()) }}" icon="clock" tone="warning" :value-class="'text-[24px] leading-tight'" />
+<x-ui.stat-card label="Disetujui" value="{{ number_format($changes->where('status', 'approved')->count()) }}" icon="check" tone="success" :value-class="'text-[24px] leading-tight'" />
+<x-ui.stat-card label="Nilai Disetujui" value="Rp {{ number_format((float) $changes->where('status', 'approved')->sum('amount'), 0, ',', '.') }}" icon="banknote" tone="info" :value-class="'text-[18px] leading-tight'" />
+</div>
+
 <p class="mt-2 text-slate-500">Variation Order, addendum, EOT, claim, denda keterlambatan, dan bond — semua melalui approval berjenjang, tanpa posting jurnal otomatis.</p>
 @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800">{{ session('status') }}</div>@endif
 @if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-4 text-sm text-red-700">{{ $errors->first() }}</div>@endif
@@ -45,5 +52,5 @@
 @if($workflows->isEmpty())
 <div class="mt-4 rounded-xl bg-amber-50 p-4 text-sm text-amber-800 no-print">Belum ada workflow <strong>contract_change</strong> aktif. Buat di <a href="/admin/approvals" class="font-bold underline">Approval Center</a> dengan document type <code>contract_change</code> agar dokumen dapat diajukan.</div>
 @endif
-</section>
+</div>
 </x-layouts.app>

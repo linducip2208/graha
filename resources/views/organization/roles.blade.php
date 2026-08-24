@@ -1,5 +1,5 @@
-<x-layouts.app title="Role & Permission"><section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-<h1 class="text-2xl font-bold tracking-tight">Role & Permission</h1>
+<x-layouts.app title="Role & Permission"><div class="page-container">
+<x-ui.page-header title="Role & Permission" />
 <p class="mt-2 text-slate-500">Akses menu & aksi ditentukan role per perusahaan. Role sistem tidak dapat diubah. Setiap perubahan tercatat di audit trail.</p>
 @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4">{{ session('status') }}</div>@endif
 @if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{{ $errors->first() }}</div>@endif
@@ -65,4 +65,4 @@
 </div>
 </div>
 @endif
-</section></x-layouts.app>
+</div></x-layouts.app>
