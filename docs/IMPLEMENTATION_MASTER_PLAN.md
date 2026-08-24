@@ -346,3 +346,17 @@ dengan registry lama; registry kanonis kini di ARCHITECTURE_DECISIONS.md
 | LNC-006 | UX | Favorit/Recents existing dipertahankan; favorit toggle dari kartu memakai endpoint existing | Tested | AppLauncherTest | Tanpa storage baru |
 
 Verifikasi: 198 tests / 808 assertions, pint bersih, view:cache + npm run build sukses. Screenshot matrix: public/marketing/screens/apps-launcher-{1440,768,375,dark-1440,dark-375}.png.
+
+# Pembaruan 2026-08-24 (6) - Dashboard Premium & Standardisasi Komponen (Fasa 2-3)
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| UI-D1 | Dashboard | Header greeting (pagi/siang/sore/malam + tanggal ID) + CTA Semua Aplikasi | Tested | DashboardPermissionTest + smoke | Tanpa hardcode brand; token --brand-primary |
+| UI-D2 | Dashboard | KPI row role-aware dengan icon chip ber-tone + hint | Tested | DashboardPermissionTest | stat-card baru backward-compatible |
+| UI-D3 | Dashboard | Cockpit Eksekutif 5 KPI premium; GP otomatis merah bila negatif | Tested | smoke | valueClass prop untuk density 5 kolom |
+| UI-D4 | Dashboard | Chart card premium (revenue brand-color dinamis dari token) + aging + pile | Tested | smoke | Chart.js palette ikut theme preset |
+| UI-D5 | Dashboard | Project health table premium + status pill ring; procurement queue card; approvals/journal card | Tested | smoke | Badge dot-ring baru dipakai lintas modul |
+| UI-C1 | Komponen | x-ui.stat-card: icon/tone/delta/valueClass; x-ui.badge: dot + ring subtle rounded-full | Tested | Suite penuh | Semua pemakaian existing tetap jalan |
+| UI-C2 | CSS | Table polish (hover row, tabular-nums), focus-visible ring konsisten, scrollbar halus light/dark | Tested | Suite penuh | prefers-reduced-motion sudah ada |
+
+Verifikasi: 198 tests / 808 assertions, pint bersih, build sukses. Screenshot: dashboard-premium-{1440,dark-1440,375}.png + finance-overview-1440.png.

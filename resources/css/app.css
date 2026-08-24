@@ -65,3 +65,21 @@ table th,table td{padding:.8rem 1rem;text-align:left;border-bottom:1px solid #e2
 .btn-danger{background:#b91c1c;color:#fff}.btn-danger:hover{background:#991b1b}
 .admin-link.active{background:linear-gradient(90deg,var(--brand-primary),var(--brand-primary-hover));box-shadow:none}
 .tab-link.active{background:var(--brand-primary);color:#fff}
+
+/* ===== Premium table polish (fasa 2) ===== */
+table th{font-weight:700;background:#f8fafc}
+table tbody tr{transition:background-color .15s}
+table tbody tr:hover{background:#f8fafc}
+.dark table tbody tr:hover{background:#131f36}
+table td{font-variant-numeric:tabular-nums}
+.dark table th{font-weight:700}
+
+/* Focus ring konsisten untuk keyboard nav (a11y) */
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--brand-primary);outline-offset:2px;border-radius:.5rem}
+
+/* Scrollbar halus (WebKit) — subtle, enterprise */
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:8px;border:2px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:#94a3b8;border:2px solid transparent;background-clip:content-box}
+.dark ::-webkit-scrollbar-thumb{background:#2a3a5c;border:2px solid transparent;background-clip:content-box}
+.dark ::-webkit-scrollbar-thumb:hover{background:#3b4f78}
