@@ -183,9 +183,12 @@ class DocumentControlPageTest extends TestCase
         $this->assertSame(1, preg_match_all('/Laporan Khusus Beton/', $search));
         $this->assertStringNotContainsString('Laporan Rutin 3</a>', $search);
 
-        // Filter jenis dokumen.
+        // Filter jenis dokumen. 25 dokumen dibuat pada detik yang sama — urutan
+        // created_at yang seri membuat penempatan baris spesifik antar halaman
+        // tidak deterministik (tie-break SQLite), jadi asersi berbasis jumlah baris.
         $type = $this->get('/admin/documents?type=report')->assertOk()->getContent();
-        $this->assertStringContainsString('Laporan Rutin 1<', $type);
+        $this->assertSame(20, preg_match_all('/href="[^"]*\/admin\/documents\/\d+"/', $type));
+        $this->assertStringContainsString('page=2', $type);
     }
 
     public function test_empty_state_shown_when_no_documents(): void

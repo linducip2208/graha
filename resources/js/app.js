@@ -40,6 +40,17 @@ document.querySelectorAll('details.nav-group').forEach((d)=>{const k='navgrp:'+(
 const wsNav=document.querySelector('#workspace-nav');
 if(wsNav){wsNav.querySelectorAll('details.ws-group').forEach((d)=>{d.addEventListener('toggle',()=>{if(d.open){wsNav.querySelectorAll('details.ws-group[open]').forEach((o)=>{if(o!==d)o.open=false})}})})}
 
+// ===== Form submit: kunci double-submit + loading state pada tombol =====
+document.addEventListener('submit',(e)=>{
+const form=e.target;
+if(!(form instanceof HTMLFormElement)||form.method.toLowerCase()==='dialog')return;
+const btn=form.querySelector('button[type="submit"],button:not([type])');
+if(!btn||btn.dataset.loading)return;
+btn.dataset.loading='1';btn.disabled=true;btn.classList.add('opacity-60','cursor-wait');
+const label=btn.dataset.loadingText||'Memproses…';
+btn.innerHTML='<span class="inline-flex items-center gap-2"><svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>'+label+'</span>';
+});
+
 // ===== Experience Studio: dashboard builder move up/down (urutan = urutan DOM) =====
 const dashList=document.querySelector('[data-dash-list]');
 if(dashList){dashList.addEventListener('click',(e)=>{const btn=e.target.closest('[data-dash-move]');if(!btn)return;e.preventDefault();const item=btn.closest('[data-dash-item]');if(!item)return;const dir=parseInt(btn.dataset.dashMove,10);const next=dir<0?item.previousElementSibling:item.nextElementSibling;if(next){dir<0?next.before(item):next.after(item)}})}

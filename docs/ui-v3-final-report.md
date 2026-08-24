@@ -55,5 +55,5 @@ Halaman dengan ≥2 form memakai workspace-tools auto-toolbar existing (form rea
 - Documents tab di project detail: tidak dibuat (tidak ada relasi project→document yang bersih); dokumen pile tetap reachable via Passport/Genealogy.
 
 ## 9. Known Remaining
-- Flaky test `DocumentControlPageTest::test_pagination_and_search_filters` (intermiten di full suite; kini memakai pesan diagnostik jumlah baris untuk tracing).
-- Tokenisasi penuh `bg-white`/`slate-*` → backlog konsistensi (dark mode sudah aman via override).
+- Flaky test pagination documents: **TERATASI** — akar masalah = 25 dokumen dibuat pada detik yang sama sehingga `ORDER BY created_at DESC` seri dan tie-break SQLite tidak deterministik; asersi diganti berbasis jumlah baris (ordering-agnostic). Dua run full-suite berturut-turut PASS.
+- Tokenisasi penuh `bg-white` level-view (183 kemunculan): EXEMPT — override `.dark .bg-white` menangani dark mode; komponen ui (empty/form-section/button secondary) sudah tokenized.
