@@ -40,18 +40,24 @@ document.querySelectorAll('details.nav-group').forEach((d)=>{const k='navgrp:'+(
 const wsNav=document.querySelector('#workspace-nav');
 if(wsNav){wsNav.querySelectorAll('details.ws-group').forEach((d)=>{d.addEventListener('toggle',()=>{if(d.open){wsNav.querySelectorAll('details.ws-group[open]').forEach((o)=>{if(o!==d)o.open=false})}})})}
 
+// ===== Experience Studio: dashboard builder move up/down (urutan = urutan DOM) =====
+const dashList=document.querySelector('[data-dash-list]');
+if(dashList){dashList.addEventListener('click',(e)=>{const btn=e.target.closest('[data-dash-move]');if(!btn)return;e.preventDefault();const item=btn.closest('[data-dash-item]');if(!item)return;const dir=parseInt(btn.dataset.dashMove,10);const next=dir<0?item.previousElementSibling:item.nextElementSibling;if(next){dir<0?next.before(item):next.after(item)}})}
+
 // ===== Public homepage: product proof tab preview (screenshot asli) =====
 const proof=document.querySelector('[data-proof]');
 if(proof){const img=proof.querySelector('[data-proof-img]');const shots={dashboard:'dashboard-redesign-v2-1440',project:'projects-portfolio-v2-1440',finance:'finance-overview-v2-1440',foundation:'foundation-control-v2-1440'};proof.querySelectorAll('[data-proof-btn]').forEach((btn)=>{btn.addEventListener('click',()=>{proof.querySelectorAll('[data-proof-btn]').forEach((b)=>b.classList.toggle('active',b===btn));const key=btn.dataset.proofBtn;if(shots[key]&&img)img.src=window.location.origin+'/marketing/screens/'+shots[key]+'.png'})})}
 
 // ===== Drawer (create panel samping): [data-drawer-open="id"] / [data-drawer-close] =====
+// A11y: simpan opener, restore focus saat tutup, aria-expanded pada opener.
+let drawerOpener=null;
 document.addEventListener('click',(e)=>{
 const opener=e.target.closest('[data-drawer-open]');
-if(opener){e.preventDefault();const drawer=document.getElementById(opener.dataset.drawerOpen);if(drawer){drawer.hidden=false;const field=drawer.querySelector('input:not([type=hidden]):not([type=file]),select,textarea');if(field)field.focus()}return}
+if(opener){e.preventDefault();const drawer=document.getElementById(opener.dataset.drawerOpen);if(drawer){drawerOpener=opener;opener.setAttribute('aria-expanded','true');drawer.hidden=false;const field=drawer.querySelector('input:not([type=hidden]):not([type=file]),select,textarea');if(field)field.focus()}return}
 const closer=e.target.closest('[data-drawer-close]');
-if(closer){const root=closer.closest('.drawer-root');if(root)root.hidden=true}
+if(closer){const root=closer.closest('.drawer-root');if(root){root.hidden=true;if(drawerOpener){drawerOpener.setAttribute('aria-expanded','false');drawerOpener.focus();drawerOpener=null}}}
 });
-document.addEventListener('keydown',(e)=>{if(e.key!=='Escape')return;if(document.querySelector('#confirm-modal:not([hidden])'))return;document.querySelectorAll('.drawer-root:not([hidden])').forEach((d)=>d.hidden=true)});
+document.addEventListener('keydown',(e)=>{if(e.key!=='Escape')return;if(document.querySelector('#confirm-modal:not([hidden])'))return;const open=document.querySelector('.drawer-root:not([hidden])');if(open){open.hidden=true;if(drawerOpener){drawerOpener.setAttribute('aria-expanded','false');drawerOpener.focus();drawerOpener=null}}});
 
 // ===== Workspace UX: global search (Ctrl+K), quick create, recent views =====
 const palette=document.getElementById('search-palette');const searchInput=document.getElementById('search-input');const searchResults=document.getElementById('search-results');

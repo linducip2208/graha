@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Storage;
 
 /**
  * Experience Studio (ADR-058): studio tampilan & white label per company.
- * Non-teknis: pilih preset, warna, font, nama — tanpa edit code.
+ * Non-teknis: pilih preset, warna, font, nama ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â tanpa edit code.
  */
 class ExperienceController extends Controller
 {
@@ -35,7 +35,7 @@ class ExperienceController extends Controller
             'launcherConfig' => array_merge(['style' => 'visual', 'covers_enabled' => true, 'density' => 'comfortable'], (array) ($experienceRow?->launcher_config ?? [])),
             'launcherCovers' => (array) ($experienceRow?->launcher_covers ?? []),
             // Cover manager hanya untuk workspace yang EFFECTIVE bagi user ini
-            // (permission + edition + navigation composer) — bukan seluruh config.
+            // (permission + edition + navigation composer) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â bukan seluruh config.
             'launcherWorkspaceKeys' => Navigation::groups($request->user(), $companyId)
                 ->map(fn ($g) => ['key' => (string) ($g['key'] ?? str($g['label'])->slug()), 'label' => (string) preg_replace('/^[^\p{L}\d]+/u', '', $g['label'])])
                 ->values(),
@@ -192,10 +192,6 @@ class ExperienceController extends Controller
             'industry_pack' => $data['industry_pack'] ?? null,
             'edition' => $data['edition'] ?? null,
             'dashboard_config' => $dash,
-            'terminology' => $terminology,
-            'industry_pack' => $data['industry_pack'] ?? null,
-            'edition' => $data['edition'] ?? null,
-            'dashboard_config' => $dash,
             'is_published' => true,
             'published_by' => $request->user()->id,
             'published_at' => now(),
@@ -203,7 +199,7 @@ class ExperienceController extends Controller
         ThemeService::flush($current->id());
         Term::flush();
 
-        return back()->with('status', 'Tampilan & white label diterbitkan — berlaku untuk semua user company ini.');
+        return back()->with('status', 'Tampilan & white label diterbitkan dan berlaku untuk semua user company ini.');
     }
 
     /** Simpan konfigurasi aktif sebagai DRAFT versi baru (belum diterbitkan). */
@@ -214,7 +210,7 @@ class ExperienceController extends Controller
         $config = $active ? collect($active->only(['admin_theme', 'frontend_theme', 'primary_color', 'secondary_color', 'accent_color', 'font_ui', 'font_heading', 'density', 'button_style', 'card_style', 'sidebar_style', 'topbar_style', 'system_name', 'company_display_name', 'footer_text', 'support_email', 'login_headline']))->filter(fn ($v) => filled($v))->all() : ['admin_theme' => ThemeService::DEFAULT_PRESET];
         $version = $service->saveDraft($current->id(), $config, $request->user());
 
-        return back()->with('status', "Draft v{$version->version} dibuat — preview lalu publish dari daftar versi.");
+        return back()->with('status', "Draft v{$version->version} dibuat ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â preview lalu publish dari daftar versi.");
     }
 
     public function publishVersion(Request $request, ExperienceVersion $version, CurrentCompany $current, ExperienceVersionService $service)
@@ -256,7 +252,7 @@ class ExperienceController extends Controller
         abort_unless($request->user()->hasPermission('finance.manage', $current->id()), 403);
         session(['experience_preview_version' => $version->id]);
 
-        return back()->with('status', "Mode pratinjau v{$version->version} aktif — tampilan berikut hanya terlihat oleh Anda.");
+        return back()->with('status', "Mode pratinjau v{$version->version} aktif ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â tampilan berikut hanya terlihat oleh Anda.");
     }
 
     public function stopPreview(Request $request)
@@ -291,12 +287,12 @@ class ExperienceController extends Controller
         $data = $request->validate(['file' => ['required', 'file', 'max:200']]);
         $json = json_decode($data['file']->getContent(), true);
         if (! is_array($json) || ($json['schema'] ?? '') !== 'graha-experience@1') {
-            return back()->withErrors(['file' => 'Schema theme tidak dikenal — butuh graha-experience@1.']);
+            return back()->withErrors(['file' => 'Schema theme tidak dikenal ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â butuh graha-experience@1.']);
         }
         $config = $this->normalizeImported($json);
         $version = $service->saveDraft($current->id(), $config, $request->user());
 
-        return back()->with('status', "Import diterima sebagai draft v{$version->version} — review lalu publish dari daftar versi.");
+        return back()->with('status', "Import diterima sebagai draft v{$version->version} ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â review lalu publish dari daftar versi.");
     }
 
     private function normalizeImported(array $json): array

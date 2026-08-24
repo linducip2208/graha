@@ -175,12 +175,24 @@ Ganti<input type="file" name="file" accept=".jpg,.jpeg,.png,.webp" required clas
 </fieldset>
 
 <fieldset class="rounded-xl border p-4"><legend class="px-2 text-sm font-bold">Dashboard Builder</legend>
-<p class="text-[11px] text-slate-400">Kosongkan = layout legacy. Centang widget yang ingin tampil; lebar kolom grid 12.</p>
-<div class="grid gap-1 sm:grid-cols-3">@foreach(config('dashboard-widgets') as $wid => $w)
-<label class="flex items-center gap-2 rounded-lg border p-2 text-xs cursor-pointer has-checked:border-sky-500">
-<input type="checkbox" name="dash_enabled[{{ $wid }}]" value="1" @checked(collect($cfg?->dashboard_config ?? [])->pluck('id')->contains($wid))>
+<p class="text-[11px] text-slate-400">Kosongkan = layout legacy. Centang widget yang ingin tampil, atur lebar kolom (grid 12), dan urutkan dengan tombol ▲▼ — urutan tersimpan mengikuti urutan daftar.</p>
+@php($savedDash = collect($cfg?->dashboard_config ?? []))
+@php($registry = collect(config('dashboard-widgets')))
+@php($ordered = $savedDash->map(fn ($w) => $w['id'])->merge($registry->keys()->reject(fn ($k) => $savedDash->pluck('id')->contains($k)))->unique())
+<div class="grid gap-1 sm:grid-cols-3" data-dash-list>
+@foreach($ordered as $wid)
+@php($w = $registry[$wid] ?? null)
+@if(! $w) @continue @endif
+@php($enabled = $savedDash->pluck('id')->contains($wid))
+@php($width = $savedDash->firstWhere('id', $wid)['w'] ?? $w['width'])
+<label class="flex items-center gap-2 rounded-lg border p-2 text-xs cursor-pointer has-checked:border-sky-500" data-dash-item>
+<input type="checkbox" name="dash_enabled[{{ $wid }}]" value="1" @checked($enabled)>
 <span class="flex-1">{{ $w['label'] }}</span>
-<select name="dash_width[{{ $wid }}]" class="rounded border p-0.5 text-[10px]">@foreach([3,4,6,12] as $wd)<option value="{{ $wd }}" @selected(collect($cfg?->dashboard_config ?? [])->firstWhere('id',$wid)['w'] ?? $w['width'] === $wd)>w{{ $wd }}</option>@endforeach</select>
+<select name="dash_width[{{ $wid }}]" class="rounded border p-0.5 text-[10px]">@foreach([3,4,6,12] as $wd)<option value="{{ $wd }}" @selected($width === $wd)>w{{ $wd }}</option>@endforeach</select>
+<span class="flex shrink-0 flex-col leading-none">
+<button type="button" class="px-1 text-[9px] text-slate-400 hover:text-sky-700" data-dash-move="-1" aria-label="Naikkan {{ $w['label'] }}">▲</button>
+<button type="button" class="px-1 text-[9px] text-slate-400 hover:text-sky-700" data-dash-move="1" aria-label="Turunkan {{ $w['label'] }}">▼</button>
+</span>
 </label>
 @endforeach
 </div>
