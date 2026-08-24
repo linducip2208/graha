@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\CompanyExperience;
+use App\Models\ExperienceVersion;
 use App\Services\AuditTrail;
+use App\Services\ExperienceVersionService;
 use App\Services\ThemeService;
 use App\Support\Experience\ThemePresets;
 use App\Support\Tenancy\CurrentCompany;
@@ -67,5 +69,48 @@ class ExperienceController extends Controller
         app(AuditTrail::class)->record($current->id(), $request->user()->id, 'experience.updated', $row);
 
         return back()->with('status', 'Tampilan & white label diterbitkan — berlaku untuk semua user company ini.');
+    }
+
+    /** Simpan konfigurasi aktif sebagai DRAFT versi baru (belum diterbitkan). */
+    public function saveDraft(Request $request, CurrentCompany $current, ExperienceVersionService $service, ThemeService $theme)
+    {
+        abort_unless($request->user()->hasPermission('finance.manage', $current->id()), 403);
+        $active = CompanyExperience::find($current->id());
+        $config = $active ? collect($active->only(['admin_theme', 'frontend_theme', 'primary_color', 'secondary_color', 'accent_color', 'font_ui', 'font_heading', 'density', 'button_style', 'card_style', 'sidebar_style', 'topbar_style', 'system_name', 'company_display_name', 'footer_text', 'support_email', 'login_headline']))->filter(fn ($v) => filled($v))->all() : ['admin_theme' => ThemeService::DEFAULT_PRESET];
+        $version = $service->saveDraft($current->id(), $config, $request->user());
+
+        return back()->with('status', "Draft v{$version->version} dibuat — preview lalu publish dari daftar versi.");
+    }
+
+    public function publishVersion(Request $request, ExperienceVersion $version, CurrentCompany $current, ExperienceVersionService $service)
+    {
+        abort_unless($version->company_id === $current->id(), 404);
+        abort_unless($request->user()->hasPermission('finance.manage', $current->id()), 403);
+        $service->publish($version, $request->user());
+
+        return back()->with('status', "Versi {$version->version} dipublikasikan; versi published sebelumnya diarsipkan.");
+    }
+
+    /** Rollback = publikasikan ulang versi arsip sebagai versi terbaru. */
+    public function rollbackTo(Request $request, ExperienceVersion $version, CurrentCompany $current, ExperienceVersionService $service)
+    {
+        abort_unless($version->company_id === $current->id(), 404);
+        abort_unless($request->user()->hasPermission('finance.manage', $current->id()), 403);
+        $new = $service->saveDraft($current->id(), $version->config, $request->user());
+        $new->update(['logo_path' => $version->logo_path, 'favicon_path' => $version->favicon_path]);
+        $service->publish($new->refresh(), $request->user());
+
+        return back()->with('status', "Rollback ke konfigurasi v{$version->version} berhasil sebagai v{$new->version}.");
+    }
+
+    public function uploadAsset(Request $request, CurrentCompany $current, ExperienceVersionService $service)
+    {
+        abort_unless($request->user()->hasPermission('finance.manage', $current->id()), 403);
+        $data = $request->validate(['kind' => ['required', 'in:logo,favicon'], 'file' => ['required', 'file', 'max:2048']]);
+        $path = $service->storeAsset($current->id(), $data['file'], $data['kind'], $request->user());
+        CompanyExperience::updateOrCreate(['company_id' => $current->id()], [$data['kind'].'_path' => $path, 'is_published' => true]);
+        ThemeService::flush($current->id());
+
+        return back()->with('status', ucfirst($data['kind']).' tersimpan (storage privat).');
     }
 }

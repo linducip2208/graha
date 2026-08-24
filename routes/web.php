@@ -312,5 +312,9 @@ Route::post('/admin/tools/{tool}/lost', [ToolController::class, 'markLost'])->mi
 Route::post('/admin/tools/{tool}/evidence', [ToolController::class, 'uploadEvidence'])->middleware(['auth', 'company', 'permission:inventory.manage']);
 Route::get('/admin/experience', [ExperienceController::class, 'edit'])->middleware(['auth', 'company'])->name('experience.studio');
 Route::post('/admin/experience', [ExperienceController::class, 'update'])->middleware(['auth', 'company'])->name('experience.update');
+Route::post('/admin/experience/draft', [ExperienceController::class, 'saveDraft'])->middleware(['auth', 'company']);
+Route::post('/admin/experience/versions/{version}/publish', [ExperienceController::class, 'publishVersion'])->middleware(['auth', 'company']);
+Route::post('/admin/experience/versions/{version}/rollback', [ExperienceController::class, 'rollbackTo'])->middleware(['auth', 'company']);
+Route::post('/admin/experience/assets', [ExperienceController::class, 'uploadAsset'])->middleware(['auth', 'company']);
 Route::get('/admin/settings', [SettingsController::class, 'index'])->middleware(['auth', 'company'])->name('settings.index');
 Route::post('/admin/settings', [SettingsController::class, 'save'])->middleware(['auth', 'company', 'permission:finance.manage'])->name('settings.save');

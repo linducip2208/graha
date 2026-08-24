@@ -49,4 +49,33 @@
 
 <div class="flex items-center gap-3"><x-ui.button>Terbitkan tampilan</x-ui.button><span class="text-xs text-slate-400">Tersimpan sebagai konfigurasi aktif company — audit tercatat.</span></div>
 </form>
+
+<div class="mt-6 grid gap-5 lg:grid-cols-2">
+<x-ui.card label="Brand Asset (privat)">
+<form method="post" action="/admin/experience/assets" enctype="multipart/form-data" class="flex flex-wrap items-center gap-2">@csrf
+<select name="kind" class="rounded-lg border p-1.5 text-xs"><option value="logo">Logo</option><option value="favicon">Favicon</option></select>
+<input type="file" name="file" accept=".png,.jpg,.jpeg,.webp,.svg" required class="rounded-lg border p-1.5 text-xs">
+<button class="font-bold text-violet-700 text-xs">Upload</button>
+</form>
+@if($row?->logo_path)<p class="mt-2 text-xs text-emerald-700">Logo aktif tersimpan.</p>@endif
+<p class="mt-1 text-[11px] text-slate-400">PNG/JPG/WebP/SVG (SVG otomatis disanitasi) · maks 2 MB · storage privat ber-authorization.</p>
+</x-ui.card>
+
+@php($versions = \App\Models\ExperienceVersion::where('company_id', app(\App\Support\Tenancy\CurrentCompany::class)->id())->orderByDesc('version')->limit(10)->get())
+<x-ui.card label="Versi Tampilan">
+<form method="post" action="/admin/experience/draft" class="mb-2 no-print">@csrf<x-ui.button variant="secondary" type="submit" class="!py-1.5 !text-xs">Simpan sebagai draft baru</x-ui.button></form>
+<table class="w-full text-xs"><thead><tr><th>Versi</th><th>Status</th><th>Diterbitkan</th><th>Aksi</th></tr></thead><tbody>
+@forelse($versions as $v)
+<tr class="border-t"><td class="font-mono font-bold">v{{ $v->version }}</td><td><span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $v->status === 'published' ? 'bg-emerald-50 text-emerald-700' : ($v->status === 'draft' ? 'bg-sky-50 text-sky-700' : 'bg-slate-100 text-slate-500') }}">{{ strtoupper($v->status) }}</span></td><td>{{ $v->published_at?->format('d/m/Y H:i') ?? '-' }}</td>
+<td class="flex gap-2">@if($v->status !== 'published')
+<form method="post" action="/admin/experience/versions/{{ $v->id }}/publish">@csrf<button class="font-bold text-emerald-700 text-[11px]">Publish</button></form>
+@endif
+@if($v->status === 'archived' || $v->status === 'published')
+<form method="post" action="/admin/experience/versions/{{ $v->id }}/rollback">@csrf<button onclick="return confirm('Rollback ke konfigurasi v{{ $v->version }}?')" class="font-bold text-amber-700 text-[11px]">Rollback</button></form>
+@endif
+</td></tr>
+@empty<tr><td colspan="4" class="p-3 text-slate-400">Belum ada versi — simpan draft pertama untuk mulai versioning.</td></tr>@endforelse
+</tbody></table>
+</x-ui.card>
+</div>
 </section></x-layouts.app>
