@@ -316,3 +316,19 @@ cash flow forecast, ITP/calibration/transmittal, UI redesign shell.
 
 ADR baru: 048 (bid decision), 049 (constraint log), 050 (procurement plan),
 051 (EVM ringkas).
+
+# Pembaruan 2026-08-24 (4) - Gelombang Digital Twin Pile (Storage, Passport, As-built, Acceptance, Control Tower)
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| DT-STO-001 | Infra | Abstraksi object storage + StoredFile metadata registry (SHA-256) + serving privat ber-authorization | Tested | Suite storage/passport | Disk non-local = temporary URL |
+| DT-PSP-001 | Bored Pile | Digital Pile Passport + QR + timeline evidence foto | Tested | Suite passport | QR publik tanpa data sensitif |
+| DT-DOC-001 | Governance | As-built PDF white-label + dossier; regenerasi = versi baru di Document Registry; nomor NumberSequence (pile_as_built/pile_acceptance_dossier) | Tested | PileDocumentRegistryTest | Foto embed dari salinan preview |
+| DT-ACC-001 | Bored Pile | Acceptance lifecycle pending->qa_review->engineer_review->accepted/rejected/conditional dengan gate data nyata | Tested | PileAcceptanceHandoverTest | Permission berjenjang project.manage/qms.verify/approval.decide |
+| DT-EVR-001 | QMS | Evidence requirement per company default OFF, configurable min foto/kategori | Tested | PileAcceptanceHandoverTest | Backward-compatible |
+| DT-HOV-001 | Project | Handover package ZIP as-built+dossier+MANIFEST.csv -> object storage -> registry versioned; exception pile belum accepted | Tested | PileAcceptanceHandoverTest | Audit handover_package_generated |
+| FT-CT-001 | Bored Pile | Foundation Control Tower: KPI harian nyata, Risk Radar deterministik HEALTHY/WATCH/CRITICAL, plan view/grid, daily production board mobile | Tested | FoundationControlTest | PileRiskService deterministic (ADR-072) |
+
+Catatan penomoran ADR: commit gelombang ini memakai nomor yang bertabrakan
+dengan registry lama; registry kanonis kini di ARCHITECTURE_DECISIONS.md
+(ADR-066 s.d. ADR-072).

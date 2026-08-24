@@ -10,6 +10,7 @@ use App\Models\Unit;
 use App\Models\Warehouse;
 use App\Models\WarehouseBin;
 use App\Services\InventoryService;
+use App\Services\ReorderService;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Http\Request;
 
@@ -53,6 +54,35 @@ class InventoryController extends Controller
         }
 
         return view('inventory.index', ['items' => Item::where('company_id', $current->id())->orderBy('name')->get(), 'warehouses' => Warehouse::where('company_id', $current->id())->with('bins')->get(), 'balances' => (clone $balances)->paginate(30), 'movements' => StockMovement::where('company_id', $current->id())->with('item')->latest('posted_at')->limit(20)->get(), 'lowStock' => $lowStock, 'balanceCount' => $balances->count()]);
+    }
+
+    /** Rekomendasi reorder deterministik dari saldo + outstanding PO (ADR-074). */
+    public function reorder(CurrentCompany $current, ReorderService $service)
+    {
+        return view('inventory.reorder', [
+            'recommendations' => $service->recommendations($current->id()),
+            'items' => Item::where('company_id', $current->id())->orderBy('sku')->get(),
+        ]);
+    }
+
+    /** Update parameter reorder satu item. */
+    public function updateReorderSettings(Request $r, Item $item, CurrentCompany $current)
+    {
+        abort_unless($item->company_id === $current->id(), 404);
+        $d = $r->validate([
+            'reorder_point' => ['required', 'decimal:0,4', 'min:0'],
+            'reorder_max' => ['nullable', 'decimal:0,4', 'min:0'],
+            'minimum_stock' => ['nullable', 'decimal:0,4', 'min:0'],
+            'lead_time_days' => ['nullable', 'integer', 'min:0', 'max:365'],
+        ]);
+        $item->update([
+            'reorder_point' => $d['reorder_point'],
+            'reorder_max' => $d['reorder_max'] ?? $item->reorder_max,
+            'minimum_stock' => $d['minimum_stock'] ?? $item->minimum_stock,
+            'lead_time_days' => $d['lead_time_days'] ?? $item->lead_time_days,
+        ]);
+
+        return back()->with('status', "Parameter reorder {$item->sku} disimpan.");
     }
 
     public function setup(Request $r, CurrentCompany $current)

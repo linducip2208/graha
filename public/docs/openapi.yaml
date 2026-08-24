@@ -153,6 +153,33 @@ paths:
       responses:
         '200': { description: Daftar equipment perusahaan aktif }
         '403': { description: Tanpa permission }
+  /v1/constraints:
+    get:
+      summary: Constraint log proyek (ADR-049; butuh permission project.view)
+      description: >
+        Read-only. Transisi open -> in_progress -> resolved dijaga di UI/service;
+        resolusi wajib catatan dan kendala selesai tidak dapat dibuka ulang.
+      parameters:
+        - { name: X-Company-Id, in: header, required: true, schema: { type: integer } }
+        - { name: project_id, in: query, required: true, schema: { type: integer } }
+        - { name: status, in: query, schema: { type: string, enum: [open, in_progress, resolved] } }
+      responses:
+        '200': { description: Maksimal 200 baris constraint terbaru }
+        '403': { description: Tanpa permission }
+        '404': { description: Proyek tidak ditemukan di perusahaan ini }
+  /v1/procurement-plans:
+    get:
+      summary: Rencana pengadaan proyek (ADR-050; butuh permission procurement.view)
+      description: >
+        Setiap baris memuat flag is_late = lewat tanggal tanpa PR dan PO
+        (tidak dibatalkan), sesuai definisi keterlambatan rencana pengadaan.
+      parameters:
+        - { name: X-Company-Id, in: header, required: true, schema: { type: integer } }
+        - { name: project_id, in: query, required: true, schema: { type: integer } }
+      responses:
+        '200': { description: Baris rencana pengadaan + flag is_late + taut item }
+        '403': { description: Tanpa permission }
+        '404': { description: Proyek tidak ditemukan di perusahaan ini }
 components:
   securitySchemes:
     bearerAuth:

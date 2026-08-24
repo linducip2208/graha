@@ -60,6 +60,44 @@ class ApiV1Test extends TestCase
         $bad->assertStatus(422)->assertJsonStructure(['message', 'errors']);
     }
 
+    public function test_constraints_and_procurement_plans_endpoints_are_scoped(): void
+    {
+        [$companyA, $user] = $this->fixture('AD');
+        [$companyB] = $this->fixture('BE');
+        foreach (['project.view', 'procurement.view'] as $code) {
+            Permission::firstOrCreate(['code' => $code], ['name' => $code, 'module' => str($code)->before('.')]);
+        }
+        $role = Role::create(['company_id' => $companyA->id, 'code' => 'viewer-api', 'name' => 'Viewer API']);
+        $role->permissions()->syncWithoutDetaching(Permission::whereIn('code', ['project.view', 'procurement.view'])->pluck('id'));
+        $pivot = DB::table('company_user')->where(['company_id' => $companyA->id, 'user_id' => $user->id])->value('id');
+        DB::table('company_user_role')->insertOrIgnore(['company_user_id' => $pivot, 'role_id' => $role->id]);
+
+        $projectA = Project::where('company_id', $companyA->id)->first();
+        $foreignProject = Project::where('company_id', $companyB->id)->first();
+        \App\Models\ConstraintLog::create(['company_id' => $companyA->id, 'project_id' => $projectA->id, 'type' => 'permit', 'title' => 'Izin lingkungan terlambat', 'description' => 'Pengurusan izin menunggu dokumen pemilik lahan.', 'status' => 'open', 'raised_at' => now()->toDateString(), 'recorded_by' => $user->id]);
+        \App\Models\ProcurementPlan::create(['company_id' => $companyA->id, 'project_id' => $projectA->id, 'title' => 'Semen 500 ton', 'quantity' => '500.0000', 'estimated_value' => '3500000.00', 'required_date' => now()->subDays(5)->toDateString(), 'planned_po_date' => now()->subDays(10)->toDateString(), 'status' => 'planned', 'created_by' => $user->id]);
+        $token = $this->getToken($user);
+
+        $ok = $this->getJson('/api/v1/constraints?project_id='.$projectA->id, ['Authorization' => "Bearer {$token}", 'X-Company-Id' => (string) $companyA->id]);
+        $ok->assertOk()->assertJsonCount(1, 'data');
+
+        // Proyek perusahaan lain -> 404 meski token valid.
+        $this->getJson('/api/v1/constraints?project_id='.$foreignProject->id, ['Authorization' => "Bearer {$token}", 'X-Company-Id' => (string) $companyA->id])->assertNotFound();
+
+        $plans = $this->getJson('/api/v1/procurement-plans?project_id='.$projectA->id, ['Authorization' => "Bearer {$token}", 'X-Company-Id' => (string) $companyA->id]);
+        $plans->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.is_late', true);
+
+        // Token tanpa permission apapun -> 403 (authorization backend).
+        $outsider = User::factory()->create();
+        $outsider->companies()->attach($companyA->id, ['is_default' => true, 'is_active' => true]);
+        // RequestGuard sanctum ter-cache per container lintas request dalam satu
+        // test; reset agar token outsider diselesaikan sebagai user-nya sendiri.
+        $this->app->make('auth')->forgetGuards();
+        $tokenOut = $this->getToken($outsider);
+        $resp = $this->getJson('/api/v1/constraints?project_id='.$projectA->id, ['Authorization' => 'Bearer '.$tokenOut, 'X-Company-Id' => (string) $companyA->id]);
+        $resp->assertStatus(403);
+    }
+
     private function fixture(string $code): array
     {
         $company = Company::create(['code' => $code, 'name' => $code]);

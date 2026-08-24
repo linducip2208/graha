@@ -19,5 +19,7 @@ Route::prefix('v1')->middleware('throttle:60,1')->group(function () {
         Route::get('/fuel-tanks', [AssetApiController::class, 'fuelTanks']);
         Route::get('/tools', [AssetApiController::class, 'tools']);
         Route::get('/equipment', [AssetApiController::class, 'equipment']);
+        Route::get('/constraints', [AssetApiController::class, 'constraints']);
+        Route::get('/procurement-plans', [AssetApiController::class, 'procurementPlans']);
     });
 });

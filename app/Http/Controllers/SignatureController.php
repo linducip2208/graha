@@ -55,6 +55,49 @@ class SignatureController extends Controller
         return response()->json(['received' => true]);
     }
 
+    /** Tandatangani banyak versi sekaligus (batch). Per versi: skip bila sudah signed. */
+    public function batchInternal(Request $request, CurrentCompany $current, DocumentSignatureService $service)
+    {
+        $data = $request->validate(['version_ids' => ['required', 'array', 'min:1', 'max:50'], 'version_ids.*' => ['integer'], 'position' => ['required', 'max:150']]);
+        $versions = DocumentVersion::whereIn('id', $data['version_ids'])
+            ->whereHas('document', fn ($q) => $q->where('company_id', $current->id()))
+            ->with('document')
+            ->get();
+        $signed = $skipped = 0;
+        foreach ($versions as $version) {
+            if ($version->is_signed) {
+                $skipped++;
+
+                continue;
+            }
+            try {
+                $service->signInternal($version, $request->user(), $data['position'], $request->ip(), $request->userAgent());
+                $signed++;
+            } catch (\Illuminate\Validation\ValidationException) {
+                $skipped++;
+            }
+        }
+
+        return back()->with('status', "Batch selesai: {$signed} ditandatangani, {$skipped} dilewati (sudah signed / gagal integritas).");
+    }
+
+    /**
+     * Halaman verifikasi publik (ADR-075): tanpa login, menampilkan status
+     * kriptografis signature — hash terikat versi + keutuhan file pada storage.
+     * Token = id-HMAC sehingga tidak dapat ditebak; data sensitif tidak disingkap.
+     */
+    public function verify(Request $request, string $token)
+    {
+        $signature = DocumentSignature::findByVerificationToken((string) $token);
+        abort_unless($signature !== null, 404);
+
+        $result = $signature->verificationResult();
+        $verifyUrl = url('/verify/'.$token);
+        $qrSvg = app(\App\Services\PileQrService::class)->svgForPileUrl($verifyUrl);
+
+        return view('verify', ['signature' => $signature->load('version.document'), 'result' => $result, 'qrSvg' => $qrSvg, 'token' => $token]);
+    }
+
     private function owned(DocumentVersion $version, CurrentCompany $current): void
     {
         abort_unless($version->document()->where('company_id', $current->id())->exists(), 404);

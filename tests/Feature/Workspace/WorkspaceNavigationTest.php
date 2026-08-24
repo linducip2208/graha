@@ -243,4 +243,16 @@ class WorkspaceNavigationTest extends TestCase
         $this->get('/admin/manufacturing/cages')->assertOk()->assertSee('Lampirkan foto');
         $this->get('/admin/operations')->assertOk();
     }
+
+    public function test_reorder_page_renders_with_permission(): void
+    {
+        $this->actingAs($this->user)->withSession(['company_id' => $this->company->id]);
+        $this->get('/admin/inventory/reorder')->assertForbidden();
+
+        $this->givePermissions(['inventory.view']);
+        $this->get('/admin/inventory/reorder')
+            ->assertOk()
+            ->assertSee('Rekomendasi Reorder')
+            ->assertSee('Parameter Reorder per Item');
+    }
 }

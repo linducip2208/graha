@@ -50,9 +50,9 @@ class EquipmentService
         }, 3);
     }
 
-    public function recordFuel(Equipment $equipment, string $liters, string $start, string $end, string $reference, User $actor, ?int $projectId = null, ?int $fuelTankId = null): FuelUsage
+    public function recordFuel(Equipment $equipment, string $liters, string $start, string $end, string $reference, User $actor, ?int $projectId = null, ?int $fuelTankId = null, ?string $unitCost = null): FuelUsage
     {
-        return DB::transaction(function () use ($equipment, $liters, $start, $end, $reference, $actor, $projectId, $fuelTankId) {
+        return DB::transaction(function () use ($equipment, $liters, $start, $end, $reference, $actor, $projectId, $fuelTankId, $unitCost) {
             $hours = bcsub($end, $start, 2);
             throw_if(bccomp($liters, '0', 4) <= 0 || bccomp($hours, '0', 2) <= 0, ValidationException::withMessages(['fuel' => 'Liter dan selisih hour meter harus positif.']));
             $lph = bcdiv($liters, $hours, 4);
@@ -75,7 +75,7 @@ class EquipmentService
                 ], $actor);
             }
 
-            return FuelUsage::create(['company_id' => $equipment->company_id, 'equipment_id' => $equipment->id, 'project_id' => $projectId, 'liters' => $liters, 'start_meter' => $start, 'end_meter' => $end, 'liters_per_hour' => $lph, 'is_anomaly' => $anomaly, 'reference' => $reference, 'recorded_by' => $actor->id, 'used_at' => now()]);
+            return FuelUsage::create(['company_id' => $equipment->company_id, 'equipment_id' => $equipment->id, 'project_id' => $projectId, 'liters' => $liters, 'unit_cost' => $unitCost, 'start_meter' => $start, 'end_meter' => $end, 'liters_per_hour' => $lph, 'is_anomaly' => $anomaly, 'reference' => $reference, 'recorded_by' => $actor->id, 'used_at' => now()]);
         }, 3);
     }
 }

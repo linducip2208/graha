@@ -30,6 +30,7 @@ return [
             ['label' => 'Inventory & Gudang', 'href' => '/admin/inventory', 'icon' => 'archive', 'permission' => 'inventory.view', 'children' => [
                 ['label' => 'Stok Kritis', 'href' => '/admin/inventory#stok-kritis'],
                 ['label' => 'Stock Opname', 'href' => '/admin/inventory/opname'],
+                ['label' => 'Rekomendasi Reorder', 'href' => '/admin/inventory/reorder'],
                 ['label' => 'Permintaan Material Proyek', 'href' => '/admin/inventory/material-requests'],
                 ['label' => 'Tools Check-out', 'href' => '/admin/tools'],
             ]],

@@ -49,6 +49,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
 Route::get('/piles/{publicUuid}', [PilePassportController::class, 'publicEntry'])->name('piles.public');
+Route::get('/verify/{token}', [SignatureController::class, 'verify'])->name('signatures.verify');
 Route::view('/docs', 'docs')->name('docs');
 Route::view('/login', 'auth.login')->middleware('guest')->name('login');
 Route::post('/login', function (Request $r) {
@@ -104,6 +105,8 @@ Route::middleware(['auth', 'company', 'permission:inventory.view'])->prefix('adm
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
     Route::get('/inventory/opname', [StockOpnameController::class, 'index'])->name('opname.index');
     Route::get('/inventory/lots', [InventoryController::class, 'lotTrace'])->name('inventory.lot-trace');
+    Route::get('/inventory/reorder', [InventoryController::class, 'reorder'])->name('inventory.reorder');
+    Route::post('/inventory/items/{item}/reorder-settings', [InventoryController::class, 'updateReorderSettings'])->middleware('permission:inventory.manage');
     Route::post('/inventory/opname', [StockOpnameController::class, 'store'])->middleware('permission:inventory.manage');
     Route::post('/inventory/opname/{count}/approve', [StockOpnameController::class, 'approve'])->middleware('permission:inventory.manage');
     Route::get('/inventory/material-requests', [MaterialRequestController::class, 'index'])->name('material-requests.index');
@@ -251,6 +254,7 @@ Route::middleware(['auth', 'company', 'permission:signature.view'])->prefix('adm
     Route::get('/', [SignatureController::class, 'index'])->name('signatures.index');
     Route::post('/providers', [SignatureController::class, 'provider'])->middleware('permission:signature.manage');
     Route::post('/versions/{version}/internal', [SignatureController::class, 'internal'])->middleware('permission:signature.sign');
+    Route::post('/batch-internal', [SignatureController::class, 'batchInternal'])->middleware('permission:signature.sign');
     Route::post('/versions/{version}/external', [SignatureController::class, 'external'])->middleware('permission:signature.manage');
 });
 Route::post('/webhooks/signatures/{provider}', [SignatureController::class, 'webhook'])->middleware('throttle:60,1')->name('signatures.webhook');

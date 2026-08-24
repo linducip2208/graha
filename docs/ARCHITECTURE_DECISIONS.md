@@ -51,3 +51,16 @@
 - ADR-051 Accepted: EVM ringkas (CPI/SPI) dihitung saat baca dari EV progres terkontrak, PV jadwal, dan AC project cost ledger; hanya tampil bila AC>0 â€” tanpa input manual baru.
 - ADR-052 Accepted: cash flow forecast 7/30/90 hari dihitung dari outstanding AR/AP berdasar jatuh tempo (sumber aging); komponen tanpa sumber data (payroll dll) tidak dikarang.
 - ADR-053 Accepted: budget proyek memakai baseline versi snapshot immutable; hanya satu approved aktif per proyek yang menjadi Revised Budget pada costing, fallback estimated_cost bila belum ada.
+
+> Catatan penomoran: sebagian commit message gelombang Digital Twin & Experience
+> memakai nomor ADR yang tumpang tindih dengan daftar di atas. Registry kanonis
+> adalah file ini; keputusan gelombang tersebut didokumentasikan ulang di bawah
+> dengan nomor berurutan mulai ADR-066.
+
+- ADR-066 Accepted: penyimpanan objek abstrak via `StoredFile` (metadata registry + SHA-256 checksum); serving file privat selalu ber-authorization per company, disk non-local memakai temporary URL berbatas waktu.
+- ADR-067 Accepted: setiap bored pile mempunyai Digital Pile Passport (QR publik terverifikasi tanpa data sensitif + timeline evidence foto) sebagai identitas digital siklus hidup pile.
+- ADR-068 Accepted: dokumen as-built dan acceptance dossier dibuat melalui Document Registry versioned (regenerasi = versi baru, tidak pernah overwrite); nomor memakai NumberSequence per company.
+- ADR-069 Accepted: penerimaan pile (acceptance) mengikuti lifecycle pending -> qa_review -> engineer_review -> accepted/rejected/conditional dengan gate dari data nyata (konstruksi tuntas, uji, NCR tertaut, as-built teregistrasi, survey aktual); aksi berjenjang dipisah per permission.
+- ADR-070 Accepted: aturan minimal foto evidence per kategori bersifat per company dan default OFF agar migrasi data lama aman.
+- ADR-071 Accepted: paket serah terima (handover) adalah ZIP berisi as-built + dossier + MANIFEST.csv yang diunggah ke object storage dan didaftarkan di registry; pile belum accepted masuk exception list, bukan diblokir diam-diam.
+- ADR-072 Accepted: Foundation Control Tower menampilkan risiko pile secara deterministik (HEALTHY/WATCH/CRITICAL) dari sinyal data nyata (depth mismatch, overbreak, slump, gap antar-truk, cage QC gagal, uji gagal/missing, NCR terbuka, durasi drilling abnormal vs median, evidence kurang); tanpa skor karangan, tanpa ML.

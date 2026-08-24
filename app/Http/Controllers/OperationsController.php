@@ -11,31 +11,48 @@ use App\Models\MaintenanceWorkOrder;
 use App\Models\ProductionOrder;
 use App\Models\Warehouse;
 use App\Models\WarehouseBin;
+use App\Services\EquipmentCostService;
 use App\Services\EquipmentService;
 use App\Services\ManufacturingService;
 use App\Support\Tenancy\CurrentCompany;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 
 class OperationsController extends Controller
 {
-    /** Record workspace equipment: riwayat meter, fuel, MWO. */
-    public function showEquipment(Request $request, Equipment $equipment, CurrentCompany $current)
+    /** Record workspace equipment: riwayat meter, fuel, MWO, biaya per jam. */
+    public function showEquipment(Request $request, Equipment $equipment, CurrentCompany $current, EquipmentCostService $costs)
     {
         abort_unless($equipment->company_id === $current->id(), 404);
+        [$from, $to] = $this->costPeriod($request);
 
         return view('operations.equipment-show', [
             'equipment' => $equipment,
             'meters' => $equipment->meterLogs()->latest('recorded_at')->limit(12)->get(),
             'fuels' => $equipment->fuelUsages()->latest('used_at')->limit(12)->get(),
             'workOrders' => MaintenanceWorkOrder::where('equipment_id', $equipment->id)->latest()->limit(15)->get(),
+            'costSummary' => $costs->summary($equipment, $from, $to),
+            'costFrom' => $from, 'costTo' => $to,
         ]);
     }
 
-    public function index(CurrentCompany $current)
+    /** Periode biaya dari query string; default 30 hari terakhir. */
+    private function costPeriod(Request $request): array
+    {
+        $data = $request->validate(['cost_from' => ['nullable', 'date'], 'cost_to' => ['nullable', 'date', 'after_or_equal:cost_from']]);
+        $to = CarbonImmutable::parse($data['cost_to'] ?? now()->toDateString())->endOfDay();
+        $from = CarbonImmutable::parse($data['cost_from'] ?? $to->subDays(29)->toDateString())->startOfDay();
+
+        return [$from, $to];
+    }
+
+    public function index(Request $request, CurrentCompany $current, EquipmentCostService $costs)
     {
         $id = $current->id();
+        [$from, $to] = $this->costPeriod($request);
+        $equipment = Equipment::where('company_id', $id)->orderBy('code')->get();
 
-        return view('operations.index', ['items' => Item::where('company_id', $id)->orderBy('name')->get(), 'warehouses' => Warehouse::where('company_id', $id)->with('bins')->get(), 'boms' => BillOfMaterial::where('company_id', $id)->with('items')->latest()->get(), 'orders' => ProductionOrder::where('company_id', $id)->with('bom')->latest()->get(), 'equipment' => Equipment::where('company_id', $id)->orderBy('code')->get(), 'workOrders' => MaintenanceWorkOrder::where('company_id', $id)->latest()->limit(50)->get(), 'fuelUsages' => FuelUsage::where('company_id', $id)->with('equipment')->latest('used_at')->limit(50)->get(), 'fuelTanks' => FuelTank::where('company_id', $id)->where('is_active', true)->orderBy('code')->get()]);
+        return view('operations.index', ['items' => Item::where('company_id', $id)->orderBy('name')->get(), 'warehouses' => Warehouse::where('company_id', $id)->with('bins')->get(), 'boms' => BillOfMaterial::where('company_id', $id)->with('items')->latest()->get(), 'orders' => ProductionOrder::where('company_id', $id)->with('bom')->latest()->get(), 'equipment' => $equipment, 'workOrders' => MaintenanceWorkOrder::where('company_id', $id)->latest()->limit(50)->get(), 'fuelUsages' => FuelUsage::where('company_id', $id)->with('equipment')->latest('used_at')->limit(50)->get(), 'fuelTanks' => FuelTank::where('company_id', $id)->where('is_active', true)->orderBy('code')->get(), 'costSummaries' => $costs->summariesFor($id, $from, $to), 'costFrom' => $from, 'costTo' => $to]);
     }
 
     public function bom(Request $request, CurrentCompany $current)
@@ -87,13 +104,13 @@ class OperationsController extends Controller
     public function fuel(Request $request, Equipment $equipment, CurrentCompany $current, EquipmentService $service)
     {
         abort_unless($equipment->company_id === $current->id(), 404);
-        $data = $request->validate(['liters' => ['required', 'decimal:0,4', 'gt:0'], 'start_meter' => ['required', 'decimal:0,2'], 'end_meter' => ['required', 'decimal:0,2', 'gt:start_meter'], 'reference' => ['required', 'max:80'], 'fuel_tank_id' => ['nullable', 'integer']]);
+        $data = $request->validate(['liters' => ['required', 'decimal:0,4', 'gt:0'], 'unit_cost' => ['nullable', 'decimal:0,4', 'min:0'], 'start_meter' => ['required', 'decimal:0,2'], 'end_meter' => ['required', 'decimal:0,2', 'gt:start_meter'], 'reference' => ['required', 'max:80'], 'fuel_tank_id' => ['nullable', 'integer']]);
         if (! empty($data['fuel_tank_id'])) {
             abort_unless(FuelTank::where('company_id', $current->id())->where('is_active', true)->whereKey($data['fuel_tank_id'])->exists(), 422);
         } else {
             unset($data['fuel_tank_id']);
         }
-        $service->recordFuel($equipment, $data['liters'], $data['start_meter'], $data['end_meter'], $data['reference'], $request->user(), null, $data['fuel_tank_id'] ?? null);
+        $service->recordFuel($equipment, $data['liters'], $data['start_meter'], $data['end_meter'], $data['reference'], $request->user(), null, $data['fuel_tank_id'] ?? null, $data['unit_cost'] ?? null);
 
         return back()->with('status', 'Fuel dan rasio LPH dicatat.');
     }
