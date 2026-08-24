@@ -34,4 +34,10 @@ class FieldEvidence extends Model
     {
         return $this->belongsTo(User::class, 'uploaded_by');
     }
+
+    /** Metadata file terstruktur (ADR-048) — binary fisik di object storage. */
+    public function storedFile(): BelongsTo
+    {
+        return $this->belongsTo(StoredFile::class);
+    }
 }

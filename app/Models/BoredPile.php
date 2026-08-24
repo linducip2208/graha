@@ -2,13 +2,25 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasUuid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class BoredPile extends Model
 {
+    use HasUuid;
+
     protected $guarded = [];
+
+    protected static function booted(): void
+    {
+        // public_uuid = identifier QR publik yang immutable, terpisah dari PK.
+        static::creating(function (self $pile) {
+            $pile->public_uuid ??= $pile->uuid ?? (string) Str::uuid();
+        });
+    }
 
     protected function casts(): array
     {
@@ -32,5 +44,10 @@ class BoredPile extends Model
     public function activities(): HasMany
     {
         return $this->hasMany(BoredPileActivity::class);
+    }
+
+    public function files(): HasMany
+    {
+        return $this->hasMany(StoredFile::class)->whereNull('original_file_id');
     }
 }

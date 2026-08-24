@@ -34,6 +34,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SignatureController;
 use App\Http\Controllers\SignatureImageController;
 use App\Http\Controllers\StockOpnameController;
+use App\Http\Controllers\StoredFileController;
 use App\Http\Controllers\TaxController;
 use App\Http\Controllers\TenderController;
 use App\Http\Controllers\ToolController;
@@ -125,6 +126,8 @@ Route::middleware(['auth', 'company', 'permission:project.view'])->prefix('admin
     Route::get('/field-evidence/{evidence}/download', [FieldOpsController::class, 'downloadEvidence'])->name('evidence.download');
     Route::get('/field-evidence/{evidence}/file', [FieldOpsController::class, 'fileEvidence'])->name('evidence.file');
     Route::get('/bored-piles/{pile}/genealogy', [PileGenealogyController::class, 'show'])->name('piles.genealogy');
+    Route::get('/files/{file}/preview', [StoredFileController::class, 'preview'])->name('files.preview');
+    Route::get('/files/{file}/download', [StoredFileController::class, 'download'])->name('files.download');
     Route::get('/bored-piles/{pile}/as-built', [PileGenealogyController::class, 'asBuilt'])->name('piles.as-built');
     Route::get('/projects/{project}/piles-as-built', [PileGenealogyController::class, 'batchAsBuilt'])->name('piles.as-built.batch');
     Route::post('/project-zones', [ProjectController::class, 'zone'])->middleware('permission:project.manage');

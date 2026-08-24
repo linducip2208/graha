@@ -10,6 +10,9 @@ use App\Models\ConcreteDelivery;
 use App\Models\FieldEvidence;
 use App\Models\PileTest;
 use App\Models\User;
+use App\Services\Storage\EvidenceStorageService;
+use App\Services\Storage\FileValidationService;
+use App\Services\Storage\GenericEvidenceStorage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -159,32 +162,52 @@ class FieldOpsService
         }, 3);
     }
 
-    /** Simpan foto evidence ke disk privat configurable (local/R2) dengan whitelist MIME dan batas 5 MB. */
+    /** Simpan foto evidence ke disk privat configurable (local/R2/S3) dengan validasi konten, checksum SHA-256, dan varian thumb/preview. */
     public function storeEvidence(string $type, int $id, UploadedFile $file, User $actor): FieldEvidence
     {
         $class = FieldEvidence::TYPES[$type] ?? throw ValidationException::withMessages(['evidence' => 'Jenis evidence tidak dikenal.']);
         $subject = $class::query()->findOrFail($id);
         $companyId = $subject->company_id ?? $subject->project?->company_id;
         throw_unless($actor->companies()->whereKey($companyId)->where('company_user.is_active', true)->exists(), ValidationException::withMessages(['company' => 'Anda bukan anggota aktif perusahaan ini.']));
-        throw_unless($file->isValid(), ValidationException::withMessages(['file' => 'Berkas tidak valid.']));
-        throw_unless(in_array($file->getMimeType(), ['image/jpeg', 'image/png', 'image/webp'], true), ValidationException::withMessages(['file' => 'Hanya JPG/PNG/WebP yang diizinkan.']));
-        throw_if($file->getSize() > 5 * 1024 * 1024, ValidationException::withMessages(['file' => 'Ukuran maksimal 5 MB.']));
 
-        $disk = (string) config('filesystems.evidence', 'local');
+        // Validasi konten terpusat (magic bytes + batas ukuran configurable).
+        app(FileValidationService::class)->validateImage($file);
+
+        $disk = (string) config('objectstorage.evidence_disk', config('filesystems.evidence', 'local'));
         throw_unless(array_key_exists($disk, config('filesystems.disks', [])), ValidationException::withMessages(['file' => "Disk evidence '{$disk}' tidak dikenal."]));
-        $path = $file->store("evidence/{$companyId}/{$type}/{$id}", $disk);
 
-        return FieldEvidence::create([
-            'company_id' => $companyId,
-            'evidence_type' => $type,
-            'evidence_id' => $id,
-            'disk_path' => $path,
-            'disk' => $disk,
-            'original_name' => $file->getClientOriginalName(),
-            'mime' => $file->getMimeType(),
-            'size_kb' => (int) ceil($file->getSize() / 1024),
-            'uploaded_by' => $actor->id,
-        ]);
+        return DB::transaction(function () use ($type, $subject, $companyId, $file, $actor, $disk) {
+            $pile = null;
+            if ($subject instanceof BoredPile) {
+                $pile = $subject;
+            } elseif ($subject->bored_pile_id ?? null) {
+                $pile = BoredPile::find($subject->bored_pile_id);
+            }
+            if ($pile !== null && filled($pile->public_uuid)) {
+                $category = match ($type) {
+                    'drilling' => 'drilling',
+                    'delivery' => 'concrete',
+                    'test' => 'testing',
+                    default => 'other',
+                };
+                $stored = app(EvidenceStorageService::class)->storePilePhoto($pile, $category, $file, $actor);
+            } else {
+                $stored = app(GenericEvidenceStorage::class)->store($companyId, $type, $subject, $file, $actor);
+            }
+
+            return FieldEvidence::create([
+                'company_id' => $companyId,
+                'evidence_type' => $type,
+                'evidence_id' => $subject->id,
+                'disk_path' => $stored->object_key,
+                'disk' => $disk,
+                'original_name' => $stored->original_name,
+                'mime' => $stored->mime_type,
+                'size_kb' => (int) ceil($stored->size_bytes / 1024),
+                'uploaded_by' => $actor->id,
+                'stored_file_id' => $stored->id,
+            ]);
+        }, 3);
     }
 
     public function completionGate(BoredPile $pile): void
