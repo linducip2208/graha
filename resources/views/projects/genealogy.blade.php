@@ -2,7 +2,8 @@
 <section class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 <x-ui.page-header title="Genealogi {{ $pile->pile_number }}" subtitle="{{ $pile->project->code }} — {{ $pile->project->name }} · Zona {{ $pile->zone?->name ?? '-' }} · Ø{{ $pile->diameter_mm }} mm" status="{{ str($pile->status)->replace('_',' ') }}">
 <div class="flex flex-wrap gap-2 no-print">
-<a href="{{ route('piles.as-built', $pile) }}" class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white">Unduh As-Built PDF</a>
+<a href="{{ route('piles.passport', $pile) }}" class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white">Pile Passport</a>
+<a href="{{ route('piles.as-built', $pile) }}" class="rounded-xl border px-4 py-2 text-sm font-semibold">Unduh As-Built PDF</a>
 <a href="{{ route('piles.as-built.batch', $pile->project_id) }}" class="rounded-xl border px-4 py-2 text-sm font-semibold">Batch semua pile</a>
 </div>
 </x-ui.page-header>

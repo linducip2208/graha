@@ -24,6 +24,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OperationsController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PileGenealogyController;
+use App\Http\Controllers\PilePassportController;
 use App\Http\Controllers\ProcurementController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectCostingController;
@@ -45,6 +46,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
+Route::get('/piles/{publicUuid}', [PilePassportController::class, 'publicEntry'])->name('piles.public');
 Route::view('/docs', 'docs')->name('docs');
 Route::view('/login', 'auth.login')->middleware('guest')->name('login');
 Route::post('/login', function (Request $r) {
@@ -126,6 +128,8 @@ Route::middleware(['auth', 'company', 'permission:project.view'])->prefix('admin
     Route::get('/field-evidence/{evidence}/download', [FieldOpsController::class, 'downloadEvidence'])->name('evidence.download');
     Route::get('/field-evidence/{evidence}/file', [FieldOpsController::class, 'fileEvidence'])->name('evidence.file');
     Route::get('/bored-piles/{pile}/genealogy', [PileGenealogyController::class, 'show'])->name('piles.genealogy');
+    Route::get('/bored-piles/{pile}/passport', [PilePassportController::class, 'show'])->name('piles.passport');
+    Route::post('/bored-piles/{pile}/photos', [PilePassportController::class, 'uploadPhoto'])->middleware('permission:project.manage')->name('piles.photos.store');
     Route::get('/files/{file}/preview', [StoredFileController::class, 'preview'])->name('files.preview');
     Route::get('/files/{file}/download', [StoredFileController::class, 'download'])->name('files.download');
     Route::get('/bored-piles/{pile}/as-built', [PileGenealogyController::class, 'asBuilt'])->name('piles.as-built');
