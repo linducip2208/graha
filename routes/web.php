@@ -171,6 +171,7 @@ Route::middleware(['auth', 'company', 'permission:tender.view'])->prefix('admin'
 });
 Route::middleware(['auth', 'company', 'permission:document.view'])->prefix('admin')->group(function () {
     Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
+    Route::get('/documents/{document}', [DocumentController::class, 'show'])->name('documents.show');
     Route::post('/documents', [DocumentController::class, 'store'])->middleware('permission:document.manage')->name('documents.store');
     Route::get('/document-versions/{version}/download', [DocumentController::class, 'download'])->name('documents.download');
 });

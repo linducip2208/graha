@@ -24,8 +24,10 @@
 @php($navGroups = \App\Support\Navigation::groups(auth()->user(), $cid))
 @php($berandaGroup = $navGroups->firstWhere('key', 'beranda'))
 @php($appGroups = $navGroups->filter(fn ($g) => $g['key'] !== 'beranda' && $g['key'] !== 'pengaturan' && $g['items']->isNotEmpty()))
-@php($sistemItems = $navGroups->firstWhere('key', 'pengaturan')?->items ?? collect())
+@php($sistemGroup = $navGroups->firstWhere('key', 'pengaturan'))
 @php($path = request()->getPathInfo())
+@php($activeWorkspace = \App\Support\Navigation::activeGroupKey($appGroups, $path))
+@php($wsIcons = ['komersial' => 'flag', 'proyek' => 'cube', 'supply-chain' => 'archive', 'operations' => 'cog', 'keuangan' => 'banknote', 'quality-hse' => 'shield', 'documents-approval' => 'document', 'laporan' => 'chart'])
 @php($initials = collect(explode(' ', trim(auth()->user()->name)))->filter()->take(2)->map(fn ($w) => mb_strtoupper(mb_substr($w, 0, 1)))->implode(''))
 <div class="min-h-screen lg:grid lg:grid-cols-[232px_1fr] print:block">
 <aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-40 flex w-[256px] -translate-x-full flex-col overflow-y-auto border-r transition-transform lg:sticky lg:top-0 lg:h-screen lg:w-auto lg:translate-x-0 print:hidden">
@@ -40,8 +42,8 @@
 </div>
 <nav class="flex-1 space-y-0.5 px-3 pb-4 text-sm">
 <p class="shell-section">Beranda</p>
-@foreach(($berandaGroup?->items ?? collect()) as $item)
-<a href="{{ $item['href'] }}" class="shell-link {{ str_starts_with($path, $item['href']) ? 'active' : '' }}"><x-ui.icon :name="$item['icon'] ?? 'dashboard'" class="h-[18px] w-[18px]" /><span class="truncate">{{ $item['label'] }}</span></a>
+@foreach(($berandaGroup['items'] ?? collect())->filter(fn ($item) => ($item['href'] ?? '') !== '/apps') as $item)
+<a href="{{ $item['href'] }}" class="shell-link {{ \App\Support\Navigation::isPathActive($item['href'], $path) ? 'active' : '' }}"><x-ui.icon :name="$item['icon'] ?? 'dashboard'" class="h-[18px] w-[18px]" /><span class="truncate">{{ $item['label'] }}</span></a>
 @endforeach
 @if($shellFavorites->isNotEmpty())
 <p class="shell-section">Favorit</p>
@@ -50,19 +52,37 @@
 @endforeach
 @endif
 <p class="shell-section">Aplikasi</p>
+<div id="workspace-nav" data-active-workspace="{{ $activeWorkspace }}">
 @foreach($appGroups as $group)
-@php($base = $group['items']->first()['href'])
-@php($active = $base !== '/dashboard' && str_starts_with($path, $base) || ($base === '/dashboard' && $path === '/dashboard'))
-<a href="{{ $base }}" class="shell-link {{ $active ? 'active' : '' }}"><x-ui.icon :name="$group['items']->first()['icon'] ?? 'grid'" class="h-[18px] w-[18px]" /><span class="min-w-0"><span class="block truncate leading-tight">{{ preg_replace('/^[^\p{L}\d]+/u', '', $group['label']) }}</span><span class="block truncate text-[10px] font-medium leading-tight text-[var(--text-sidebar-muted)]">{{ $group['items']->first()['label'] }}</span></span></a>
+@php($wsKey = (string) ($group['key'] ?? str($group['label'])->slug()))
+@php($isActive = $wsKey === $activeWorkspace)
+<details class="ws-group{{ $isActive ? ' ws-active' : '' }}" data-ws-key="{{ $wsKey }}"@if($isActive) open @endif>
+<summary class="ws-row"><x-ui.icon :name="$wsIcons[$wsKey] ?? ($group['items']->first()['icon'] ?? 'grid')" class="h-[18px] w-[18px]" /><span class="min-w-0 flex-1 truncate">{{ preg_replace('/^[^\p{L}\d]+/u', '', $group['label']) }}</span><x-ui.icon name="chevron-down" class="ws-chevron h-4 w-4" /></summary>
+<div class="ws-body">
+@php($activeItems = \App\Support\Navigation::activeItems($group, $path))
+@foreach($group['items'] as $item)
+@php($selfActive = $activeItems->contains(fn ($m) => ($m['item']['href'] ?? null) === $item['href']))
+@php($childActive = ! empty($item['children']) && $activeItems->contains(fn ($m) => collect($item['children'])->contains(fn ($c) => ($c['href'] ?? null) === ($m['item']['href'] ?? null))))
+<a href="{{ $item['href'] }}" class="ws-link{{ $selfActive ? ' active' : '' }}">{{ $item['label'] }}</a>
+@if(! empty($item['children']) && ($selfActive || $childActive))
+@foreach($item['children'] as $child)
+<a href="{{ $child['href'] }}" class="ws-sublink{{ $activeItems->contains(fn ($m) => ($m['item']['href'] ?? null) === $child['href']) ? ' active' : '' }}">{{ $child['label'] }}</a>
 @endforeach
-@if($sistemItems->isNotEmpty())
+@endif
+@endforeach
+</div>
+</details>
+@endforeach
+<a href="/apps" class="ws-apps-footer"><x-ui.icon name="grid" class="h-3.5 w-3.5" />Semua Aplikasi…</a>
+</div>
+@if($sistemGroup && $sistemGroup['items']->isNotEmpty())
 <p class="shell-section">Sistem</p>
-@foreach($sistemItems as $item)
-<a href="{{ $item['href'] }}" class="shell-link {{ str_starts_with($path, $item['href']) ? 'active' : '' }}"><x-ui.icon :name="$item['icon'] ?? 'cog'" class="h-[18px] w-[18px]" /><span class="truncate">{{ $item['label'] }}</span></a>
+@foreach($sistemGroup['items'] as $item)
+<a href="{{ $item['href'] }}" class="shell-link {{ \App\Support\Navigation::isPathActive($item['href'], $path) ? 'active' : '' }}"><x-ui.icon :name="$item['icon'] ?? 'cog'" class="h-[18px] w-[18px]" /><span class="truncate">{{ $item['label'] }}</span></a>
 @endforeach
 @endif
 </nav>
-<div class="sticky bottom-0 mt-auto border-t p-3" style="border-color:var(--border-subtle)">
+<div class="sticky bottom-0 mt-auto border-t p-3" style="border-color:var(--border-subtle);background:var(--surface-sidebar,#ffffff)">
 @if($shellMemberships->count() > 1)
 <details class="dropdown">
 <summary class="flex cursor-pointer list-none items-center gap-2.5 rounded-xl p-2 transition hover:bg-[var(--surface-muted)]">

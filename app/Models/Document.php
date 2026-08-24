@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Document extends Model
 {
@@ -23,5 +24,10 @@ class Document extends Model
     public function versions(): HasMany
     {
         return $this->hasMany(DocumentVersion::class)->orderByDesc('version');
+    }
+
+    public function approvalRequests(): MorphMany
+    {
+        return $this->morphMany(ApprovalRequest::class, 'approvable')->latest('submitted_at');
     }
 }

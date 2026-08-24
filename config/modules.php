@@ -19,38 +19,36 @@ return [
             ['label' => 'Administrasi Kontrak', 'href' => '/admin/contracts', 'icon' => 'document', 'permission' => 'contract.view'],
         ]],
         ['key' => 'proyek', 'label' => '🏗️ Proyek', 'items' => [
-            ['label' => 'Proyek, Gantt & Kurva-S', 'href' => '/admin/projects', 'icon' => 'cube', 'permission' => 'project.view'],
+            ['label' => 'Daftar Proyek & Gantt', 'href' => '/admin/projects', 'icon' => 'cube', 'permission' => 'project.view'],
             ['label' => 'Field Operations', 'href' => '/admin/projects/field-ops', 'icon' => 'wrench', 'permission' => 'project.view', 'children' => [
                 ['label' => 'Drilling Record & Bore Log', 'href' => '/admin/projects/field-ops#drilling'],
                 ['label' => 'Delivery Beton (Slump)', 'href' => '/admin/projects/field-ops#concrete'],
                 ['label' => 'Pile Testing', 'href' => '/admin/projects/field-ops#testing'],
             ]],
+            ['label' => 'Foundation Control', 'href' => '/admin/projects#foundation', 'icon' => 'shield', 'permission' => 'project.view'],
         ]],
         ['key' => 'supply-chain', 'label' => '📦 Supply Chain', 'items' => [
-            ['label' => 'Inventory & Gudang', 'href' => '/admin/inventory', 'icon' => 'archive', 'permission' => 'inventory.view', 'children' => [
+            ['label' => 'Inventory', 'href' => '/admin/inventory', 'icon' => 'archive', 'permission' => 'inventory.view', 'children' => [
                 ['label' => 'Stok Kritis', 'href' => '/admin/inventory#stok-kritis'],
-                ['label' => 'Stock Opname', 'href' => '/admin/inventory/opname'],
                 ['label' => 'Rekomendasi Reorder', 'href' => '/admin/inventory/reorder'],
-                ['label' => 'Permintaan Material Proyek', 'href' => '/admin/inventory/material-requests'],
-                ['label' => 'Tools Check-out', 'href' => '/admin/tools'],
             ]],
-            ['label' => 'Procurement', 'href' => '/admin/procurement', 'icon' => 'cart', 'permission' => 'procurement.view', 'children' => [
-                ['label' => 'Vendor, PO & Receipt', 'href' => '/admin/procurement'],
-                ['label' => 'RFQ & Perbandingan Harga', 'href' => '/admin/procurement/rfq'],
-            ]],
+            ['label' => 'Material Request', 'href' => '/admin/inventory/material-requests', 'icon' => 'swap', 'permission' => 'inventory.view'],
+            ['label' => 'Stock Opname', 'href' => '/admin/inventory/opname', 'icon' => 'check', 'permission' => 'inventory.view'],
+            ['label' => 'Lot Traceability', 'href' => '/admin/inventory/lots', 'icon' => 'search', 'permission' => 'inventory.view'],
+            ['label' => 'Tools Check-out', 'href' => '/admin/tools', 'icon' => 'wrench', 'permission' => 'inventory.view'],
+            ['label' => 'Procurement', 'href' => '/admin/procurement', 'icon' => 'cart', 'permission' => 'procurement.view'],
+            ['label' => 'RFQ & Perbandingan Harga', 'href' => '/admin/procurement/rfq', 'icon' => 'calculator', 'permission' => 'procurement.view'],
         ]],
         ['key' => 'operations', 'label' => '🏭 Workshop & Equipment', 'items' => [
             ['label' => 'Manufacturing Control', 'href' => '/admin/manufacturing', 'icon' => 'cog', 'permission' => 'manufacturing.view', 'children' => [
                 ['label' => 'Routing & Biaya Produksi', 'href' => '/admin/manufacturing/costing'],
                 ['label' => 'Quality Control Produksi', 'href' => '/admin/manufacturing/quality'],
                 ['label' => 'Output Ditolak & Disposition', 'href' => '/admin/manufacturing/nonconforming'],
-                ['label' => 'Reinforcement Cage', 'href' => '/admin/manufacturing/cages'],
-                ['label' => 'Casing Pile', 'href' => '/admin/casings'],
             ]],
-            ['label' => 'Equipment & Tangki BBM', 'href' => '/admin/fuel-tanks', 'icon' => 'wrench', 'permission' => 'equipment.view', 'children' => [
-                ['label' => 'Produksi & Equipment', 'href' => '/admin/operations'],
-                ['label' => 'Tangki BBM & Rekonsiliasi', 'href' => '/admin/fuel-tanks'],
-            ]],
+            ['label' => 'Reinforcement Cage', 'href' => '/admin/manufacturing/cages', 'icon' => 'grid', 'permission' => 'manufacturing.view'],
+            ['label' => 'Casing Pile', 'href' => '/admin/casings', 'icon' => 'archive', 'permission' => 'equipment.view'],
+            ['label' => 'Equipment & Produksi', 'href' => '/admin/operations', 'icon' => 'wrench', 'permission' => 'manufacturing.view'],
+            ['label' => 'Tangki BBM', 'href' => '/admin/fuel-tanks', 'icon' => 'percent', 'permission' => 'equipment.view'],
         ]],
         ['key' => 'keuangan', 'label' => '💰 Keuangan', 'items' => [
             ['label' => 'Ikhtisar Keuangan', 'href' => '/admin/finance/overview', 'icon' => 'pie', 'permission' => 'finance.view'],
@@ -88,10 +86,8 @@ return [
             ['label' => 'AR/AP Aging', 'href' => '/admin/reports/aging', 'icon' => 'clock', 'permission' => 'report.view'],
         ]],
         ['key' => 'pengaturan', 'label' => '⚙️ Pengaturan', 'items' => [
-            ['label' => 'Perusahaan & Role', 'href' => '/admin/organization', 'icon' => 'building', 'permission' => 'organization.view', 'children' => [
-                ['label' => 'Perusahaan & Cabang', 'href' => '/admin/organization'],
-                ['label' => 'Role & Permission', 'href' => '/admin/organization/roles'],
-            ]],
+            ['label' => 'Perusahaan & Cabang', 'href' => '/admin/organization', 'icon' => 'building', 'permission' => 'organization.view'],
+            ['label' => 'Role & Permission', 'href' => '/admin/organization/roles', 'icon' => 'user', 'permission' => 'organization.view'],
             ['label' => 'Pengaturan Perusahaan', 'href' => '/admin/settings', 'icon' => 'cog'],
             ['label' => 'Notifikasi', 'href' => '/admin/notifications', 'icon' => 'bell'],
         ]],

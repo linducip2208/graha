@@ -45,7 +45,7 @@ class InventoryController extends Controller
         return view('inventory.lot-trace', ['lot' => $lot, 'movements' => $movements]);
     }
 
-    public function index(CurrentCompany $current)
+    public function index(Request $request, CurrentCompany $current)
     {
         $lowStock = StockBalance::where('stock_balances.company_id', $current->id())->join('items', 'items.id', '=', 'stock_balances.item_id')->whereColumn('stock_balances.quantity', '<=', 'items.minimum_stock')->select('stock_balances.*')->with(['item', 'warehouse', 'bin'])->get();
         $balances = StockBalance::where('company_id', $current->id())->with(['item', 'warehouse', 'bin']);

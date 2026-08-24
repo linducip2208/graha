@@ -55,6 +55,9 @@ table th,table td{padding:.8rem 1rem;text-align:left;border-bottom:1px solid #e2
 .tab-link.active{border-color:transparent;background:var(--brand-700);color:#fff;box-shadow:0 6px 18px -8px rgba(3,105,161,.55)}
 .chip{display:inline-flex;align-items:center;gap:.25rem;border-radius:9999px;padding:.3rem .75rem;font-size:.75rem;font-weight:700}
 .chip-active{background:#e0f2fe;color:#075985;border:1px solid #7dd3fc}
+.chip-approved{background:#ecfdf5;color:#059669;border:1px solid #6ee7b7}
+.chip-draft{background:#fffbeb;color:#d97706;border:1px solid #fcd34d}
+.chip-signed{background:#f5f3ff;color:#7c3aed;border:1px solid #c4b5fd}
 .dark .tab-link{background:#16233c;border-color:#2a3a5c;color:#b6c2d4}
 .dark .tab-link.active{background:linear-gradient(90deg,#075985,#0e7490);color:#fff}
 .dark .chip-active{background:#0c3a52;color:#7dd3fc;border-color:#0ea5e9}
@@ -132,3 +135,43 @@ main input:user-invalid:not(:placeholder-shown),main select:user-invalid,main te
 ::-webkit-scrollbar-thumb:hover{background:#94a3b8;border:2px solid transparent;background-clip:content-box}
 .dark ::-webkit-scrollbar-thumb{background:#2a3a5c;border:2px solid transparent;background-clip:content-box}
 .dark ::-webkit-scrollbar-thumb:hover{background:#3b4f78}
+
+/* ===== Adaptive Workspace Navigation (ADR-077) ===== */
+/* Accordion workspace: default collapsed, auto-expanded saat route di dalamnya.
+   Progressive disclosure — bukan penghapusan akses. */
+#workspace-nav .ws-group{margin-bottom:2px}
+#workspace-nav .ws-row{display:flex;align-items:center;gap:.65rem;min-height:38px;list-style:none;cursor:pointer;user-select:none;border-radius:var(--radius-control);padding:.55rem .7rem;font-size:.83rem;font-weight:600;color:var(--text-sidebar);transition:background .15s,color .15s}
+#workspace-nav .ws-row::-webkit-details-marker{display:none}
+#workspace-nav .ws-row:hover{background:color-mix(in srgb,var(--brand-primary) 7%,transparent);color:var(--brand-primary)}
+#workspace-nav .ws-group.ws-active>.ws-row{background:var(--surface-sidebar-active);color:var(--brand-primary);font-weight:700}
+#workspace-nav .ws-chevron{flex-shrink:0;margin-left:auto;color:var(--text-sidebar-muted);transition:transform .2s}
+#workspace-nav .ws-group[open] .ws-chevron{transform:rotate(180deg)}
+#workspace-nav .ws-body{display:flex;flex-direction:column;gap:1px;margin:2px 0 6px;padding-left:.85rem;border-left:2px solid var(--border-subtle)}
+#workspace-nav .ws-link,#workspace-nav .ws-sublink{position:relative;display:flex;align-items:center;min-height:34px;border-radius:.6rem;padding:.35rem .6rem;font-size:.79rem;font-weight:500;color:var(--text-sidebar-muted);transition:background .15s,color .15s}
+#workspace-nav .ws-sublink{min-height:30px;margin-left:1rem;font-size:.74rem;padding-left:.9rem}
+#workspace-nav .ws-link:hover,#workspace-nav .ws-sublink:hover{background:color-mix(in srgb,var(--brand-primary) 6%,transparent);color:var(--brand-primary)}
+#workspace-nav .ws-link.active,#workspace-nav .ws-sublink.active{background:color-mix(in srgb,var(--brand-primary) 12%,transparent);color:var(--brand-primary);font-weight:700}
+#workspace-nav .ws-link.active::before,#workspace-nav .ws-sublink.active::before{content:'';position:absolute;left:-.85rem;top:50%;width:2px;height:60%;transform:translateY(-50%);border-radius:2px;background:var(--brand-primary)}
+#workspace-nav .ws-apps-footer{display:flex;align-items:center;gap:.5rem;margin-top:.35rem;padding:.4rem .7rem;border-radius:var(--radius-control);font-size:.72rem;font-weight:700;color:var(--text-sidebar-muted)}
+#workspace-nav .ws-apps-footer:hover{color:var(--brand-primary);background:color-mix(in srgb,var(--brand-primary) 6%,transparent)}
+.dark #workspace-nav .ws-row{color:#cbd5e1}
+.dark #workspace-nav .ws-group.ws-active>.ws-row{color:#fff;background:color-mix(in srgb,var(--brand-primary) 30%,transparent)}
+.dark #workspace-nav .ws-body{border-left-color:#22304d}
+.dark #workspace-nav .ws-link,.dark #workspace-nav .ws-sublink{color:#8fa3bd}
+.dark #workspace-nav .ws-link.active,.dark #workspace-nav .ws-sublink.active{color:#fff;background:color-mix(in srgb,var(--brand-primary) 32%,transparent)}
+
+/* Touch target mobile (WCAG 2.5.5): workspace parent ≥44px, child ≥40px */
+@media (pointer:coarse){#workspace-nav .ws-row{min-height:44px}#workspace-nav .ws-link{min-height:40px}#workspace-nav .ws-sublink{min-height:36px}}
+
+/* ===== Standard page container (enterprise width) ===== */
+.page-container{width:100%;max-width:1560px;margin-inline:auto;padding:clamp(18px,2.6vw,30px)}
+@media print{.page-container{max-width:none;padding:0}}
+
+/* ===== Drawer (create/panel samping) ===== */
+.drawer-root{position:fixed;inset:0;z-index:60;display:flex;justify-content:flex-end}
+.drawer-root[hidden]{display:none}
+.drawer-overlay{position:absolute;inset:0;background:rgba(2,6,23,.55)}
+.drawer-panel{position:relative;z-index:1;display:flex;width:min(520px,100vw);height:100%;flex-direction:column;background:var(--surface-card);box-shadow:var(--shadow-modal);animation:drawerIn .28s cubic-bezier(.16,1,.3,1)}
+.drawer-body{flex:1;overflow-y:auto;padding:20px}
+@keyframes drawerIn{from{transform:translateX(28px);opacity:.5}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.drawer-panel{animation:none}}

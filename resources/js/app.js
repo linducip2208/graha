@@ -3,7 +3,6 @@ const sidebar=document.querySelector('#admin-sidebar');const overlay=document.qu
 const toastRoot=document.querySelector('#toast-root');const showToast=(message,tone)=>{if(!message||!toastRoot)return;const el=document.createElement('div');el.className=`toast-item ${tone==='error'?'bg-red-600':'bg-slate-900'}`;el.innerHTML=`<span>${tone==='error'?'⚠️':'✅'}</span><span></span>`;el.lastChild.textContent=message;toastRoot.append(el);setTimeout(()=>{el.style.transition='opacity .4s';el.style.opacity='0';setTimeout(()=>el.remove(),400)},5000)};
 showToast(document.body.dataset.flash,'success');showToast(document.body.dataset.flashError,'error');
 const uiCopy={
-'Document Control':['Pengendalian Dokumen dan Riwayat Revisi','Daftarkan dokumen, pertahankan versi lama, dan pastikan pengguna selalu memakai revisi yang berlaku.'],
 'Inventory & Gudang':['Persediaan Material dan Operasi Gudang','Kelola material, lokasi penyimpanan, saldo, serta setiap penerimaan dan pengeluaran yang dapat ditelusuri.'],
 'Master Item & Gudang':['Tambah Material, Gudang, dan Lokasi Penyimpanan','Membuat master material beserta gudang dan bin awal sebelum transaksi stok dilakukan.'],
 'Posting Movement':['Catat Penerimaan atau Pengeluaran Stok','Membukukan perubahan stok ke ledger immutable; pilih jenis transaksi sesuai dokumen sumber.'],
@@ -36,6 +35,19 @@ const uiCopy={
 document.querySelectorAll('h1,h2').forEach((heading)=>{const key=heading.textContent.trim();const copy=uiCopy[key];if(!copy)return;heading.textContent=copy[0];if(copy[1]&&!heading.nextElementSibling?.classList.contains('ui-purpose')){const purpose=document.createElement('p');purpose.className='ui-purpose mt-1 text-sm text-slate-500';purpose.textContent=copy[1];heading.after(purpose)}});
 document.querySelectorAll('main div').forEach((workspace)=>{const forms=[...workspace.children].filter((element)=>element.tagName==='FORM'&&!element.closest('.nav-details'));if(forms.length<2)return;workspace.classList.add('workspace-tools');const toolbar=document.createElement('div');toolbar.className='workspace-toolbar no-print';forms.forEach((form,index)=>{form.classList.add('workspace-tool-panel');form.hidden=true;const button=document.createElement('button');button.type='button';button.className='workspace-tool-button';button.textContent=form.querySelector('h2')?.textContent?.trim()||form.querySelector('button')?.textContent?.trim()||`Aksi ${index+1}`;button.addEventListener('click',()=>{const willOpen=form.hidden;forms.forEach((item)=>{item.hidden=true});toolbar.querySelectorAll('button').forEach((item)=>item.classList.remove('active'));if(willOpen){form.hidden=false;button.classList.add('active');form.scrollIntoView({behavior:'smooth',block:'nearest'})}});toolbar.append(button)});toolbar.querySelector('button')?.click();workspace.before(toolbar)});
 document.querySelectorAll('details.nav-group').forEach((d)=>{const k='navgrp:'+(d.dataset.group||'');if(localStorage.getItem(k)==='0')d.open=false;d.addEventListener('toggle',()=>localStorage.setItem(k,d.open?'1':'0'))});
+
+// ===== Adaptive Workspace Navigation (accordion): buka satu workspace menutup lainnya =====
+const wsNav=document.querySelector('#workspace-nav');
+if(wsNav){wsNav.querySelectorAll('details.ws-group').forEach((d)=>{d.addEventListener('toggle',()=>{if(d.open){wsNav.querySelectorAll('details.ws-group[open]').forEach((o)=>{if(o!==d)o.open=false})}})})}
+
+// ===== Drawer (create panel samping): [data-drawer-open="id"] / [data-drawer-close] =====
+document.addEventListener('click',(e)=>{
+const opener=e.target.closest('[data-drawer-open]');
+if(opener){e.preventDefault();const drawer=document.getElementById(opener.dataset.drawerOpen);if(drawer){drawer.hidden=false;const field=drawer.querySelector('input:not([type=hidden]):not([type=file]),select,textarea');if(field)field.focus()}return}
+const closer=e.target.closest('[data-drawer-close]');
+if(closer){const root=closer.closest('.drawer-root');if(root)root.hidden=true}
+});
+document.addEventListener('keydown',(e)=>{if(e.key!=='Escape')return;if(document.querySelector('#confirm-modal:not([hidden])'))return;document.querySelectorAll('.drawer-root:not([hidden])').forEach((d)=>d.hidden=true)});
 
 // ===== Workspace UX: global search (Ctrl+K), quick create, recent views =====
 const palette=document.getElementById('search-palette');const searchInput=document.getElementById('search-input');const searchResults=document.getElementById('search-results');

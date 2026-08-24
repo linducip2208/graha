@@ -20,24 +20,28 @@ class TaxController extends Controller
     {
         $companyId = $current->id();
         $year = (int) ($request->query('year', now()->year));
+        // Ekspresi bulanan/tahunan lintas driver: MySQL MONTH()/YEAR(), SQLite strftime.
+        $isSqlite = DB::getDriverName() === 'sqlite';
+        $monthOf = fn (string $column): string => $isSqlite ? "CAST(strftime('%m', {$column}) AS INTEGER)" : "MONTH({$column})";
+        $yearOf = fn (string $column): string => $isSqlite ? "CAST(strftime('%Y', {$column}) AS INTEGER)" : "YEAR({$column})";
 
         $ppnOut = ProgressBilling::where('company_id', $companyId)->where('status', 'posted')
             ->whereYear('billing_date', $year)
-            ->selectRaw('MONTH(billing_date) as month, SUM(gross_amount) as dpp, SUM(tax_amount) as tax')
-            ->groupBy(DB::raw('MONTH(billing_date)'))->orderBy(DB::raw('MONTH(billing_date)'))->get();
+            ->selectRaw("{$monthOf('billing_date')} as month, SUM(gross_amount) as dpp, SUM(tax_amount) as tax")
+            ->groupBy(DB::raw($monthOf('billing_date')))->orderBy(DB::raw($monthOf('billing_date')))->get();
         $ppnIn = VendorInvoice::where('company_id', $companyId)->where('match_status', 'matched')
             ->whereYear('invoice_date', $year)
             ->whereIn('id', Journal::where('company_id', $companyId)->where('source_type', 'vendor_invoice')->where('status', 'posted')->select('source_id'))
-            ->selectRaw('MONTH(invoice_date) as month, SUM(subtotal) as dpp, SUM(tax_amount) as tax')
-            ->groupBy(DB::raw('MONTH(invoice_date)'))->orderBy(DB::raw('MONTH(invoice_date)'))->get();
+            ->selectRaw("{$monthOf('invoice_date')} as month, SUM(subtotal) as dpp, SUM(tax_amount) as tax")
+            ->groupBy(DB::raw($monthOf('invoice_date')))->orderBy(DB::raw($monthOf('invoice_date')))->get();
         $withheldFromUs = CustomerReceipt::where('company_id', $companyId)->where('status', 'posted')
             ->whereYear('receipt_date', $year)->where('withholding_amount', '>', 0)
-            ->selectRaw('MONTH(receipt_date) as month, SUM(withholding_amount) as tax, COUNT(*) as docs')
-            ->groupBy(DB::raw('MONTH(receipt_date)'))->orderBy(DB::raw('MONTH(receipt_date)'))->get();
+            ->selectRaw("{$monthOf('receipt_date')} as month, SUM(withholding_amount) as tax, COUNT(*) as docs")
+            ->groupBy(DB::raw($monthOf('receipt_date')))->orderBy(DB::raw($monthOf('receipt_date')))->get();
         $withheldToVendors = VendorPayment::where('company_id', $companyId)->where('status', 'posted')
             ->whereYear('payment_date', $year)->where('withholding_amount', '>', 0)
-            ->selectRaw('MONTH(payment_date) as month, SUM(withholding_amount) as tax, COUNT(*) as docs')
-            ->groupBy(DB::raw('MONTH(payment_date)'))->orderBy(DB::raw('MONTH(payment_date)'))->get();
+            ->selectRaw("{$monthOf('payment_date')} as month, SUM(withholding_amount) as tax, COUNT(*) as docs")
+            ->groupBy(DB::raw($monthOf('payment_date')))->orderBy(DB::raw($monthOf('payment_date')))->get();
 
         $months = [];
         foreach (range(1, 12) as $m) {
@@ -62,7 +66,7 @@ class TaxController extends Controller
 
         return view('taxes.index', [
             'year' => $year,
-            'years' => ProgressBilling::where('company_id', $companyId)->selectRaw('DISTINCT YEAR(billing_date) as y')->pluck('y')->merge([$year])->unique()->sortDesc()->values(),
+            'years' => ProgressBilling::where('company_id', $companyId)->selectRaw("DISTINCT {$yearOf('billing_date')} as y")->pluck('y')->merge([$year])->unique()->sortDesc()->values(),
             'months' => $months,
             'totals' => ['dpp_out' => $sum('dpp_out'), 'tax_out' => $sum('tax_out'), 'dpp_in' => $sum('dpp_in'), 'tax_in' => $sum('tax_in'), 'pph_received' => $sum('pph_received'), 'pph_paid' => $sum('pph_paid')],
             'rates' => TaxRate::where('company_id', $companyId)->orderBy('kind')->orderBy('code')->get(),

@@ -83,8 +83,12 @@ class DashboardController extends Controller
 
         $revenueTrend = null;
         if ($can('finance.view')) {
+            // Ekspresi bulanan lintas driver: MySQL DATE_FORMAT, SQLite strftime.
+            $ymExpression = DB::getDriverName() === 'sqlite'
+                ? "strftime('%Y-%m', billing_date)"
+                : "DATE_FORMAT(billing_date, '%Y-%m')";
             $revenueTrend = ProgressBilling::where('company_id', $companyId)->where('status', 'posted')->where('billing_date', '>=', now()->subMonths(5)->startOfMonth())
-                ->selectRaw("DATE_FORMAT(billing_date, '%Y-%m') as ym, SUM(gross_amount) as dpp, SUM(tax_amount) as tax")
+                ->selectRaw("{$ymExpression} as ym, SUM(gross_amount) as dpp, SUM(tax_amount) as tax")
                 ->groupBy('ym')->orderBy('ym')->get()
                 ->map(fn ($row) => ['label' => Carbon::createFromFormat('Y-m', $row->ym)->translatedFormat('M y'), 'dpp' => (float) $row->dpp, 'tax' => (float) $row->tax]);
         }

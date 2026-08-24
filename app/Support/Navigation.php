@@ -78,4 +78,101 @@ class Navigation
 
         return $module === 'other' || $visibleModules->isEmpty() || $visibleModules->contains($module);
     }
+
+    // ===== Adaptive Workspace Navigation (ADR-077) =====
+    // Resolver aktif reusable: mengecek group → item → children secara
+    // recursive. Sidebar display BUKAN authorization — direct route tetap
+    // divalidasi middleware permission backend.
+
+    /** Normalisasi path/href: buang query + fragment, rapikan trailing slash. */
+    public static function normalizePath(string $path): string
+    {
+        $path = trim(strtok($path, '#') ?: '', '?');
+        $path = strtok($path, '?') ?: '/';
+        if ($path !== '/') {
+            $path = rtrim($path, '/');
+        }
+
+        return $path === '' ? '/' : $path;
+    }
+
+    /** Path cocok dengan href? Exact atau prefix di batas segmen (/a/b vs /a/b/c ✓, /a/bc ✗). */
+    public static function isPathActive(string $href, string $path): bool
+    {
+        if ($href === '' || $href === '/' || str_contains($href, '#')) {
+            return false; // anchor in-page bukan halaman — tidak pernah auto-active.
+        }
+        $path = self::normalizePath($path);
+        $href = self::normalizePath($href);
+
+        return $path === $href || str_starts_with($path.'/', $href.'/');
+    }
+
+    /** Item aktif bila href-nya sendiri ATAU salah satu children-nya cocok. */
+    public static function isItemActive(array $item, string $path): bool
+    {
+        if (self::isPathActive((string) ($item['href'] ?? ''), $path)) {
+            return true;
+        }
+        foreach (self::nodes($item['children'] ?? []) as $child) {
+            if (self::isItemActive($child, $path)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Item-item dalam group yang aktif untuk path — hanya yang paling spesifik
+     * (href terpanjang) agar /admin/inventory tidak ikut menyala saat user di
+     * /admin/inventory/lots.
+     *
+     * @return Collection<int, array{item: array, depth: int}>
+     */
+    public static function activeItems(array $group, string $path): Collection
+    {
+        $matched = collect();
+        foreach (self::nodes($group['items'] ?? []) as $item) {
+            foreach (array_merge([$item], self::nodes($item['children'] ?? [])->all()) as $node => $candidate) {
+                $candidate = is_array($candidate) ? $candidate : ['href' => (string) $candidate];
+                if (self::isItemActive($candidate, $path)) {
+                    $matched->push(['item' => $candidate, 'depth' => $node === 0 ? 0 : 1]);
+                }
+            }
+        }
+        $deepest = $matched->max(fn (array $m) => mb_strlen(self::normalizePath((string) $m['item']['href'])));
+
+        return $matched->filter(fn (array $m) => mb_strlen(self::normalizePath((string) $m['item']['href'])) === $deepest)->values();
+    }
+
+    /** Group aktif bila SALAH SATU descendant-nya cocok dengan path. */
+    public static function isGroupActive(array $group, string $path): bool
+    {
+        foreach (self::nodes($group['items'] ?? []) as $item) {
+            if (self::isItemActive($item, $path)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** Normalisasi daftar node (array | Collection) tanpa (array)-cast yang merusak Collection. */
+    private static function nodes(mixed $list): Collection
+    {
+        return collect(Collection::wrap($list)->filter(fn ($node) => is_array($node))->values());
+    }
+
+    /** Key workspace yang aktif untuk path saat ini (null = tidak ada). */
+    public static function activeGroupKey(Collection $groups, string $path): ?string
+    {
+        foreach ($groups as $group) {
+            if (($group['key'] ?? null) && self::isGroupActive($group, $path)) {
+                return (string) $group['key'];
+            }
+        }
+
+        return null;
+    }
 }
