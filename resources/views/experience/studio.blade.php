@@ -71,14 +71,14 @@
 <fieldset class="rounded-xl border p-4"><legend class="px-2 text-sm font-bold">Navigation Composer & Istilah</legend>
 <div class="space-y-2">@foreach($navGroupsCfg as $idx => $group)
 <div class="flex flex-wrap items-center gap-2 text-sm">
-<input type="checkbox" name="nav_hidden[{{ $idx }}]" value="1" @checked(in_array($idx, $navConfig[''hidden''] ?? []))> <span class="w-56 truncate">{{ $group[''label''] }}</span>
-<input name="nav_labels[{{ $idx }}]" value="{{ $navConfig[''labels''][$idx] ?? '''' }}" placeholder="Ganti label (opsional)" class="flex-1 rounded-lg border p-1.5 text-xs">
+<input type="checkbox" name="nav_hidden[{{ $idx }}]" value="1" @checked(in_array($idx, $navConfig['hidden'] ?? []))> <span class="w-56 truncate">{{ $group['label'] }}</span>
+<input name="nav_labels[{{ $idx }}]" value="{{ $navConfig['labels'][$idx] ?? '' }}" placeholder="Ganti label (opsional)" class="flex-1 rounded-lg border p-1.5 text-xs">
 </div>
 @endforeach</div>
 <p class="mt-2 text-[11px] text-slate-400">Hide hanya menyembunyikan menu — permission backend tetap berlaku.</p>
 <div class="mt-3 grid gap-2 sm:grid-cols-2">
-@foreach([''Customer'' => ''Klien'', ''Vendor'' => ''Supplier'', ''Project'' => ''Pekerjaan'', ''Tender'' => ''Lelang'', ''Bored Pile'' => ''Titik Pondasi''] as $from => $ph)
-<label class="text-xs font-semibold">{{ $from }} → <input name="terminology[{{ $from }}]" value="{{ $terminologyMap[$from] ?? '''' }}" placeholder="{{ $ph }}" class="mt-1 w-full rounded-lg border p-1.5 text-xs"></label>
+@foreach(['Customer' => 'Klien', 'Vendor' => 'Supplier', 'Project' => 'Pekerjaan', 'Tender' => 'Lelang', 'Bored Pile' => 'Titik Pondasi'] as $from => $ph)
+<label class="text-xs font-semibold">{{ $from }} → <input name="terminology[{{ $from }}]" value="{{ $terminologyMap[$from] ?? '' }}" placeholder="{{ $ph }}" class="mt-1 w-full rounded-lg border p-1.5 text-xs"></label>
 @endforeach
 </div>
 </fieldset>
