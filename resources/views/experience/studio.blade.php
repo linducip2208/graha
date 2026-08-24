@@ -61,6 +61,13 @@
 <p class="mt-1 text-[11px] text-slate-400">PNG/JPG/WebP/SVG (SVG otomatis disanitasi) · maks 2 MB · storage privat ber-authorization.</p>
 </x-ui.card>
 
+<div class="flex flex-wrap gap-2 no-print">
+<a href="/admin/experience/export" class="rounded-xl border px-3 py-1.5 text-xs font-bold">Export JSON</a>
+<form method="post" action="/admin/experience/import" enctype="multipart/form-data" class="flex items-center gap-1">@csrf
+<input type="file" name="file" accept=".json" required class="rounded-lg border p-1 text-xs">
+<button class="rounded-xl bg-slate-800 px-3 py-1.5 text-xs font-bold text-white">Import JSON</button>
+</form>
+</div>
 @php($versions = \App\Models\ExperienceVersion::where('company_id', app(\App\Support\Tenancy\CurrentCompany::class)->id())->orderByDesc('version')->limit(10)->get())
 <x-ui.card label="Versi Tampilan">
 <form method="post" action="/admin/experience/draft" class="mb-2 no-print">@csrf<x-ui.button variant="secondary" type="submit" class="!py-1.5 !text-xs">Simpan sebagai draft baru</x-ui.button></form>
@@ -68,7 +75,7 @@
 @forelse($versions as $v)
 <tr class="border-t"><td class="font-mono font-bold">v{{ $v->version }}</td><td><span class="rounded-full px-2 py-0.5 text-[10px] font-bold {{ $v->status === 'published' ? 'bg-emerald-50 text-emerald-700' : ($v->status === 'draft' ? 'bg-sky-50 text-sky-700' : 'bg-slate-100 text-slate-500') }}">{{ strtoupper($v->status) }}</span></td><td>{{ $v->published_at?->format('d/m/Y H:i') ?? '-' }}</td>
 <td class="flex gap-2">@if($v->status !== 'published')
-<form method="post" action="/admin/experience/versions/{{ $v->id }}/publish">@csrf<button class="font-bold text-emerald-700 text-[11px]">Publish</button></form>
+
 @endif
 @if($v->status === 'archived' || $v->status === 'published')
 <form method="post" action="/admin/experience/versions/{{ $v->id }}/rollback">@csrf<button onclick="return confirm('Rollback ke konfigurasi v{{ $v->version }}?')" class="font-bold text-amber-700 text-[11px]">Rollback</button></form>

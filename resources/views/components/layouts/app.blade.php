@@ -13,7 +13,11 @@
 <style>:root{@foreach(($experience["tokens"] ?? []) as $tk => $tv){{ $tk }}:{{ $tv }};@endforeach}}</style>
 @vite(['resources/css/app.css','resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-900" data-flash="{{ session('status') }}" data-flash-error="{{ $errors->any() ? $errors->first() : '' }}" data-authed="{{ auth()->check() ? '1' : '0' }}">
+<body class="min-h-screen bg-slate-50 text-slate-900"
+@if(!empty($experience["config"]["previewing_version"]))
+<div class="bg-violet-700 px-4 py-1.5 text-center text-xs font-bold text-white no-print">MODE PRATINJAU v{{ $experience["config"]["previewing_version"] }} — hanya terlihat oleh Anda
+<form method="post" action="/admin/experience/preview/stop" class="inline ml-2">@csrf<button class="underline">Matikan</button></form></div>
+@endif data-flash="{{ session('status') }}" data-flash-error="{{ $errors->any() ? $errors->first() : '' }}" data-authed="{{ auth()->check() ? '1' : '0' }}">
 @if(auth()->check())
 @php($cid = session('company_id'))
 @php($navGroups = \App\Support\Navigation::groups(auth()->user(), $cid))

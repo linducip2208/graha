@@ -115,6 +115,83 @@ class ExperienceController extends Controller
         return back()->with('status', ucfirst($data['kind']).' tersimpan (storage privat).');
     }
 
+    /** Mode pratinjau: session-scoped, hanya finance.manage, tidak menyentuh published. */
+    public function startPreview(Request $request, ExperienceVersion $version, CurrentCompany $current)
+    {
+        abort_unless($version->company_id === $current->id(), 404);
+        abort_unless($request->user()->hasPermission('finance.manage', $current->id()), 403);
+        session(['experience_preview_version' => $version->id]);
+
+        return back()->with('status', "Mode pratinjau v{$version->version} aktif — tampilan berikut hanya terlihat oleh Anda.");
+    }
+
+    public function stopPreview(Request $request)
+    {
+        session()->forget('experience_preview_version');
+
+        return back()->with('status', 'Mode pratinjau dimatikan.');
+    }
+
+    /** Export konfigurasi aktif sebagai JSON (tanpa kredensial/data sensitif). */
+    public function export(Request $request, CurrentCompany $current)
+    {
+        abort_unless($request->user()->hasPermission('finance.manage', $current->id()), 403);
+        $row = CompanyExperience::find($current->id());
+        $payload = [
+            'schema' => 'graha-experience@1',
+            'admin_theme' => $row?->admin_theme ?? ThemeService::DEFAULT_PRESET,
+            'frontend_theme' => $row?->frontend_theme ?? 'corporate',
+            'colors' => ['primary' => $row?->primary_color, 'secondary' => $row?->secondary_color, 'accent' => $row?->accent_color],
+            'fonts' => ['ui' => $row?->font_ui, 'heading' => $row?->font_heading],
+            'layout' => ['density' => $row?->density, 'button_style' => $row?->button_style, 'card_style' => $row?->card_style, 'sidebar_style' => $row?->sidebar_style, 'topbar_style' => $row?->topbar_style],
+            'branding' => ['system_name' => $row?->system_name, 'company_display_name' => $row?->company_display_name, 'footer_text' => $row?->footer_text, 'support_email' => $row?->support_email, 'login_headline' => $row?->login_headline],
+        ];
+
+        return response()->json($payload)->header('Content-Disposition', 'attachment; filename="graha-experience-'.$current->id().'.json"');
+    }
+
+    /** Import JSON: validasi schema + whitelist nilai; hasilnya DRAFT, bukan langsung publish. */
+    public function import(Request $request, CurrentCompany $current, ExperienceVersionService $service)
+    {
+        abort_unless($request->user()->hasPermission('finance.manage', $current->id()), 403);
+        $data = $request->validate(['file' => ['required', 'file', 'max:200']]);
+        $json = json_decode($data['file']->getContent(), true);
+        if (! is_array($json) || ($json['schema'] ?? '') !== 'graha-experience@1') {
+            return back()->withErrors(['file' => 'Schema theme tidak dikenal — butuh graha-experience@1.']);
+        }
+        $config = $this->normalizeImported($json);
+        $version = $service->saveDraft($current->id(), $config, $request->user());
+
+        return back()->with('status', "Import diterima sebagai draft v{$version->version} — review lalu publish dari daftar versi.");
+    }
+
+    private function normalizeImported(array $json): array
+    {
+        $hex = fn ($v) => is_string($v) && preg_match('/^#[0-9a-fA-F]{6}$/', $v) ? strtoupper(substr($v, 1)) : null;
+        $in = fn (array $list, $v) => in_array($v, $list, true) ? $v : null;
+        $font = fn ($v) => in_array($v, ThemePresets::FONTS, true) ? $v : null;
+
+        return [
+            'admin_theme' => $in(array_keys(ThemePresets::all()), $json['admin_theme'] ?? null) ?? ThemeService::DEFAULT_PRESET,
+            'frontend_theme' => $in(['corporate', 'construction', 'minimal', 'modern', 'professional'], $json['frontend_theme'] ?? null) ?? 'corporate',
+            'primary_color' => $hex($json['colors']['primary'] ?? null),
+            'secondary_color' => $hex($json['colors']['secondary'] ?? null),
+            'accent_color' => $hex($json['colors']['accent'] ?? null),
+            'font_ui' => $font($json['fonts']['ui'] ?? null),
+            'font_heading' => $font($json['fonts']['heading'] ?? null),
+            'density' => $in(['compact', 'comfortable'], $json['layout']['density'] ?? null),
+            'button_style' => $in(['square', 'soft', 'rounded', 'pill'], $json['layout']['button_style'] ?? null),
+            'card_style' => $in(['minimal', 'bordered', 'elevated', 'soft'], $json['layout']['card_style'] ?? null),
+            'sidebar_style' => $in(['dark', 'light', 'brand'], $json['layout']['sidebar_style'] ?? null),
+            'topbar_style' => $in(['light', 'dark', 'brand'], $json['layout']['topbar_style'] ?? null),
+            'system_name' => isset($json['branding']['system_name']) ? mb_substr((string) $json['branding']['system_name'], 0, 80) : null,
+            'company_display_name' => isset($json['branding']['company_display_name']) ? mb_substr((string) $json['branding']['company_display_name'], 0, 120) : null,
+            'footer_text' => isset($json['branding']['footer_text']) ? mb_substr((string) $json['branding']['footer_text'], 0, 200) : null,
+            'support_email' => isset($json['branding']['support_email']) && filter_var($json['branding']['support_email'], FILTER_VALIDATE_EMAIL) ? $json['branding']['support_email'] : null,
+            'login_headline' => isset($json['branding']['login_headline']) ? mb_substr((string) $json['branding']['login_headline'], 0, 150) : null,
+        ];
+    }
+
     /** Serving asset branding: path harus terdaftar pada experience company tsb (anti traversal/enumeration). */
     public function serveAsset(int $companyId, string $file)
     {

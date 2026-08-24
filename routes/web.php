@@ -317,5 +317,9 @@ Route::post('/admin/experience/draft', [ExperienceController::class, 'saveDraft'
 Route::post('/admin/experience/versions/{version}/publish', [ExperienceController::class, 'publishVersion'])->middleware(['auth', 'company']);
 Route::post('/admin/experience/versions/{version}/rollback', [ExperienceController::class, 'rollbackTo'])->middleware(['auth', 'company']);
 Route::post('/admin/experience/assets', [ExperienceController::class, 'uploadAsset'])->middleware(['auth', 'company']);
+Route::post('/admin/experience/versions/{version}/preview', [ExperienceController::class, 'startPreview'])->middleware(['auth', 'company']);
+Route::post('/admin/experience/preview/stop', [ExperienceController::class, 'stopPreview'])->middleware(['auth', 'company']);
+Route::get('/admin/experience/export', [ExperienceController::class, 'export'])->middleware(['auth', 'company']);
+Route::post('/admin/experience/import', [ExperienceController::class, 'import'])->middleware(['auth', 'company']);
 Route::get('/admin/settings', [SettingsController::class, 'index'])->middleware(['auth', 'company'])->name('settings.index');
 Route::post('/admin/settings', [SettingsController::class, 'save'])->middleware(['auth', 'company', 'permission:finance.manage'])->name('settings.save');
