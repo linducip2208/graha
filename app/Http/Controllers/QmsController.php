@@ -18,6 +18,15 @@ use Illuminate\Http\Request;
 
 class QmsController extends Controller
 {
+    /** Record workspace NCR: header + akar masalah + CAPA + verifikasi. */
+    public function showNcr(Request $request, Nonconformity $ncr, CurrentCompany $current)
+    {
+        abort_unless($ncr->company_id === $current->id(), 404);
+        $ncr->load(['actions.owner', 'actions.verifier', 'project:id,code,name']);
+
+        return view('qms.ncr-show', ['ncr' => $ncr]);
+    }
+
     public function index(Request $request, CurrentCompany $current)
     {
         $companyId = $current->id();

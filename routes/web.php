@@ -154,6 +154,7 @@ Route::middleware(['auth', 'company', 'permission:document.view'])->prefix('admi
 });
 Route::middleware(['auth', 'company', 'permission:qms.view'])->prefix('admin')->group(function () {
     Route::get('/qms', [QmsController::class, 'index'])->name('qms.index');
+    Route::get('/qms/ncrs/{ncr}', [QmsController::class, 'showNcr'])->name('qms.ncr-show');
     Route::post('/qms/risks', [QmsController::class, 'risk'])->middleware('permission:qms.manage');
     Route::post('/qms/ncrs', [QmsController::class, 'ncr'])->middleware('permission:qms.manage');
     Route::post('/qms/ncrs/{ncr}/actions', [QmsController::class, 'capa'])->middleware('permission:qms.manage');
@@ -178,6 +179,7 @@ Route::middleware(['auth', 'company', 'permission:manufacturing.view'])->prefix(
     Route::get('/manufacturing/nonconforming', [ManufacturingController::class, 'nonconforming'])->name('manufacturing.nonconforming');
     Route::get('/manufacturing/costing', [ManufacturingController::class, 'costing'])->name('manufacturing.costing');
     Route::get('/manufacturing/cages', [CageController::class, 'index'])->name('cages.index');
+    Route::get('/operations/equipment/{equipment}', [OperationsController::class, 'showEquipment'])->name('equipment.show');
     Route::post('/manufacturing/cages', [CageController::class, 'store'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/cages/{cage}/qc', [CageController::class, 'qc'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/cages/{cage}/deliver', [CageController::class, 'deliver'])->middleware('permission:manufacturing.manage');
@@ -202,6 +204,7 @@ Route::middleware(['auth', 'company', 'permission:manufacturing.view'])->prefix(
 });
 Route::middleware(['auth', 'company', 'permission:procurement.view'])->prefix('admin/procurement')->group(function () {
     Route::get('/', [ProcurementController::class, 'index'])->name('procurement.index');
+    Route::get('/orders/{order}', [ProcurementController::class, 'showOrder'])->name('procurement.orders.show');
     Route::get('/rfq', [RfqController::class, 'index'])->name('rfq.index');
     Route::post('/rfq', [RfqController::class, 'store'])->middleware('permission:procurement.manage');
     Route::post('/rfq/{rfq}/invite', [RfqController::class, 'invite'])->middleware('permission:procurement.manage');

@@ -18,6 +18,19 @@ use Illuminate\Http\Request;
 
 class OperationsController extends Controller
 {
+    /** Record workspace equipment: riwayat meter, fuel, MWO. */
+    public function showEquipment(Request $request, Equipment $equipment, CurrentCompany $current)
+    {
+        abort_unless($equipment->company_id === $current->id(), 404);
+
+        return view('operations.equipment-show', [
+            'equipment' => $equipment,
+            'meters' => $equipment->meterLogs()->latest('recorded_at')->limit(12)->get(),
+            'fuels' => $equipment->fuelUsages()->latest('used_at')->limit(12)->get(),
+            'workOrders' => MaintenanceWorkOrder::where('equipment_id', $equipment->id)->latest()->limit(15)->get(),
+        ]);
+    }
+
     public function index(CurrentCompany $current)
     {
         $id = $current->id();

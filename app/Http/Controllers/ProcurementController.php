@@ -34,6 +34,15 @@ class ProcurementController extends Controller
         return back()->with('status', "Vendor {$vendor->name} → {$data['status']}.");
     }
 
+    /** Record workspace PO: header + item + riwayat revisi. */
+    public function showOrder(Request $request, PurchaseOrder $order, CurrentCompany $current)
+    {
+        abort_unless($order->company_id === $current->id(), 404);
+        $order->load(['vendor:id,code,name', 'items.item:id,sku,name', 'revisions.reviser:id,name']);
+
+        return view('procurement.order-show', ['order' => $order]);
+    }
+
     public function index(CurrentCompany $current)
     {
         $id = $current->id();
