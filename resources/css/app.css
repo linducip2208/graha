@@ -48,3 +48,13 @@ table th,table td{padding:.8rem 1rem;text-align:left;border-bottom:1px solid #e2
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 .nav-group>summary{list-style:none}.nav-group[open]>summary .nav-chevron{transform:rotate(180deg)}.nav-group>summary::-webkit-details-marker{display:none}
+
+/* Tabs & chips (x-ui.tabs / x-ui.filter-bar) */
+.tab-link{flex:none;min-height:40px;border:1px solid #cbd5e1;border-radius:9999px;background:#fff;padding:.5rem 1.1rem;font-size:.85rem;font-weight:700;color:#475569}
+.tab-link:hover{color:#0369a1;border-color:#7dd3fc}
+.tab-link.active{border-color:transparent;background:var(--brand-700);color:#fff;box-shadow:0 6px 18px -8px rgba(3,105,161,.55)}
+.chip{display:inline-flex;align-items:center;gap:.25rem;border-radius:9999px;padding:.3rem .75rem;font-size:.75rem;font-weight:700}
+.chip-active{background:#e0f2fe;color:#075985;border:1px solid #7dd3fc}
+.dark .tab-link{background:#16233c;border-color:#2a3a5c;color:#b6c2d4}
+.dark .tab-link.active{background:linear-gradient(90deg,#075985,#0e7490);color:#fff}
+.dark .chip-active{background:#0c3a52;color:#7dd3fc;border-color:#0ea5e9}

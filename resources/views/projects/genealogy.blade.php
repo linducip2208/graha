@@ -32,7 +32,7 @@
 </div>
 
 <div class="mt-8 grid gap-6 xl:grid-cols-2">
-<article class="rounded-2xl border bg-white p-5">
+<x-ui.card>
 <h2 class="font-black">Bore Log & Drilling</h2>
 @foreach($drillings as $drilling)
 <details class="mt-2 rounded-xl border p-3" @if($loop->first) open @endif>
@@ -43,25 +43,25 @@
 </details>
 @endforeach
 @if($drillings->isEmpty())<p class="mt-2 text-sm text-slate-400">Belum ada drilling record.</p>@endif
-</article>
+</x-ui.card>
 
-<article class="rounded-2xl border bg-white p-5">
+<x-ui.card>
 <h2 class="font-black">Delivery Beton & Slump</h2>
 <div class="mt-2 overflow-x-auto"><table class="w-full text-xs"><thead><tr><th>DO</th><th>Truk</th><th>Tiba</th><th>Terdima</th><th>Ditolak</th><th>Slump</th><th>Sampel</th><th>Status</th></tr></thead><tbody>
 @foreach($deliveries as $d)<tr class="border-t"><td>{{ $d->delivery_order_number }}</td><td>{{ $d->truck_number }}</td><td>{{ optional($d->arrived_at)->format('d/m H:i') ?? '-' }}</td><td>{{ $d->accepted_volume_m3 }}</td><td>{{ $d->rejected_volume_m3 }}</td><td>{{ $d->slump_cm ?? '-' }}</td><td>{{ $d->sample_number ?? '-' }}</td><td>{{ $d->status }}</td></tr>@endforeach
 @if($deliveries->isEmpty())<tr><td colspan="8" class="p-3 text-center text-slate-400">Belum ada delivery.</td></tr>@endif
 </tbody></table></div>
-</article>
+</x-ui.card>
 
-<article class="rounded-2xl border bg-white p-5">
+<x-ui.card>
 <h2 class="font-black">Pengujian Pile</h2>
 <ul class="mt-2 space-y-1 text-sm">
 @forelse($tests as $t)<li class="rounded-xl border p-2 text-xs"><strong>{{ $t->test_type }}</strong> {{ $t->number }} · jadwal {{ optional($t->scheduled_date)->format('d/m/y') }} · hasil <span class="font-bold uppercase">{{ $t->result_status }}</span>@if($t->report_number) · laporan {{ $t->report_number }}@endif{{ $t->consultant_approved_at ? ' · disetujui konsultan' : '' }}</li>
 @empty<li class="text-slate-400">Belum ada pengujian.</li>@endforelse
 </ul>
-</article>
+</x-ui.card>
 
-<article class="rounded-2xl border bg-white p-5">
+<x-ui.card>
 <h2 class="font-black">Cage & Casing</h2>
 <ul class="mt-2 space-y-1 text-xs">
 @foreach($cages as $cage)<li class="rounded-xl border p-2"><strong>{{ $cage->number }}</strong> · QC {{ strtoupper($cage->qc_status) }} · berat {{ $cage->theoretical_weight_kg ?? '-' }}/{{ $cage->actual_weight_kg ?? '-' }} kg · terkirim {{ optional($cage->delivered_at)->format('d/m/y') }}</li>
@@ -70,18 +70,18 @@
 @endforeach
 @if($cages->isEmpty() && $casings->isEmpty())<li class="text-slate-400">Belum ada cage/casing di titik ini.</li>@endif
 </ul>
-</article>
+</x-ui.card>
 
-<article class="rounded-2xl border bg-white p-5">
+<x-ui.card>
 <h2 class="font-black">Foto Evidence</h2>
 <div class="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
 @forelse($evidences as $ev)
 <a href="{{ route('evidence.file', $ev) }}" target="_blank" class="group relative"><img src="{{ route('evidence.file', $ev) }}" alt="{{ $ev->original_name }}" class="h-20 w-full rounded-lg border object-cover"><span class="absolute bottom-1 left-1 rounded bg-black/60 px-1 text-[9px] text-white">{{ \App\Models\FieldEvidence::LABELS[$ev->evidence_type] ?? $ev->evidence_type }}</span></a>
 @empty<p class="col-span-4 text-sm text-slate-400">Belum ada evidence.</p>@endforelse
 </div>
-</article>
+</x-ui.card>
 
-<article class="rounded-2xl border bg-white p-5">
+<x-ui.card>
 <h2 class="font-black">Linimasa Aktivitas</h2>
 <ol class="mt-2 space-y-1 text-xs">
 @foreach($activities as $a)<li class="flex flex-wrap items-center gap-2 rounded-lg border p-2"><span class="font-mono">{{ optional($a->started_at)->format('d/m H:i') ?? '?' }}</span><span class="font-bold">{{ str($a->from_status)->replace('_',' ')->title() }} → {{ str($a->to_status)->replace('_',' ')->title() }}</span>@if($a->finished_at)<span class="text-emerald-700">selesai {{ $a->finished_at->format('H:i') }}</span>
@@ -90,6 +90,6 @@
 @endforeach
 @if($activities->isEmpty())<li class="text-slate-400">Belum ada aktivitas tercatat.</li>@endif
 </ol>
-</article>
+</x-ui.card>
 </div>
 </section></x-layouts.app>

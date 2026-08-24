@@ -21,11 +21,7 @@
 @if($project->contract_value)<span>Kontrak: <strong class="font-mono">Rp {{ number_format((float) $project->contract_value, 0, ',', '.') }}</strong></span>@endif
 </div>
 
-<nav class="mt-6 flex gap-1 overflow-x-auto border-b no-print" aria-label="Tab proyek">
-@foreach($tabs as $key => $label)
-<a href="/admin/projects/{{ $project->id }}?tab={{ $key }}" @class(['whitespace-nowrap rounded-t-xl px-4 py-2.5 text-sm font-semibold', 'bg-sky-700 text-white shadow-sm' => $activeTab === $key, 'text-slate-500 hover:bg-slate-100 hover:text-slate-800' => $activeTab !== $key])>{{ $label }}</a>
-@endforeach
-</nav>
+<x-ui.tabs :tabs="$tabs" :active="$activeTab" class="mt-6" />
 
 @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800 print:hidden">{{ session('status') }}</div>@endif
 

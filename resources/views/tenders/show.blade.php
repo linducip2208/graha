@@ -11,11 +11,7 @@
 @if($project)<a href="/admin/projects/{{ $project->id }}" class="font-semibold text-sky-700 hover:underline">Proyek terkait â†’</a>@endif
 </div>
 
-<nav class="mt-6 flex gap-1 overflow-x-auto border-b no-print" aria-label="Tab tender">
-@foreach($tabs as $key => $label)
-<a href="/admin/tenders/{{ $tender->id }}?tab={{ $key }}" @class(['whitespace-nowrap rounded-t-xl px-4 py-2.5 text-sm font-semibold', 'bg-sky-700 text-white shadow-sm' => $activeTab === $key, 'text-slate-500 hover:bg-slate-100 hover:text-slate-800' => $activeTab !== $key])>{{ $label }}</a>
-@endforeach
-</nav>
+<x-ui.tabs :tabs="$tabs" :active="$activeTab" class="mt-6" />
 
 @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4 text-sm text-emerald-800 print:hidden">{{ session('status') }}</div>@endif
 
