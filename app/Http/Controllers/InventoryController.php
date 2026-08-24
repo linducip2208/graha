@@ -47,8 +47,12 @@ class InventoryController extends Controller
     public function index(CurrentCompany $current)
     {
         $lowStock = StockBalance::where('stock_balances.company_id', $current->id())->join('items', 'items.id', '=', 'stock_balances.item_id')->whereColumn('stock_balances.quantity', '<=', 'items.minimum_stock')->select('stock_balances.*')->with(['item', 'warehouse', 'bin'])->get();
+        $balances = StockBalance::where('company_id', $current->id())->with(['item', 'warehouse', 'bin']);
+        if ($term = trim((string) $request->query('q'))) {
+            $balances->whereHas('item', fn ($iq) => $iq->where(fn ($w) => $w->where('sku', 'like', "%{$term}%")->orWhere('name', 'like', "%{$term}%")));
+        }
 
-        return view('inventory.index', ['items' => Item::where('company_id', $current->id())->orderBy('name')->get(), 'warehouses' => Warehouse::where('company_id', $current->id())->with('bins')->get(), 'balances' => StockBalance::where('company_id', $current->id())->with(['item', 'warehouse', 'bin'])->paginate(30), 'movements' => StockMovement::where('company_id', $current->id())->with('item')->latest('posted_at')->limit(20)->get(), 'lowStock' => $lowStock]);
+        return view('inventory.index', ['items' => Item::where('company_id', $current->id())->orderBy('name')->get(), 'warehouses' => Warehouse::where('company_id', $current->id())->with('bins')->get(), 'balances' => (clone $balances)->paginate(30), 'movements' => StockMovement::where('company_id', $current->id())->with('item')->latest('posted_at')->limit(20)->get(), 'lowStock' => $lowStock, 'balanceCount' => $balances->count()]);
     }
 
     public function setup(Request $r, CurrentCompany $current)

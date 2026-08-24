@@ -1,4 +1,4 @@
-﻿<x-layouts.app title="{{ $project->code }} â€” {{ $project->name }}">
+<x-layouts.app title="{{ $project->code }} â€” {{ $project->name }}">
 @php($tabs = [
     'overview' => 'Ringkasan',
     'planning' => 'Perencanaan',
@@ -41,10 +41,10 @@
 @endif
 </div>
 <div class="grid gap-5 lg:grid-cols-3">
-<article class="rounded-2xl border bg-white p-6 shadow-sm"><h2 class="font-bold">Funnel Bored Pile</h2><div class="mt-3 space-y-2">@foreach(['planned', 'drilling', 'cage_installation', 'concreting', 'testing', 'completed'] as $stage)
+<x-ui.card bodyClass="p-6"><h2 class="font-bold">Funnel Bored Pile</h2><div class="mt-3 space-y-2">@foreach(['planned', 'drilling', 'cage_installation', 'concreting', 'testing', 'completed'] as $stage)
 @php($count = $piles->where('status', $stage)->count())
 <div class="flex items-center justify-between text-sm"><span class="capitalize">{{ str_replace('_', ' ', $stage) }}</span><span class="font-mono font-bold">{{ $count }}</span></div>
-@endforeach</div></article>
+@endforeach</div></x-ui.card>
 <article class="lg:col-span-2 rounded-2xl border bg-white p-6 shadow-sm overflow-x-auto"><h2 class="font-bold">Zona & Ringkasan Pile</h2>
 <table class="mt-3 w-full text-sm table-sticky"><thead><tr><th>Zona</th><th>Jml Pile</th><th>Selesai</th><th>Berjalan</th></tr></thead><tbody>@foreach($piles->groupBy('zone.code') as $zoneCode => $zonePiles)
 <tr><td>{{ $zoneCode }}</td><td>{{ $zonePiles->count() }}</td><td>{{ $zonePiles->where('status', 'completed')->count() }}</td><td>{{ $zonePiles->whereNotIn('status', ['completed'])->count() }}</td></tr>
@@ -115,15 +115,15 @@
 
 @if($activeTab === 'fieldops')
 <section class="mt-6 space-y-6">
-<article class="overflow-x-auto rounded-2xl border bg-white p-6 shadow-sm"><h2 class="font-bold">Drilling Terakhir</h2><table class="mt-3 w-full text-sm table-sticky"><thead><tr><th>Pile</th><th>Mulai</th><th>Selesai</th><th>Alat</th></tr></thead><tbody>@forelse($drillings ?? [] as $drilling)
+<x-ui.card class="overflow-x-auto" bodyClass="p-6"><h2 class="font-bold">Drilling Terakhir</h2><table class="mt-3 w-full text-sm table-sticky"><thead><tr><th>Pile</th><th>Mulai</th><th>Selesai</th><th>Alat</th></tr></thead><tbody>@forelse($drillings ?? [] as $drilling)
 <tr><td>Pile #{{ $drilling->bored_pile_id }}</td><td>{{ $drilling->drilling_started_at?->format('d/m H:i') }}</td><td>{{ $drilling->drilling_finished_at?->format('d/m H:i') ?? '-' }}</td><td>{{ $drilling->drilling_tool ?? '-' }}</td></tr>
-@empty<tr><td colspan="4" class="p-6 text-center text-slate-500">Belum ada drilling record.</td></tr>@endforelse</tbody></table></article>
-<article class="overflow-x-auto rounded-2xl border bg-white p-6 shadow-sm"><h2 class="font-bold">Delivery Beton</h2><table class="mt-3 w-full text-sm table-sticky"><thead><tr><th>DO</th><th>Truk</th><th>Tiba</th></tr></thead><tbody>@forelse($deliveries ?? [] as $delivery)
+@empty<tr><td colspan="4" class="p-6 text-center text-slate-500">Belum ada drilling record.</td></tr>@endforelse</tbody></table></x-ui.card>
+<x-ui.card class="overflow-x-auto" bodyClass="p-6"><h2 class="font-bold">Delivery Beton</h2><table class="mt-3 w-full text-sm table-sticky"><thead><tr><th>DO</th><th>Truk</th><th>Tiba</th></tr></thead><tbody>@forelse($deliveries ?? [] as $delivery)
 <tr><td class="font-mono text-xs">{{ $delivery->delivery_order_number }}</td><td>{{ $delivery->truck_number }}</td><td>{{ $delivery->arrived_at?->format('d/m H:i') ?? '-' }}</td></tr>
-@empty<tr><td colspan="3" class="p-6 text-center text-slate-500">Belum ada delivery beton.</td></tr>@endforelse</tbody></table></article>
-<article class="overflow-x-auto rounded-2xl border bg-white p-6 shadow-sm"><h2 class="font-bold">Pile Testing</h2><table class="mt-3 w-full text-sm table-sticky"><thead><tr><th>Nomor</th><th>Jenis</th><th>Jadwal</th><th>Hasil</th></tr></thead><tbody>@forelse($tests ?? [] as $test)
+@empty<tr><td colspan="3" class="p-6 text-center text-slate-500">Belum ada delivery beton.</td></tr>@endforelse</tbody></table></x-ui.card>
+<x-ui.card class="overflow-x-auto" bodyClass="p-6"><h2 class="font-bold">Pile Testing</h2><table class="mt-3 w-full text-sm table-sticky"><thead><tr><th>Nomor</th><th>Jenis</th><th>Jadwal</th><th>Hasil</th></tr></thead><tbody>@forelse($tests ?? [] as $test)
 <tr><td class="font-mono text-xs">{{ $test->number }}</td><td>{{ strtoupper($test->test_type) }}</td><td>{{ $test->scheduled_date?->format('d/m/Y') }}</td><td>{{ strtoupper($test->result_status) }}</td></tr>
-@empty<tr><td colspan="4" class="p-6 text-center text-slate-500">Belum ada jadwal testing.</td></tr>@endforelse</tbody></table></article>
+@empty<tr><td colspan="4" class="p-6 text-center text-slate-500">Belum ada jadwal testing.</td></tr>@endforelse</tbody></table></x-ui.card>
 </section>
 @endif
 
@@ -137,7 +137,7 @@
 @endif
 
 @if($activeTab === 'procurement' && isset($plans))
-<article class="rounded-2xl border bg-white p-6 shadow-sm">
+<x-ui.card bodyClass="p-6">
 <div class="flex flex-wrap items-center justify-between gap-2"><h2 class="font-bold">Rencana Pengadaan</h2><span class="text-xs text-slate-400">{{ $plans->whereIn('status',['planned','pr_created'])->where('required_date','<',now()->toDateString())->count() }} terlambat dari {{ $plans->count() }} baris</span></div>
 <form method="post" action="/admin/projects/{{ $project->id }}/procurement-plans" class="mt-3 grid gap-2 md:grid-cols-[1fr_110px_130px_140px_auto] no-print">@csrf
 <input name="title" required placeholder="Material / jasa (wajib)" class="rounded-xl border p-2.5 text-sm">
@@ -165,16 +165,16 @@
 </tr>
 @empty<tr><td colspan="7" class="p-4 text-center text-slate-400">Belum ada rencana pengadaan â€” susun kebutuhan material/jasa per tanggal dibutuhkan.</td></tr>@endforelse
 </tbody></table></div>
-</article>
+</x-ui.card>
 @endif
 @if($activeTab === 'procurement' && isset($purchaseOrders))
 <section class="mt-6 space-y-6">
-<article class="overflow-x-auto rounded-2xl border bg-white p-6 shadow-sm"><h2 class="font-bold">Purchase Order Proyek</h2><table class="mt-3 w-full text-sm table-sticky"><thead><tr><th>PO</th><th>Vendor</th><th class="text-right">Nilai</th><th>Status</th><th>Genealogi</th></tr></thead><tbody>@forelse($purchaseOrders ?? [] as $po)
+<x-ui.card class="overflow-x-auto" bodyClass="p-6"><h2 class="font-bold">Purchase Order Proyek</h2><table class="mt-3 w-full text-sm table-sticky"><thead><tr><th>PO</th><th>Vendor</th><th class="text-right">Nilai</th><th>Status</th><th>Genealogi</th></tr></thead><tbody>@forelse($purchaseOrders ?? [] as $po)
 <tr><td class="font-mono text-xs">{{ $po->number }} v{{ $po->version }}</td><td>{{ $po->vendor?->name }}</td><td class="text-right font-mono">{{ number_format((float) $po->total, 0, ',', '.') }}</td><td>{{ strtoupper(str_replace('_', ' ', $po->status)) }}</td></tr>
-@empty<tr><td colspan="4" class="p-6 text-center text-slate-500">Belum ada PO untuk proyek ini.</td></tr>@endforelse</tbody></table></article>
-<article class="overflow-x-auto rounded-2xl border bg-white p-6 shadow-sm"><h2 class="font-bold">RFQ Proyek</h2><table class="mt-3 w-full text-sm table-sticky"><thead><tr><th>Nomor</th><th>Judul</th><th>Vendor Diundang</th><th>Status</th><th>Genealogi</th></tr></thead><tbody>@forelse($rfqs ?? [] as $rfq)
+@empty<tr><td colspan="4" class="p-6 text-center text-slate-500">Belum ada PO untuk proyek ini.</td></tr>@endforelse</tbody></table></x-ui.card>
+<x-ui.card class="overflow-x-auto" bodyClass="p-6"><h2 class="font-bold">RFQ Proyek</h2><table class="mt-3 w-full text-sm table-sticky"><thead><tr><th>Nomor</th><th>Judul</th><th>Vendor Diundang</th><th>Status</th><th>Genealogi</th></tr></thead><tbody>@forelse($rfqs ?? [] as $rfq)
 <tr><td class="font-mono text-xs">{{ $rfq->number }}</td><td>{{ $rfq->title }}</td><td>{{ $rfq->vendors_count }}</td><td>{{ strtoupper($rfq->status) }}</td></tr>
-@empty<tr><td colspan="4" class="p-6 text-center text-slate-500">Belum ada RFQ.</td></tr>@endforelse</tbody></table></article>
+@empty<tr><td colspan="4" class="p-6 text-center text-slate-500">Belum ada RFQ.</td></tr>@endforelse</tbody></table></x-ui.card>
 </section>
 @endif
 
@@ -188,7 +188,7 @@
 @endif
 
 @if($activeTab === 'cost' && isset($baselines))
-<article class="lg:col-span-3 rounded-2xl border bg-white p-6 shadow-sm">
+<x-ui.card class="lg:col-span-3" bodyClass="p-6">
 <div class="flex flex-wrap items-center justify-between gap-2"><h2 class="font-bold">Budget Baseline (versi)</h2><span class="text-xs text-slate-400">Baseline aktif: {{ $costing['baseline_version'] ? 'v'.$costing['baseline_version'] : 'belum ada â€” memakai estimated cost proyek' }}</span></div>
 <form method="post" action="/admin/project-costing/baselines" class="mt-3 grid gap-2 no-print">@csrf
 <input type="hidden" name="project_id" value="{{ $project->id }}">
@@ -209,12 +209,12 @@
 </div>
 @empty<p class="text-sm text-slate-400">Belum ada baseline â€” buat v0 untuk mengunci anggaran awal proyek.</p>@endforelse
 </div>
-</article>
+</x-ui.card>
 @endif
 @if($activeTab === 'cost' && isset($costByCode))
 <section class="mt-6 grid gap-5 lg:grid-cols-3">
 @if(isset($costing))
-<article class="rounded-2xl border bg-white p-6 shadow-sm"><h2 class="font-bold">Cockpit Biaya</h2><dl class="mt-3 space-y-2 text-sm"><div class="flex justify-between"><dt>RAB</dt><dd class="font-mono">{{ number_format((float) $costing['budget'], 0, ',', '.') }}</dd></div><div class="flex justify-between"><dt>Aktual</dt><dd class="font-mono">{{ number_format((float) $costing['actual'], 0, ',', '.') }}</dd></div><div class="flex justify-between"><dt>Komitmen PO</dt><dd class="font-mono">{{ number_format((float) $costing['committed'], 0, ',', '.') }}</dd></div><div class="flex justify-between"><dt>CTC</dt><dd class="font-mono">{{ number_format((float) $costing['cost_to_complete'], 0, ',', '.') }}</dd></div><div class="flex justify-between font-bold"><dt>EAC</dt><dd class="font-mono">{{ number_format((float) $costing['eac'], 0, ',', '.') }}</dd></div></dl></article>
+<x-ui.card bodyClass="p-6"><h2 class="font-bold">Cockpit Biaya</h2><dl class="mt-3 space-y-2 text-sm"><div class="flex justify-between"><dt>RAB</dt><dd class="font-mono">{{ number_format((float) $costing['budget'], 0, ',', '.') }}</dd></div><div class="flex justify-between"><dt>Aktual</dt><dd class="font-mono">{{ number_format((float) $costing['actual'], 0, ',', '.') }}</dd></div><div class="flex justify-between"><dt>Komitmen PO</dt><dd class="font-mono">{{ number_format((float) $costing['committed'], 0, ',', '.') }}</dd></div><div class="flex justify-between"><dt>CTC</dt><dd class="font-mono">{{ number_format((float) $costing['cost_to_complete'], 0, ',', '.') }}</dd></div><div class="flex justify-between font-bold"><dt>EAC</dt><dd class="font-mono">{{ number_format((float) $costing['eac'], 0, ',', '.') }}</dd></div></dl></x-ui.card>
 @endif
 <article class="rounded-2xl border bg-white p-6 shadow-sm overflow-x-auto lg:col-span-2"><h2 class="font-bold">Realisasi per Cost Code</h2><table class="mt-3 w-full text-sm table-sticky"><thead><tr><th>Kode</th><th>Nama</th><th>Tipe</th><th class="text-right">Nilai</th></tr></thead><tbody>@forelse($costByCode ?? [] as $row)
 <tr><td class="font-mono text-xs">{{ $row->code }}</td><td>{{ $row->name }}</td><td>{{ $row->cost_type }}</td><td class="text-right font-mono">{{ number_format((float) $row->total, 0, ',', '.') }}</td></tr>

@@ -15,38 +15,38 @@
 
 <div class="mt-8 grid gap-5 lg:grid-cols-2">
 
-<article class="rounded-2xl border bg-white p-6 shadow-sm">
+<x-ui.card bodyClass="p-6">
 <div class="flex items-center justify-between"><h2 class="font-bold">Approval Menunggu Keputusan Saya</h2><a href="/admin/approvals" class="text-xs font-bold text-sky-700">Approval Center →</a></div>
 <div class="mt-3 space-y-2">@forelse($toDecide as $approval)
 @php($label = method_exists($approval->approvable ?? null, 'workLabel') ? $approval->approvable->workLabel() : (class_basename($approval->approvable_type).' #'.$approval->approvable_id))
 <a href="/admin/approvals" class="flex items-center justify-between gap-3 rounded-xl border p-3 text-sm hover:border-sky-500"><span class="min-w-0"><strong>{{ $approval->workflow?->document_type ? ucfirst($approval->workflow->document_type) : 'Dokumen' }}</strong> · {{ $label }}<span class="block text-xs text-slate-500">Tahap {{ $approval->current_sequence }} @if($approval->due_at)· tenggat {{ $approval->due_at->format('d/m H:i') }}@endif</span></span>@if($approval->due_at && $approval->due_at->isPast())<x-ui.badge status="exception" label="overdue" />@else<x-ui.badge status="pending_approval" label="pending" />@endif</a>
 @empty<x-ui.empty icon="check" title="Tidak ada approval menunggu" description="Semua dokumen dalam batas SLA atau bukan kewenangan Anda." /></@endforelse</div>
-</article>
+</x-ui.card>
 
-<article class="rounded-2xl border bg-white p-6 shadow-sm">
+<x-ui.card bodyClass="p-6">
 <h2 class="font-bold">Pengajuan Saya yang Berjalan</h2>
 <div class="mt-3 space-y-2">@forelse($mySubmissions as $submission)
 @php($label = class_basename($submission->approvable_type).' #'.$submission->approvable_id)
 <a href="/admin/approvals" class="flex items-center justify-between gap-3 rounded-xl border p-3 text-sm hover:border-sky-500"><span class="min-w-0"><strong>{{ $submission->workflow?->document_type ? ucfirst($submission->workflow->document_type) : 'Dokumen' }}</strong> · {{ $label }}<span class="block text-xs text-slate-500">Diajukan {{ $submission->submitted_at?->format('d/m H:i') }}</span></span>@if($submission->due_at && $submission->due_at->isPast())<x-ui.badge status="exception" label="melewati SLA" />@else<x-ui.badge status="pending_approval" label="di review" />@endif</a>
 @empty<x-ui.empty icon="check" title="Tidak ada pengajuan aktif" description="Anda tidak memiliki dokumen yang sedang menunggu persetujuan." /></@endforelse</div>
-</article>
+</x-ui.card>
 
 @if($capaActions->isNotEmpty())
-<article class="rounded-2xl border bg-white p-6 shadow-sm">
+<x-ui.card bodyClass="p-6">
 <h2 class="font-bold">CAPA Ditugaskan ke Saya</h2>
 <div class="mt-3 space-y-2">@foreach($capaActions as $action)
 <a href="/admin/qms" class="flex items-center justify-between gap-3 rounded-xl border p-3 text-sm hover:border-sky-500"><span class="min-w-0">{{ str($action->action)->limit(80) }}<span class="block text-xs text-slate-500">NCR #{{ $action->nonconformity_id }} · tenggat {{ $action->due_at?->format('d/m/Y') }}</span></span>@if($action->due_at && $action->due_at->isPast())<x-ui.badge status="exception" label="lewat tenggat" />@else<x-ui.badge status="open" label="open" />@endif</a>
 @endforeach</div>
-</article>
+</x-ui.card>
 @endif
 
 @if($hseActions->isNotEmpty())
-<article class="rounded-2xl border bg-white p-6 shadow-sm">
+<x-ui.card bodyClass="p-6">
 <h2 class="font-bold">Aksi HSE Ditugaskan ke Saya</h2>
 <div class="mt-3 space-y-2">@foreach($hseActions as $action)
 <a href="/admin/hse" class="flex items-center justify-between gap-3 rounded-xl border p-3 text-sm hover:border-sky-500"><span class="min-w-0">{{ str($action->action)->limit(80) }}<span class="block text-xs text-slate-500">Incident #{{ $action->hse_incident_id }} · tenggat {{ $action->due_at?->format('d/m/Y') }}</span></span>@if($action->due_at && $action->due_at->isPast())<x-ui.badge status="exception" label="lewat tenggat" />@else<x-ui.badge status="open" label="open" />@endif</a>
 @endforeach</div>
-</article>
+</x-ui.card>
 @endif
 
 @if($materialRequests->isNotEmpty())
@@ -59,12 +59,12 @@
 @endif
 
 @if($signatures->isNotEmpty())
-<article class="rounded-2xl border bg-white p-6 shadow-sm">
+<x-ui.card bodyClass="p-6">
 <div class="flex items-center justify-between"><h2 class="font-bold">Menunggu Tanda Tangan Saya</h2><a href="/admin/signatures" class="text-xs font-bold text-sky-700">Signing →</a></div>
 <div class="mt-3 space-y-2">@foreach($signatures as $signature)
 <a href="/admin/signatures" class="flex items-center justify-between gap-3 rounded-xl border p-3 text-sm hover:border-sky-500"><span class="min-w-0">{{ $signature->version?->document?->title ?? ('Versi #'.$signature->document_version_id) }}<span class="block text-xs text-slate-500">{{ ucfirst($signature->signature_type) }} · diminta {{ $signature->created_at->format('d/m') }}</span></span><x-ui.badge status="pending_approval" label="pending" /></a>
 @endforeach</div>
-</article>
+</x-ui.card>
 @endif
 
 </div>

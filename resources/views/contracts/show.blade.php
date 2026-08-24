@@ -1,14 +1,8 @@
 <x-layouts.app title="Kontrak — {{ $contract->number }}">
 <section class="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
-<p class="text-xs font-bold uppercase tracking-widest text-sky-700">{{ ($types = \App\Models\ContractChange::TYPES)[$contract->type] ?? $contract->type }}</p>
-<h1 class="mt-1 text-2xl font-bold tracking-tight">{{ $contract->number }} — {{ $contract->title }}</h1>
-<div class="mt-2 flex flex-wrap items-center gap-3 text-sm text-slate-500">
-<x-ui.badge :status="match ($contract->status) { 'approved' => 'posted', 'rejected' => 'exception', 'pending_approval' => 'pending_approval', default => 'draft' }" :label="str_replace('_', ' ', $contract->status)" />
-@if($contract->project)<a href="/admin/projects/{{ $contract->project->id }}" class="font-semibold text-sky-700 hover:underline">{{ $contract->project->code }} — {{ $contract->project->name }}</a>@endif
-@if((int) $contract->days_extension > 0)<span>Perpanjangan: <strong>{{ $contract->days_extension }} hari</strong></span>@endif
-<span>Nilai: <strong class="font-mono">Rp {{ number_format((float) $contract->amount, 0, ',', '.') }}</strong></span>
-@if($contract->effective_date)<span>Efektif: {{ $contract->effective_date->format('d/m/Y') }}</span>@endif
-</div>
+<x-ui.page-header title="{{ $contract->number }} — {{ $contract->title }}" subtitle="{{ ($types = \App\Models\ContractChange::TYPES)[$contract->type] ?? $contract->type }} · Nilai Rp {{ number_format((float) $contract->amount, 0, ',', '.') }}@if($contract->days_extension > 0) · +{{ $contract->days_extension }} hari@endif@if($contract->effective_date) · Efektif {{ $contract->effective_date->format('d/m/Y') }}@endif" status="{{ str_replace('_',' ', $contract->status) }}">
+@if($contract->project)<a href="/admin/projects/{{ $contract->project->id }}" class="font-semibold text-sky-700 hover:underline">{{ $contract->project->code }}</a>@endif
+</x-ui.page-header>
 
 @if($contract->description)
 <article class="mt-6 rounded-2xl border bg-white p-6 shadow-sm"><h2 class="font-bold">Uraian</h2><p class="mt-2 whitespace-pre-line text-sm leading-relaxed">{{ $contract->description }}</p></article>

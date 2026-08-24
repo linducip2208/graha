@@ -70,27 +70,27 @@
 
 @if($aging)
 <div class="mt-8 grid gap-5 lg:grid-cols-2">
-<article class="rounded-2xl border bg-white p-6 shadow-sm">
+<x-ui.card bodyClass="p-6">
 <h2 class="font-bold">Aging Piutang & Utang</h2>
 <p class="mb-4 text-xs text-slate-500">Outstanding per bucket umur pada tanggal hari ini.</p>
 <div class="relative h-60"><canvas id="chart-aging"></canvas></div>
-</article>
-<article class="overflow-x-auto rounded-2xl border bg-white p-6 shadow-sm">
+</x-ui.card>
+<x-ui.card class="overflow-x-auto" bodyClass="p-6">
 <h2 class="font-bold mb-1">Ringkasan Bucket</h2>
 <p class="mb-3 text-xs text-slate-500">Total piutang Rp {{ number_format((float) $aging['ar_total'], 0, ',', '.') }} · total utang Rp {{ number_format((float) $aging['ap_total'], 0, ',', '.') }}</p>
 <table class="w-full text-sm table-sticky"><thead><tr><th>Bucket</th><th class="text-right">Nilai</th></tr></thead><tbody>@foreach($aging['buckets'] as $bucket => $total)<tr><td>{{ $bucket }}</td><td class="text-right font-mono">{{ number_format((float) $total, 2, ',', '.') }}</td></tr>@endforeach</tbody></table>
-</article>
+</x-ui.card>
 </div>
 @endif
 
 <div class="mt-8 grid gap-5 lg:grid-cols-2">
 @if($approvals !== null)
-<article class="rounded-2xl border bg-white p-6 shadow-sm">
+<x-ui.card bodyClass="p-6">
 <div class="flex items-center justify-between"><h2 class="font-bold">Menunggu Persetujuan</h2><a href="/admin/approvals" class="text-xs font-bold text-sky-700">Approval Center →</a></div>
 <div class="mt-3 space-y-2">@forelse($approvals as $approval)
 <div class="flex items-center justify-between rounded-xl border p-3 text-sm"><div><strong>{{ class_basename($approval->approvable_type) }} #{{ $approval->approvable_id }}</strong><span class="block text-xs text-slate-500">Tahap {{ $approval->current_sequence }} @if($approval->due_at)· SLA {{ $approval->due_at->format('d/m H:i') }}@endif</span></div>@if($approval->due_at && $approval->due_at->isPast())<x-ui.badge status="exception" label="overdue" />@else<x-ui.badge status="pending_approval" label="pending" />@endif</div>
 @empty<x-ui.empty icon="check" title="Tidak ada dokumen menunggu" description="Semua approval dalam batas SLA." /></@endforelse</div>
-</article>
+</x-ui.card>
 @endif
 @if($journals->isNotEmpty())
 <article class="rounded-2xl border bg-white p-6 shadow-sm overflow-x-auto">
