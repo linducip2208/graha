@@ -17,7 +17,7 @@
 </form>
 
 <div class="mt-8 space-y-4">@forelse($units as $unit)
-<article class="rounded-2xl border bg-white p-5">
+<x-ui.card>
 <div class="flex flex-wrap items-center justify-between gap-2">
 <strong>{{ $unit->code }} · Ø{{ $unit->diameter_mm }} × {{ $unit->length_m }} m · {{ $unit->ownership === 'owned' ? 'milik' : 'sewa' }}</strong>
 <x-ui.badge :status="match($unit->status) { 'in_stock' => 'approved', 'installed' => 'open', 'extracted' => 'draft', 'left_in_pile' => 'pending_approval', 'damage_reported' => 'rejected', 'repaired' => 'approved', default => 'closed' }" :label="$unit->status" />
@@ -49,6 +49,6 @@
 <div class="mt-2 flex items-center gap-3 rounded-xl bg-slate-50 p-2 text-xs"><img src="{{ route('evidence.file', $ev) }}" alt="{{ $ev->original_name }}" class="h-14 w-14 rounded-lg border object-cover"><div><strong>{{ \Illuminate\Support\Str::limit($ev->original_name, 40) }}</strong><br>{{ $ev->size_kb }} KB · {{ $ev->created_at->format('d/m/Y H:i') }} · {{ $ev->uploader?->name }} <a href="{{ route('evidence.download', $ev) }}" class="font-bold text-sky-700">Unduh</a></div></div>
 @empty
 @endforelse
-</article>
+</x-ui.card>
 @empty<x-ui.empty icon="archive" title="Belum ada casing" description="Daftarkan casing pertama untuk mulai melacak siklus pemakaiannya." />@endforelse</div>
 </section></x-layouts.app>

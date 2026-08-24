@@ -18,7 +18,7 @@
 
 <h2 class="mt-10 text-lg font-black">Daftar Permintaan</h2>
 <div class="mt-3 space-y-3">@forelse($requests as $mr)
-<article class="rounded-2xl border bg-white p-5">
+<x-ui.card>
 <div class="flex flex-wrap items-center justify-between gap-2">
 <strong>{{ $mr->number }} · {{ $mr->project?->code }}@if($mr->boredPile) / {{ $mr->boredPile->pile_number }}@endif · {{ $mr->warehouse?->code }}</strong>
 <x-ui.badge :status="$mr->status === 'approved' ? 'approved' : ($mr->status === 'requested' ? 'pending_approval' : 'closed')" :label="$mr->status" />
@@ -32,6 +32,6 @@
 <form method="post" action="/admin/inventory/material-requests/{{ $mr->id }}/issue" class="mt-2 inline">@csrf<button onclick="return confirm('Terbitkan seluruh sisa material dari gudang dan posting jurnal biaya proyek?')" class="rounded-lg bg-sky-700 px-4 py-2 text-xs font-bold text-white">Issue ke proyek</button></form>
 @endif
 @endif
-</article>
+</x-ui.card>
 @empty<x-ui.empty icon="archive" title="Belum ada permintaan" description="Ajukan permintaan material pertama untuk proyek aktif." />@endforelse</div>
 </section></x-layouts.app>

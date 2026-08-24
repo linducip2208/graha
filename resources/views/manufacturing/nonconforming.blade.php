@@ -33,7 +33,7 @@
             @forelse($inspections as $inspection)
                 @php($disposed = $inspection->dispositions->sum('quantity'))
                 @php($remaining = max(0, (float) $inspection->inspected_quantity - (float) $disposed))
-                <article class="rounded-2xl border bg-white p-5">
+                <x-ui.card>
                     <div class="flex flex-wrap items-start justify-between gap-3">
                         <div>
                             <h2 class="font-bold">{{ $inspection->number }} — {{ $inspection->productionOrder->number }}</h2>
@@ -73,7 +73,7 @@
                         @endforelse
                         </tbody></table>
                     </div>
-                </article>
+                </x-ui.card>
             @empty
                 <div class="rounded-2xl border border-dashed p-8 text-center"><strong>Tidak ada output produksi yang ditolak.</strong><p class="mt-1 text-sm text-slate-500">Hasil QC berstatus ditolak akan muncul di sini untuk ditindaklanjuti.</p></div>
             @endforelse

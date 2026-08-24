@@ -12,7 +12,7 @@
 
 <h2 class="mt-10 text-lg font-black">Daftar Alat</h2>
 <div class="mt-3 space-y-4">@forelse($tools as $tool)
-<article class="rounded-2xl border bg-white p-5">
+<x-ui.card>
 <div class="flex flex-wrap items-center justify-between gap-2">
 <strong>{{ $tool->code }} — {{ $tool->name }}</strong>
 <x-ui.badge :status="$tool->status === 'available' ? 'approved' : ($tool->status === 'checked_out' ? 'pending_approval' : ($tool->status === 'lost' ? 'rejected' : 'closed'))" :label="$tool->status" />
@@ -48,6 +48,6 @@
 <details class="mt-2"><summary class="cursor-pointer text-xs font-bold text-sky-700">Riwayat</summary>
 <ul class="mt-1 space-y-1 text-xs text-slate-600">@foreach($tool->movements as $mv)<li>{{ $mv->occurred_at->format('d/m/Y H:i') }} — <strong>{{ str($mv->type)->replace('_',' ') }}</strong> oleh {{ $mv->holder?->name }} {{ $mv->notes ? '· '.\Illuminate\Support\Str::limit($mv->notes, 60) : '' }}</li>@endforeach</ul>
 </details>
-</article>
+</x-ui.card>
 @empty<x-ui.empty icon="wrench" title="Belum ada alat terdaftar" description="Daftarkan alat bantu pertama untuk mulai kontrol keluar-masuk." />@endforelse</div>
 </section></x-layouts.app>

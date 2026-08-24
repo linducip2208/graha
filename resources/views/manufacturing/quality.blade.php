@@ -7,7 +7,7 @@
         @if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{{ $errors->first() }}</div>@endif
         <div class="mt-8 space-y-4">
             @forelse($orders as $order)
-                <article class="rounded-2xl border bg-white p-5">
+                <x-ui.card>
                     <div class="flex flex-wrap justify-between gap-3"><div><strong>{{ $order->number }} — {{ $order->bom?->outputItem?->name }}</strong><p class="text-sm text-slate-500">Rencana {{ $order->planned_quantity }} · diterima QC {{ $order->inspections->where('result','accepted')->sum('inspected_quantity') }} · selesai {{ $order->completed_quantity }}</p></div><span class="rounded-lg bg-slate-100 px-3 py-1 text-xs font-bold">{{ strtoupper($order->status) }}</span></div>
                     @if(in_array($order->status, ['released', 'in_progress']) && auth()->user()->hasPermission('manufacturing.manage', app(\App\Support\Tenancy\CurrentCompany::class)->id()))
                         <form method="post" action="/admin/manufacturing/orders/{{ $order->id }}/inspect" class="mt-4 grid gap-3 rounded-xl bg-sky-50 p-4 md:grid-cols-3">@csrf
@@ -21,7 +21,7 @@
                     <div class="mt-4 overflow-x-auto"><table class="w-full text-sm"><thead><tr><th>Inspeksi</th><th>Kuantitas</th><th>Hasil</th><th>Kriteria</th><th>Evidence</th><th>Waktu</th></tr></thead><tbody>
                         @forelse($order->inspections as $inspection)<tr><td>{{ $inspection->number }}</td><td>{{ $inspection->inspected_quantity }}</td><td class="font-bold {{ $inspection->result === 'accepted' ? 'text-emerald-700' : 'text-red-700' }}">{{ $inspection->result === 'accepted' ? 'DITERIMA' : 'DITOLAK' }}</td><td>{{ $inspection->criteria }}</td><td>{{ $inspection->evidence_reference ?: '—' }}</td><td>{{ $inspection->inspected_at->format('d/m/Y H:i') }}</td></tr>@empty<tr><td colspan="6" class="p-6 text-center text-amber-700">Belum diperiksa QC. Production completion akan ditolak.</td></tr>@endforelse
                     </tbody></table></div>
-                </article>
+                </x-ui.card>
             @empty<div class="rounded-2xl border border-dashed p-8 text-center">Belum ada production order untuk diperiksa.</div>@endforelse
         </div>
     </section>

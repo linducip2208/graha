@@ -24,7 +24,7 @@
 <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 @foreach(config('modules.nav') as $group)
 @php($childLabels = collect($group['items'])->map(fn ($item) => empty($item['children']) ? null : collect($item['children'])->pluck('label')->implode(' · '))->filter()->implode(' | '))
-<article class="rounded-2xl border bg-white p-5"><p class="text-xs font-bold uppercase tracking-widest text-slate-400">{{ $group['label'] }}</p><ul class="mt-2 space-y-1.5 text-sm text-slate-700">@foreach($group['items'] as $item)<li>{{ $item['label'] }}</li>@endforeach</ul>@if($childLabels)<p class="mt-2 text-xs leading-relaxed text-slate-400">{{ $childLabels }}</p>@endif</article>
+<x-ui.card><p class="text-xs font-bold uppercase tracking-widest text-slate-400">{{ $group['label'] }}</p><ul class="mt-2 space-y-1.5 text-sm text-slate-700">@foreach($group['items'] as $item)<li>{{ $item['label'] }}</li>@endforeach</ul>@if($childLabels)<p class="mt-2 text-xs leading-relaxed text-slate-400">{{ $childLabels }}</p>@endif</x-ui.card>
 @endforeach
 </div>
 

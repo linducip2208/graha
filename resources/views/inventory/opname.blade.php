@@ -18,7 +18,7 @@
 
 <h2 class="mt-10 text-lg font-black">Riwayat Opname</h2>
 <div class="mt-3 space-y-3">@forelse($counts as $count)
-<article class="rounded-2xl border bg-white p-5">
+<x-ui.card>
 <div class="flex flex-wrap items-center justify-between gap-2">
 <strong>{{ $count->number }} · {{ $count->warehouse?->code }}</strong>
 <x-ui.badge :status="$count->status === 'approved' ? 'approved' : 'draft'" />
@@ -29,6 +29,6 @@
 @if($count->status === 'draft' && auth()->user()->hasPermission('inventory.manage', app(\App\Support\Tenancy\CurrentCompany::class)->id()) && $count->counted_by !== auth()->id())
 <form method="post" action="/admin/inventory/opname/{{ $count->id }}/approve" class="mt-2 inline">@csrf<button onclick="return confirm('Approve akan memposting adjustment ke ledger secara permanen untuk semua baris bervarian. Lanjutkan?')" class="rounded-lg bg-emerald-700 px-4 py-2 text-xs font-bold text-white">Approve & posting adjustment</button></form>
 @endif
-</article>
+</x-ui.card>
 @empty<x-ui.empty icon="archive" title="Belum ada opname" description="Buat penghitungan fisik pertama untuk gudang Anda." />@endforelse</div>
 </section></x-layouts.app>
