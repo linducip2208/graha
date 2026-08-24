@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\UserFavorite;
 use App\Models\UserRecentView;
+use App\Support\AppLauncher;
 use App\Support\Navigation;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Http\Request;
@@ -17,7 +18,9 @@ class WorkspaceController extends Controller
 
         return view('apps', [
             'company' => $current->get(),
-            'workspaces' => Navigation::groups($request->user(), $current->id()),
+            'workspaces' => AppLauncher::workspaces($request->user(), $current->id()),
+            'navGroups' => Navigation::groups($request->user(), $current->id()),
+            'launcherConfig' => AppLauncher::config($current->id()),
             'favorites' => $favorites,
             'recents' => $recents,
         ]);

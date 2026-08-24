@@ -21,6 +21,7 @@ class Navigation
 
         return collect(config('modules.nav', []))
             ->map(fn (array $group) => [
+                'key' => $group['key'] ?? null,
                 'label' => $group['label'],
                 'items' => self::filterItems(collect($group['items']), $user, $companyId, $visibleModules),
             ])
@@ -46,9 +47,9 @@ class Navigation
             if (! empty($item['permission']) && ! $user->hasPermission($item['permission'], (int) $companyId)) {
                 return null;
             }
-            if (! empty($item['children'])) {
-                return $item;
-            }
+            // Module visibility (edition) berlaku untuk SEMUA item, termasuk
+            // parent ber-children: tanpa ini edition tidak bisa menyembunyikan
+            // workspace utuh (ADR-065).
             if (! self::isVisibleForModule((string) $item['href'], $visibleModules)) {
                 return null;
             }

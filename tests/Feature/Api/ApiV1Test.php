@@ -3,10 +3,12 @@
 namespace Tests\Feature\Api;
 
 use App\Models\Company;
+use App\Models\ConstraintLog;
 use App\Models\Customer;
 use App\Models\FiscalPeriod;
 use App\Models\NumberSequence;
 use App\Models\Permission;
+use App\Models\ProcurementPlan;
 use App\Models\Project;
 use App\Models\ProjectDailyReport;
 use App\Models\Role;
@@ -74,8 +76,8 @@ class ApiV1Test extends TestCase
 
         $projectA = Project::where('company_id', $companyA->id)->first();
         $foreignProject = Project::where('company_id', $companyB->id)->first();
-        \App\Models\ConstraintLog::create(['company_id' => $companyA->id, 'project_id' => $projectA->id, 'type' => 'permit', 'title' => 'Izin lingkungan terlambat', 'description' => 'Pengurusan izin menunggu dokumen pemilik lahan.', 'status' => 'open', 'raised_at' => now()->toDateString(), 'recorded_by' => $user->id]);
-        \App\Models\ProcurementPlan::create(['company_id' => $companyA->id, 'project_id' => $projectA->id, 'title' => 'Semen 500 ton', 'quantity' => '500.0000', 'estimated_value' => '3500000.00', 'required_date' => now()->subDays(5)->toDateString(), 'planned_po_date' => now()->subDays(10)->toDateString(), 'status' => 'planned', 'created_by' => $user->id]);
+        ConstraintLog::create(['company_id' => $companyA->id, 'project_id' => $projectA->id, 'type' => 'permit', 'title' => 'Izin lingkungan terlambat', 'description' => 'Pengurusan izin menunggu dokumen pemilik lahan.', 'status' => 'open', 'raised_at' => now()->toDateString(), 'recorded_by' => $user->id]);
+        ProcurementPlan::create(['company_id' => $companyA->id, 'project_id' => $projectA->id, 'title' => 'Semen 500 ton', 'quantity' => '500.0000', 'estimated_value' => '3500000.00', 'required_date' => now()->subDays(5)->toDateString(), 'planned_po_date' => now()->subDays(10)->toDateString(), 'status' => 'planned', 'created_by' => $user->id]);
         $token = $this->getToken($user);
 
         $ok = $this->getJson('/api/v1/constraints?project_id='.$projectA->id, ['Authorization' => "Bearer {$token}", 'X-Company-Id' => (string) $companyA->id]);

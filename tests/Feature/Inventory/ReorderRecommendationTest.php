@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Inventory;
 
+use App\Http\Controllers\InventoryController;
 use App\Models\Company;
 use App\Models\Item;
 use App\Models\PurchaseOrder;
@@ -59,7 +60,7 @@ class ReorderRecommendationTest extends TestCase
 
     public function test_reorder_settings_update_and_page_render(): void
     {
-        $this->assertTrue(method_exists(\App\Http\Controllers\InventoryController::class, 'reorder'));
-        $this->assertTrue(method_exists(\App\Http\Controllers\InventoryController::class, 'updateReorderSettings'));
+        $this->assertTrue(method_exists(InventoryController::class, 'reorder'));
+        $this->assertTrue(method_exists(InventoryController::class, 'updateReorderSettings'));
     }
 }

@@ -9,16 +9,16 @@ return [
     | Laporan · Pengaturan  (maksimal 10 workspace).
     */
     'nav' => [
-        ['label' => '🏠 Beranda', 'items' => [
+        ['key' => 'beranda', 'label' => '🏠 Beranda', 'items' => [
             ['label' => 'Executive Dashboard', 'href' => '/dashboard', 'icon' => 'dashboard'],
             ['label' => 'My Work', 'href' => '/admin/my-work', 'icon' => 'check'],
             ['label' => 'Semua Aplikasi', 'href' => '/apps', 'icon' => 'grid'],
         ]],
-        ['label' => '💼 Komersial', 'items' => [
+        ['key' => 'komersial', 'label' => '💼 Komersial', 'items' => [
             ['label' => 'Tender & Pelanggan', 'href' => '/admin/tenders', 'icon' => 'flag', 'permission' => 'tender.view'],
             ['label' => 'Administrasi Kontrak', 'href' => '/admin/contracts', 'icon' => 'document', 'permission' => 'contract.view'],
         ]],
-        ['label' => '🏗️ Proyek', 'items' => [
+        ['key' => 'proyek', 'label' => '🏗️ Proyek', 'items' => [
             ['label' => 'Proyek, Gantt & Kurva-S', 'href' => '/admin/projects', 'icon' => 'cube', 'permission' => 'project.view'],
             ['label' => 'Field Operations', 'href' => '/admin/projects/field-ops', 'icon' => 'wrench', 'permission' => 'project.view', 'children' => [
                 ['label' => 'Drilling Record & Bore Log', 'href' => '/admin/projects/field-ops#drilling'],
@@ -26,7 +26,7 @@ return [
                 ['label' => 'Pile Testing', 'href' => '/admin/projects/field-ops#testing'],
             ]],
         ]],
-        ['label' => '📦 Supply Chain', 'items' => [
+        ['key' => 'supply-chain', 'label' => '📦 Supply Chain', 'items' => [
             ['label' => 'Inventory & Gudang', 'href' => '/admin/inventory', 'icon' => 'archive', 'permission' => 'inventory.view', 'children' => [
                 ['label' => 'Stok Kritis', 'href' => '/admin/inventory#stok-kritis'],
                 ['label' => 'Stock Opname', 'href' => '/admin/inventory/opname'],
@@ -39,7 +39,7 @@ return [
                 ['label' => 'RFQ & Perbandingan Harga', 'href' => '/admin/procurement/rfq'],
             ]],
         ]],
-        ['label' => '🏭 Workshop & Equipment', 'items' => [
+        ['key' => 'operations', 'label' => '🏭 Workshop & Equipment', 'items' => [
             ['label' => 'Manufacturing Control', 'href' => '/admin/manufacturing', 'icon' => 'cog', 'permission' => 'manufacturing.view', 'children' => [
                 ['label' => 'Routing & Biaya Produksi', 'href' => '/admin/manufacturing/costing'],
                 ['label' => 'Quality Control Produksi', 'href' => '/admin/manufacturing/quality'],
@@ -52,7 +52,7 @@ return [
                 ['label' => 'Tangki BBM & Rekonsiliasi', 'href' => '/admin/fuel-tanks'],
             ]],
         ]],
-        ['label' => '💰 Keuangan', 'items' => [
+        ['key' => 'keuangan', 'label' => '💰 Keuangan', 'items' => [
             ['label' => 'Ikhtisar Keuangan', 'href' => '/admin/finance/overview', 'icon' => 'pie', 'permission' => 'finance.view'],
             ['label' => 'General Ledger & Periode', 'href' => '/admin/finance', 'icon' => 'banknote', 'permission' => 'finance.view', 'children' => [
                 ['label' => 'Chart of Accounts', 'href' => '/admin/finance/accounts'],
@@ -70,24 +70,24 @@ return [
             ['label' => 'Fixed Asset & Depresiasi', 'href' => '/admin/fixed-assets', 'icon' => 'briefcase', 'permission' => 'finance.view'],
             ['label' => 'Procurement Posting', 'href' => '/admin/procurement-accounting', 'icon' => 'calculator', 'permission' => 'accounting.post'],
         ]],
-        ['label' => '✅ Quality & HSE', 'items' => [
+        ['key' => 'quality-hse', 'label' => '✅ Quality & HSE', 'items' => [
             ['label' => 'Risiko, NCR & Audit Mutu', 'href' => '/admin/qms', 'icon' => 'shield', 'permission' => 'qms.view'],
             ['label' => 'HSE, JSA & Incident', 'href' => '/admin/hse', 'icon' => 'triangle-alert', 'permission' => 'hse.view'],
         ]],
-        ['label' => '📄 Dokumen & Approval', 'items' => [
+        ['key' => 'documents-approval', 'label' => '📄 Dokumen & Approval', 'items' => [
             ['label' => 'Document Control', 'href' => '/admin/documents', 'icon' => 'document', 'permission' => 'document.view'],
             ['label' => 'Approval Center', 'href' => '/admin/approvals', 'icon' => 'check', 'permission' => 'approval.view'],
             ['label' => 'Digital Signing', 'href' => '/admin/signatures', 'icon' => 'pen', 'permission' => 'signature.view'],
             ['label' => 'Audit Trail', 'href' => '/admin/audit', 'icon' => 'search', 'permission' => 'audit.view'],
         ]],
-        ['label' => '📊 Laporan', 'items' => [
+        ['key' => 'laporan', 'label' => '📊 Laporan', 'items' => [
             ['label' => 'Bisnis & Tender', 'href' => '/admin/reports/executive', 'icon' => 'chart', 'permission' => 'report.view'],
             ['label' => 'Keuangan', 'href' => '/admin/reports/finance', 'icon' => 'calculator', 'permission' => 'report.view'],
             ['label' => 'Operasional', 'href' => '/admin/reports/operations', 'icon' => 'dashboard', 'permission' => 'report.view'],
             ['label' => 'Manufaktur', 'href' => '/admin/reports/manufacturing', 'icon' => 'cog', 'permission' => 'report.view'],
             ['label' => 'AR/AP Aging', 'href' => '/admin/reports/aging', 'icon' => 'clock', 'permission' => 'report.view'],
         ]],
-        ['label' => '⚙️ Pengaturan', 'items' => [
+        ['key' => 'pengaturan', 'label' => '⚙️ Pengaturan', 'items' => [
             ['label' => 'Perusahaan & Role', 'href' => '/admin/organization', 'icon' => 'building', 'permission' => 'organization.view', 'children' => [
                 ['label' => 'Perusahaan & Cabang', 'href' => '/admin/organization'],
                 ['label' => 'Role & Permission', 'href' => '/admin/organization/roles'],

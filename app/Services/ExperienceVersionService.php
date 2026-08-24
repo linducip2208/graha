@@ -106,4 +106,73 @@ class ExperienceVersionService
 
         return $path;
     }
+
+    /**
+     * Custom cover App Launcher (ADR-076): JPEG/PNG/WebP saja (tanpa SVG),
+     * maksimal 5 MB, validasi isi gambar, lalu dioptimalkan ke WebP 1200x675
+     * via GD agar launcher tidak pernah memuat file berat. Path disk privat.
+     */
+    public function storeLauncherCover(int $companyId, UploadedFile $file, string $workspaceKey, User $actor): string
+    {
+        throw_unless(preg_match('/^[a-z0-9-]{1,60}$/', $workspaceKey), ValidationException::withMessages(['key' => 'Workspace key tidak valid.']));
+        $allowedMimes = ['image/png' => 'png', 'image/jpeg' => 'jpg', 'image/webp' => 'webp'];
+        $ext = $allowedMimes[$file->getClientMimeType()] ?? null;
+        throw_unless($ext !== null, ValidationException::withMessages(['file' => 'Cover harus JPEG/PNG/WebP.']));
+        throw_if($file->getSize() > 5 * 1024 * 1024, ValidationException::withMessages(['file' => 'Cover maksimal 5 MB.']));
+
+        $content = (string) $file->getContent();
+        $source = getimagesizefromstring($content);
+        throw_unless($source !== false, ValidationException::withMessages(['file' => 'Berkas gambar tidak valid.']));
+
+        $image = match ($ext) {
+            'png' => imagecreatefromstring($content),
+            'webp' => @imagecreatefromstring($content),
+            default => imagecreatefromstring($content),
+        };
+        throw_unless($image !== false, ValidationException::withMessages(['file' => 'Berkas gambar tidak dapat dibaca.']));
+
+        // Crop-cover ke rasio 16:9 lalu skala ke maksimal 1200x675.
+        $targetW = 1200;
+        $targetH = 675;
+        $srcW = imagesx($image);
+        $srcH = imagesy($image);
+        $scale = max($targetW / $srcW, $targetH / $srcH);
+        $cropW = (int) round($targetW / $scale);
+        $cropH = (int) round($targetH / $scale);
+        $canvas = imagecreatetruecolor($targetW, $targetH);
+        $srcX = (int) floor(($srcW - $cropW) / 2);
+        $srcY = (int) floor(($srcH - $cropH) / 2);
+        imagecopyresampled($canvas, $image, 0, 0, $srcX, $srcY, $targetW, $targetH, $cropW, $cropH);
+        imagedestroy($image);
+        ob_start();
+        imagewebp($canvas, null, 82);
+        imagedestroy($canvas);
+        $optimized = (string) ob_get_clean();
+
+        $existing = CompanyExperience::find($companyId)?->launcher_covers ?? [];
+        $oldPath = is_array($existing) ? ($existing[$workspaceKey] ?? null) : null;
+        $path = "branding/{$companyId}/launcher-covers/cover-{$workspaceKey}-".now()->format('YmdHis').'.webp';
+        Storage::disk('local')->put($path, $optimized);
+        if ($oldPath && Storage::disk('local')->exists($oldPath)) {
+            Storage::disk('local')->delete($oldPath);
+        }
+        $this->audit->record($companyId, $actor->id, 'experience.launcher_cover_uploaded', CompanyExperience::firstOrNew(['company_id' => $companyId]));
+
+        return $path;
+    }
+
+    /** Hapus custom cover workspace; registry default otomatis kembali dipakai. */
+    public function deleteLauncherCover(int $companyId, string $workspaceKey, User $actor): void
+    {
+        throw_unless(preg_match('/^[a-z0-9-]{1,60}$/', $workspaceKey), ValidationException::withMessages(['key' => 'Workspace key tidak valid.']));
+        $covers = CompanyExperience::find($companyId)?->launcher_covers ?? [];
+        $path = is_array($covers) ? ($covers[$workspaceKey] ?? null) : null;
+        if ($path && Storage::disk('local')->exists($path)) {
+            Storage::disk('local')->delete($path);
+        }
+        $remaining = is_array($covers) ? collect($covers)->except($workspaceKey)->all() : [];
+        CompanyExperience::updateOrCreate(['company_id' => $companyId], ['launcher_covers' => $remaining]);
+        ThemeService::flush($companyId);
+        $this->audit->record($companyId, $actor->id, 'experience.launcher_cover_deleted', CompanyExperience::firstOrNew(['company_id' => $companyId]));
+    }
 }

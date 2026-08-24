@@ -89,6 +89,40 @@
 </div>
 </fieldset>
 
+<fieldset class="rounded-xl border p-4"><legend class="px-2 text-sm font-bold">App Launcher</legend>
+<form method="post" action="/admin/experience/launcher" class="grid gap-3 sm:grid-cols-3">@csrf
+<label class="text-xs font-semibold">Launcher Style<select name="style" class="mt-1 w-full rounded-lg border p-2 text-xs"><option value="visual" @selected(($launcherConfig['style'] ?? 'visual') === 'visual')>Visual (cover)</option><option value="compact" @selected(($launcherConfig['style'] ?? '') === 'compact')>Compact</option></select></label>
+<label class="text-xs font-semibold">Cover Display<select name="covers_enabled" class="mt-1 w-full rounded-lg border p-2 text-xs"><option value="1" @selected(($launcherConfig['covers_enabled'] ?? true))>On</option><option value="0" @selected(!($launcherConfig['covers_enabled'] ?? true))>Off (gradient + ikon)</option></select></label>
+<label class="text-xs font-semibold">Card Density<select name="density" class="mt-1 w-full rounded-lg border p-2 text-xs"><option value="comfortable" @selected(($launcherConfig['density'] ?? '') === 'comfortable')>Comfortable</option><option value="compact" @selected(($launcherConfig['density'] ?? '') === 'compact')>Compact</option></select></label>
+<div class="sm:col-span-3"><button class="rounded-xl bg-slate-800 px-4 py-2 text-xs font-bold text-white">Simpan Preferensi Launcher</button><span class="ml-2 text-[11px] text-slate-400">Default halaman /apps untuk seluruh user company; user tetap bisa ganti mode sendiri.</span></div>
+</form>
+<div class="mt-4 space-y-2">
+@foreach($launcherWorkspaceKeys as $ws)
+@php($coverPath = $launcherCovers[$ws['key']] ?? null)
+<div class="flex flex-wrap items-center justify-between gap-2 rounded-xl border p-2.5 text-xs">
+<div class="flex min-w-0 items-center gap-3">
+@if($coverPath)<img src="/branding/{{ app(\App\Support\Tenancy\CurrentCompany::class)->id() }}/{{ basename($coverPath) }}" alt="" class="h-10 w-[71px] rounded-lg object-cover">@else<span class="h-10 w-[71px] rounded-lg bg-gradient-to-br from-slate-700 to-slate-900"></span>@endif
+<span class="min-w-0 truncate font-bold">{{ $ws['label'] }}<span class="ml-1 font-mono text-[10px] font-normal text-slate-400">{{ $ws['key'] }}</span>@if($coverPath)<span class="ml-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[9px] font-black text-emerald-700">CUSTOM</span>@endif</span>
+</div>
+<div class="flex items-center gap-2">
+<form method="post" action="/admin/experience/launcher/covers" enctype="multipart/form-data" class="flex items-center gap-1">@csrf
+<input type="hidden" name="workspace_key" value="{{ $ws['key'] }}">
+<input type="file" name="file" accept=".jpg,.jpeg,.png,.webp" required class="max-w-40 rounded border p-0.5 text-[10px]">
+<button class="rounded-lg bg-violet-700 px-2.5 py-1.5 font-bold text-white">Upload cover</button>
+</form>
+@if($coverPath)
+<form method="post" action="/admin/experience/launcher/covers/delete" onsubmit="return confirm('Kembalikan ke cover default?')">@csrf
+<input type="hidden" name="workspace_key" value="{{ $ws['key'] }}">
+<button class="font-bold text-red-600">Hapus</button>
+</form>
+@endif
+</div>
+</div>
+@endforeach
+</div>
+<p class="mt-2 text-[11px] text-slate-400">Cover: JPEG/PNG/WebP maks 5 MB — otomatis di-crop 16:9 dan dioptimalkan ke WebP 1200×675. Tanpa custom cover, default Graha dipakai; tanpa cover sama sekali, gradient tema + ikon.</p>
+</fieldset>
+
 <fieldset class="rounded-xl border p-4"><legend class="px-2 text-sm font-bold">Dashboard Builder</legend>
 <p class="text-[11px] text-slate-400">Kosongkan = layout legacy. Centang widget yang ingin tampil; lebar kolom grid 12.</p>
 <div class="grid gap-1 sm:grid-cols-3">@foreach(config('dashboard-widgets') as $wid => $w)

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 
 class DocumentSignature extends Model
 {
@@ -53,7 +54,7 @@ class DocumentSignature extends Model
         if ($version !== null && hash_equals((string) $this->signed_hash, (string) $version->sha256)) {
             $checks['hash_bound'] = true;
             try {
-                $disk = \Illuminate\Support\Facades\Storage::disk($version->disk);
+                $disk = Storage::disk($version->disk);
                 $checks['file_intact'] = $disk->exists($version->path)
                     && hash_equals((string) $version->sha256, hash_file('sha256', $disk->path($version->path)));
             } catch (\Throwable) {

@@ -338,6 +338,9 @@ Route::post('/admin/experience/draft', [ExperienceController::class, 'saveDraft'
 Route::post('/admin/experience/versions/{version}/publish', [ExperienceController::class, 'publishVersion'])->middleware(['auth', 'company']);
 Route::post('/admin/experience/versions/{version}/rollback', [ExperienceController::class, 'rollbackTo'])->middleware(['auth', 'company']);
 Route::post('/admin/experience/assets', [ExperienceController::class, 'uploadAsset'])->middleware(['auth', 'company']);
+Route::post('/admin/experience/launcher', [ExperienceController::class, 'saveLauncherConfig'])->middleware(['auth', 'company']);
+Route::post('/admin/experience/launcher/covers', [ExperienceController::class, 'uploadLauncherCover'])->middleware(['auth', 'company']);
+Route::post('/admin/experience/launcher/covers/delete', [ExperienceController::class, 'deleteLauncherCover'])->middleware(['auth', 'company']);
 Route::post('/admin/experience/versions/{version}/preview', [ExperienceController::class, 'startPreview'])->middleware(['auth', 'company']);
 Route::post('/admin/experience/preview/stop', [ExperienceController::class, 'stopPreview'])->middleware(['auth', 'company']);
 Route::get('/admin/experience/export', [ExperienceController::class, 'export'])->middleware(['auth', 'company']);

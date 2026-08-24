@@ -7,8 +7,10 @@ use App\Models\DocumentSignature;
 use App\Models\DocumentVersion;
 use App\Models\SignatureProvider;
 use App\Services\DocumentSignatureService;
+use App\Services\PileQrService;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class SignatureController extends Controller
 {
@@ -73,7 +75,7 @@ class SignatureController extends Controller
             try {
                 $service->signInternal($version, $request->user(), $data['position'], $request->ip(), $request->userAgent());
                 $signed++;
-            } catch (\Illuminate\Validation\ValidationException) {
+            } catch (ValidationException) {
                 $skipped++;
             }
         }
@@ -93,7 +95,7 @@ class SignatureController extends Controller
 
         $result = $signature->verificationResult();
         $verifyUrl = url('/verify/'.$token);
-        $qrSvg = app(\App\Services\PileQrService::class)->svgForPileUrl($verifyUrl);
+        $qrSvg = app(PileQrService::class)->svgForPileUrl($verifyUrl);
 
         return view('verify', ['signature' => $signature->load('version.document'), 'result' => $result, 'qrSvg' => $qrSvg, 'token' => $token]);
     }

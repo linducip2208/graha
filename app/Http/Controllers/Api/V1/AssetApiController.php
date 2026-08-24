@@ -8,6 +8,7 @@ use App\Models\ConstraintLog;
 use App\Models\Equipment;
 use App\Models\FuelTank;
 use App\Models\ProcurementPlan;
+use App\Models\Project;
 use App\Models\ReinforcementCage;
 use App\Models\Tool;
 use Illuminate\Http\JsonResponse;
@@ -83,7 +84,7 @@ class AssetApiController extends Controller
         $companyId = $this->company($request);
         abort_unless($request->user()->hasPermission('project.view', $companyId), 403, 'Butuh permission project.view.');
         $projectId = (int) $request->query('project_id', 0);
-        abort_if($projectId === 0 || ! \App\Models\Project::where('company_id', $companyId)->whereKey($projectId)->exists(), 404, 'Proyek tidak ditemukan di perusahaan ini.');
+        abort_if($projectId === 0 || ! Project::where('company_id', $companyId)->whereKey($projectId)->exists(), 404, 'Proyek tidak ditemukan di perusahaan ini.');
 
         return response()->json(['data' => ConstraintLog::where('company_id', $companyId)
             ->where('project_id', $projectId)
@@ -97,7 +98,7 @@ class AssetApiController extends Controller
         $companyId = $this->company($request);
         abort_unless($request->user()->hasPermission('procurement.view', $companyId), 403, 'Butuh permission procurement.view.');
         $projectId = (int) $request->query('project_id', 0);
-        abort_if($projectId === 0 || ! \App\Models\Project::where('company_id', $companyId)->whereKey($projectId)->exists(), 404, 'Proyek tidak ditemukan di perusahaan ini.');
+        abort_if($projectId === 0 || ! Project::where('company_id', $companyId)->whereKey($projectId)->exists(), 404, 'Proyek tidak ditemukan di perusahaan ini.');
 
         return response()->json(['data' => ProcurementPlan::where('company_id', $companyId)
             ->where('project_id', $projectId)

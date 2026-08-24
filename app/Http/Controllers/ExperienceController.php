@@ -22,15 +22,65 @@ class ExperienceController extends Controller
     {
         abort_unless($request->user()->hasPermission('finance.manage', $current->id()), 403);
         $companyId = $current->id();
+        $experienceRow = CompanyExperience::find($companyId);
 
         return view('experience.studio', [
             'resolved' => $service->resolve($companyId),
-            'row' => CompanyExperience::find($companyId),
+            'row' => $experienceRow,
             'presets' => collect(ThemePresets::all())->map(fn ($p, $k) => ['key' => $k, 'label' => $p['label']]),
             'navGroupsCfg' => config('modules.nav'),
-            'navConfig' => (array) (CompanyExperience::find($companyId)?->nav_config ?? []),
-            'terminologyMap' => (array) (CompanyExperience::find($companyId)?->terminology ?? []),
+            'navConfig' => (array) ($experienceRow?->nav_config ?? []),
+            'terminologyMap' => (array) ($experienceRow?->terminology ?? []),
+            'launcherConfig' => array_merge(['style' => 'visual', 'covers_enabled' => true, 'density' => 'comfortable'], (array) ($experienceRow?->launcher_config ?? [])),
+            'launcherCovers' => (array) ($experienceRow?->launcher_covers ?? []),
+            'launcherWorkspaceKeys' => collect(config('modules.nav'))->map(fn ($g) => ['key' => $g['key'] ?? str($g['label'])->slug(), 'label' => $g['label']]),
         ]);
+    }
+
+    /** Simpan preferensi App Launcher company (style/covers/density). */
+    public function saveLauncherConfig(Request $request, CurrentCompany $current)
+    {
+        abort_unless($request->user()->hasPermission('finance.manage', $current->id()), 403);
+        $data = $request->validate([
+            'style' => ['required', 'in:visual,compact'],
+            'covers_enabled' => ['required', 'boolean'],
+            'density' => ['required', 'in:comfortable,compact'],
+        ]);
+        CompanyExperience::updateOrCreate(['company_id' => $current->id()], ['launcher_config' => $data]);
+        ThemeService::flush($current->id());
+
+        return back()->with('status', 'Preferensi App Launcher disimpan.');
+    }
+
+    /** Upload custom cover satu workspace (JPEG/PNG/WebP, dioptimalkan ke WebP 16:9). */
+    public function uploadLauncherCover(Request $request, CurrentCompany $current, ExperienceVersionService $service)
+    {
+        abort_unless($request->user()->hasPermission('finance.manage', $current->id()), 403);
+        $knownKeys = collect(config('modules.nav'))->pluck('key')->filter()->implode(',');
+        $data = $request->validate([
+            'workspace_key' => ['required', "in:{$knownKeys}"],
+            'file' => ['required', 'file', 'max:5120', 'mimes:jpg,jpeg,png,webp'],
+        ], ['file.max' => 'Cover maksimal 5 MB.']);
+        $path = $service->storeLauncherCover($current->id(), $request->file('file'), $data['workspace_key'], $request->user());
+        $row = CompanyExperience::firstOrNew(['company_id' => $current->id()]);
+        $covers = (array) ($row->launcher_covers ?? []);
+        $covers[$data['workspace_key']] = $path;
+        $row->launcher_covers = $covers;
+        $row->save();
+        ThemeService::flush($current->id());
+
+        return back()->with('status', 'Custom cover workspace tersimpan (dioptimalkan ke WebP 1200x675).');
+    }
+
+    /** Kembalikan cover workspace ke default registry. */
+    public function deleteLauncherCover(Request $request, CurrentCompany $current, ExperienceVersionService $service)
+    {
+        abort_unless($request->user()->hasPermission('finance.manage', $current->id()), 403);
+        $knownKeys = collect(config('modules.nav'))->pluck('key')->filter()->implode(',');
+        $data = $request->validate(['workspace_key' => ['required', "in:{$knownKeys}"]]);
+        $service->deleteLauncherCover($current->id(), $data['workspace_key'], $request->user());
+
+        return back()->with('status', 'Custom cover dihapus; default dikembalikan.');
     }
 
     public function update(Request $request, CurrentCompany $current, ThemeService $service)
@@ -230,6 +280,18 @@ class ExperienceController extends Controller
     {
         $row = CompanyExperience::where('company_id', $companyId)->first();
         abort_unless($row, 404);
+        abort_if(! preg_match('/^[a-zA-Z0-9._-]+$/', $file), 404);
+
+        // Custom launcher cover (dekoratif, publik-safe): /branding/{company}/cover-{key}-*.webp
+        if (str_starts_with($file, 'cover-') && str_ends_with($file, '.webp')) {
+            $cover = collect((array) ($row->launcher_covers ?? []))
+                ->filter(fn ($p) => is_string($p) && str_ends_with($p, '/'.$file))
+                ->first();
+            abort_unless(is_string($cover) && Storage::disk('local')->exists($cover), 404);
+
+            return Storage::disk('local')->response($cover, null, ['Content-Type' => 'image/webp', 'Cache-Control' => 'private, max-age=3600']);
+        }
+
         $relative = collect([$row->logo_path, $row->favicon_path])->filter()->first(fn ($p) => str_ends_with((string) $p, '/'.$file));
         abort_unless($relative && ! preg_match('#[\\\\/]{2}|\.\./#', $file), 404);
         abort_unless(Storage::disk('local')->exists($relative), 404);

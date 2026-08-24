@@ -4,11 +4,16 @@ namespace Tests\Feature\Foundation;
 
 use App\Models\Company;
 use App\Models\Document;
+use App\Models\DocumentSignature;
+use App\Models\DocumentVersion;
+use App\Models\Permission;
+use App\Models\Role;
 use App\Models\User;
 use App\Services\DocumentSignatureService;
 use App\Services\DocumentVersionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
@@ -39,7 +44,7 @@ class SignatureVerifyBatchTest extends TestCase
     {
         [, $user, $version] = $this->fixture();
         app(DocumentSignatureService::class)->signInternal($version, $user, 'Direktur');
-        $good = explode('-', \App\Models\DocumentSignature::where('document_version_id', $version->id)->first()->verificationToken());
+        $good = explode('-', DocumentSignature::where('document_version_id', $version->id)->first()->verificationToken());
 
         $this->get('/verify/999-'.($good[1] ?? 'deadbeef'))->assertNotFound();
         $this->get('/verify/not-a-token')->assertNotFound();
@@ -90,16 +95,16 @@ class SignatureVerifyBatchTest extends TestCase
     /** Permission signature.* harus lewat role per membership (backend authorization). */
     private function grantSignPermission(Company $company, User $user): void
     {
-        $role = \App\Models\Role::firstOrCreate(['company_id' => $company->id, 'code' => 'signer-'.md5($company->id.$user->id)], ['name' => 'Signer']);
+        $role = Role::firstOrCreate(['company_id' => $company->id, 'code' => 'signer-'.md5($company->id.$user->id)], ['name' => 'Signer']);
         foreach (['signature.sign', 'signature.view'] as $code) {
-            $permission = \App\Models\Permission::firstOrCreate(['code' => $code], ['name' => 'Signature '.$code, 'module' => 'signature']);
+            $permission = Permission::firstOrCreate(['code' => $code], ['name' => 'Signature '.$code, 'module' => 'signature']);
             $role->permissions()->syncWithoutDetaching([$permission->id]);
         }
-        $membership = \Illuminate\Support\Facades\DB::table('company_user')->where('company_id', $company->id)->where('user_id', $user->id)->first();
-        \Illuminate\Support\Facades\DB::table('company_user_role')->insertOrIgnore(['company_user_id' => $membership->id, 'role_id' => $role->id]);
+        $membership = DB::table('company_user')->where('company_id', $company->id)->where('user_id', $user->id)->first();
+        DB::table('company_user_role')->insertOrIgnore(['company_user_id' => $membership->id, 'role_id' => $role->id]);
     }
 
-    private function makeVersion(Company $company, User $user): \App\Models\DocumentVersion
+    private function makeVersion(Company $company, User $user): DocumentVersion
     {
         $document = Document::create(['company_id' => $company->id, 'document_type' => 'contract', 'number' => fake()->unique()->numerify('DOC-####'), 'title' => 'Kontrak Batch', 'owner_id' => $user->id]);
         $file = UploadedFile::fake()->createWithContent('contract.pdf', '%PDF-1.4 content '.uniqid());

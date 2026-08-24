@@ -332,3 +332,17 @@ ADR baru: 048 (bid decision), 049 (constraint log), 050 (procurement plan),
 Catatan penomoran ADR: commit gelombang ini memakai nomor yang bertabrakan
 dengan registry lama; registry kanonis kini di ARCHITECTURE_DECISIONS.md
 (ADR-066 s.d. ADR-072).
+
+# Pembaruan 2026-08-24 (5) - Premium App Launcher /apps
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| LNC-001 | UX | Stable key 10 workspace + registry config/app-launcher.php (metadata saja) | Tested | AppLauncherTest | Navigation tetap sumber href/permission |
+| LNC-002 | UX | Kartu workspace cover 16:9 + deskripsi + capability preview (3 + N) + favorite + Buka | Tested | AppLauncherTest | Cover lokal WebP hasil scripts/generate-app-covers.php |
+| LNC-003 | UX | Mode tampilan Visual/Compact/List + search client-side + empty state | Tested | smoke HTTP | localStorage per user; List memuat semua item+children |
+| LNC-004 | UX | Custom cover per workspace via Experience Studio | Tested | AppLauncherTest | JPEG/PNG/WebP max 5MB -> GD crop 16:9 -> WebP 1200x675 disk privat |
+| LNC-005 | Security | Serving cover /branding/{company}/cover-*; 404 lintas company | Tested | AppLauncherTest | MIME whitelist, tanpa SVG |
+| BUG-002 | Navigation | Item parent ber-children melewati cek module visibility (edition tidak menyembunyikan workspace) | Fixed | AppLauncherTest | filterItems kini memeriksa SEMUA item (ADR-065 benar-benar berlaku) |
+| LNC-006 | UX | Favorit/Recents existing dipertahankan; favorit toggle dari kartu memakai endpoint existing | Tested | AppLauncherTest | Tanpa storage baru |
+
+Verifikasi: 198 tests / 808 assertions, pint bersih, view:cache + npm run build sukses. Screenshot matrix: public/marketing/screens/apps-launcher-{1440,768,375,dark-1440,dark-375}.png.
