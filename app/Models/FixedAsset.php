@@ -12,7 +12,12 @@ class FixedAsset extends Model
 
     protected function casts(): array
     {
-        return ['acquisition_date' => 'date', 'depreciation_start_date' => 'date', 'acquisition_cost' => 'decimal:2', 'residual_value' => 'decimal:2'];
+        return ['acquisition_date' => 'date', 'depreciation_start_date' => 'date', 'disposed_at' => 'date', 'acquisition_cost' => 'decimal:2', 'residual_value' => 'decimal:2', 'disposal_proceeds' => 'decimal:2'];
+    }
+
+    public function disposalJournal(): BelongsTo
+    {
+        return $this->belongsTo(Journal::class, 'disposal_journal_id');
     }
 
     public function category(): BelongsTo

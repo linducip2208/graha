@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Account;
 use App\Models\AccountingMapping;
 use App\Models\ApprovalWorkflow;
+use App\Models\ArCreditNote;
+use App\Models\ArWriteOff;
 use App\Models\Company;
 use App\Models\CompanySetting;
 use App\Models\ProgressBilling;
@@ -14,6 +16,7 @@ use App\Models\TaxRate;
 use App\Services\ApprovalEngine;
 use App\Services\FxService;
 use App\Services\ProgressBillingService;
+use App\Services\ReceivableAdjustmentService;
 use App\Services\RetentionReleaseService;
 use App\Support\Tenancy\CurrentCompany;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -23,7 +26,9 @@ class BillingController extends Controller
 {
     public function index(CurrentCompany $current)
     {
-        return view('billing.index', ['projects' => Project::where('company_id', $current->id())->whereIn('status', ['active', 'in_progress'])->orderBy('name')->get(), 'billings' => ProgressBilling::where('company_id', $current->id())->with(['project', 'journal'])->latest('billing_date')->get(), 'releases' => RetentionRelease::where('company_id', $current->id())->with(['project', 'journal'])->latest('release_date')->get(), 'workflows' => ApprovalWorkflow::where('company_id', $current->id())->whereIn('document_type', ['progress_billing', 'retention_release'])->where('is_active', true)->get()->groupBy('document_type'), 'accounts' => Account::where('company_id', $current->id())->where('is_active', true)->orderBy('code')->get(), 'mappings' => AccountingMapping::where('company_id', $current->id())->whereIn('event_type', ['progress_billing', 'retention_release'])->with('account')->get(), 'taxRates' => TaxRate::where('company_id', $current->id())->where('kind', 'ppn_output')->where('is_active', true)->orderBy('code')->get()]);
+        $billings = ProgressBilling::where('company_id', $current->id())->with(['project', 'journal'])->latest('billing_date')->get();
+
+        return view('billing.index', ['projects' => Project::where('company_id', $current->id())->whereIn('status', ['active', 'in_progress'])->orderBy('name')->get(), 'billings' => $billings, 'creditNotes' => ArCreditNote::where('company_id', $current->id())->with('billing')->latest('note_date')->limit(50)->get(), 'writeOffs' => ArWriteOff::where('company_id', $current->id())->with('billing')->latest('request_date')->limit(50)->get(), 'releases' => RetentionRelease::where('company_id', $current->id())->with(['project', 'journal'])->latest('release_date')->get(), 'workflows' => ApprovalWorkflow::where('company_id', $current->id())->whereIn('document_type', ['progress_billing', 'retention_release'])->where('is_active', true)->get()->groupBy('document_type'), 'accounts' => Account::where('company_id', $current->id())->where('is_active', true)->orderBy('code')->get(), 'mappings' => AccountingMapping::where('company_id', $current->id())->whereIn('event_type', ['progress_billing', 'retention_release'])->with('account')->get(), 'taxRates' => TaxRate::where('company_id', $current->id())->where('kind', 'ppn_output')->where('is_active', true)->orderBy('code')->get()]);
     }
 
     public function store(Request $request, CurrentCompany $current, ProgressBillingService $service)
@@ -76,6 +81,39 @@ class BillingController extends Controller
         $service->post($billing, $request->user());
 
         return back()->with('status', 'Billing diposting ke AR dan revenue.');
+    }
+
+    public function creditNote(Request $request, ProgressBilling $billing, CurrentCompany $current, ReceivableAdjustmentService $service)
+    {
+        $this->owned($billing, $current);
+        $data = $request->validate(['amount' => ['required', 'decimal:0,2', 'gt:0'], 'reason' => ['required', 'max:500'], 'note_date' => ['required', 'date'], 'idempotency_key' => ['required', 'max:120']]);
+        $service->creditNote($billing, $data['amount'], $data['reason'], $data['note_date'], $data['idempotency_key'], $request->user());
+
+        return back()->with('status', 'Credit note diposting dan piutang dikurangi.');
+    }
+
+    public function requestWriteOff(Request $request, ProgressBilling $billing, CurrentCompany $current, ReceivableAdjustmentService $service)
+    {
+        $this->owned($billing, $current);
+        $data = $request->validate(['amount' => ['required', 'decimal:0,2', 'gt:0'], 'reason' => ['required', 'max:500'], 'request_date' => ['required', 'date'], 'idempotency_key' => ['required', 'max:120']]);
+        $service->requestWriteOff($billing, $data['amount'], $data['reason'], $data['request_date'], $data['idempotency_key'], $request->user());
+
+        return back()->with('status', 'Pengajuan write-off dibuat, menunggu persetujuan pemisah.');
+    }
+
+    public function decideWriteOff(Request $request, ArWriteOff $writeOff, CurrentCompany $current, ReceivableAdjustmentService $service)
+    {
+        abort_unless($writeOff->company_id === $current->id(), 404);
+        if ($request->input('decision') === 'reject') {
+            $data = $request->validate(['notes' => ['required', 'max:500']]);
+            $service->rejectWriteOff($writeOff, $data['notes'], $request->user());
+
+            return back()->with('status', 'Pengajuan write-off ditolak.');
+        }
+        $data = $request->validate(['posting_date' => ['required', 'date']]);
+        $service->approveWriteOff($writeOff, $data['posting_date'], $request->user());
+
+        return back()->with('status', 'Write-off disetujui dan diposting ke beban piutang.');
     }
 
     public function pdf(Request $request, ProgressBilling $billing, CurrentCompany $current)

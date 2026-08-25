@@ -27,12 +27,13 @@ yang "Blocked" menunggu keputusan/file eksternal.
 | Manufacturing WIP/OEE | ✅ Ada core | OEE butuh downtime terstruktur | Backlog E |
 | Equipment cost/hour | ⚠️ Data ada | agregasi fuel+maintenance+depresiasi → Rp/jam | Backlog E |
 | Fuel tank↔equipment | ✅ Baru (ADR-044) | — | — |
-| Accounting core | ✅ Ada | cash flow statement, recurring journal, accrual/prepaid module | Backlog F |
-| AR subledger | ✅ Ada aging | credit note, write-off approval | Backlog F |
+| Accounting core | ✅ Ada | recurring journal, accrual/prepaid module | Backlog F |
+| AR subledger | ✅ Ada aging | ✅ credit note + write-off approval (2026-08-25) | Selesai |
 | AP matching 3-way | ✅ Ada | flag mismatch granular di UI | Kecil |
-| Cash flow forecast | ❌ Belum | dari AR/AP due + billing plan | Backlog F |
+| Cash flow forecast | ✅ Ada (CashFlowForecastService) | — | — |
+| Cash flow statement | ✅ Baru (ADR-055, 2026-08-25) | tagging kategori CoA perlu disiplin input | Disiplin input |
 | Budget vs actual account | ❌ Belum | butuh budget akun per periode | Backlog F |
-| Fixed asset | ✅ Ada | disposal flow lengkap | Kecil |
+| Fixed asset | ✅ Ada | ✅ disposal flow lengkap (ADR-056, 2026-08-25) | Selesai |
 | Pajak ID | ✅ PPN/PPh23/4(2) | PPh 21 engine, rekonsiliasi UI | Backlog F |
 | QMS NCR/CAPA | ✅ Ada | ITP, calibration, customer complaint, supplier NCR | Backlog G |
 | HSE | ✅ JSA/PTW/incident | safety observation/near miss terpisah, PPE, KPI LTIFR/TRIR (butuh man-hours source) | Backlog G |

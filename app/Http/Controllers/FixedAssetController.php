@@ -50,4 +50,13 @@ class FixedAssetController extends Controller
 
         return back()->with('status', 'Depresiasi diposting.');
     }
+
+    public function dispose(Request $request, FixedAsset $asset, CurrentCompany $current, FixedAssetService $service)
+    {
+        abort_unless($asset->company_id === $current->id(), 404);
+        $data = $request->validate(['disposal_date' => ['required', 'date'], 'proceeds' => ['required', 'decimal:0,2', 'min:0'], 'idempotency_key' => ['required', 'max:120']]);
+        $service->dispose($asset, $data['disposal_date'], $data['proceeds'], $data['idempotency_key'], $request->user());
+
+        return back()->with('status', 'Aset dilepas. Jurnal disposal (akumulasi, nilai perolehan, hasil jual, laba/rugi) diposting.');
+    }
 }

@@ -376,7 +376,7 @@ White-label kini benar-benar menyeluruh: ganti preset/warna di Experience Studio
 |---|---|---|---|---|---|
 | UI-F1 | Form | CSS global form: min-height 42px (touch WCAG), radius konsisten, focus ring brand, disabled state, :user-invalid merah progresif | Tested | Suite penuh | Berlaku otomatis ke SEMUA form tanpa ubah view |
 | UI-F2 | Komponen | x-ui.field (label + hint + error per name) dan x-ui.form-section (title + description) | Tested | smoke | Exemplar: halaman Pengaturan |
-| UI-F3 | UX | Form Settings direfaktor ke form-section + helper text per field | Tested | CompanySettingsTest + smoke screenshot settings-hub-1440.png | Nama input tidak berubah — backend aman |
+| UI-F3 | UX | Form Settings direfaktor ke form-section + helper text per field | Tested | CompanySettingsTest + smoke screenshot settings-hub-1440.png | Nama input tidak berubah ï¿½ backend aman |
 
 Verifikasi: 198 tests / 808 assertions, pint bersih.
 
@@ -388,3 +388,14 @@ Verifikasi: 198 tests / 808 assertions, pint bersih.
 | UI-F4 | Form | Form grid utama dikonversi ke x-ui.field/form-section: inventory (master+movement), operations (equipment register), procurement (vendor+draft PO), RFQ | Tested | Ledger/PO/RFQ/Workspace tests | Nama input tidak berubah; helper text per field; required marker |
 
 Verifikasi akhir fasa UI: 198 tests / 808 assertions, pint bersih, build sukses. Screenshot: inventory-forms, procurement-forms, operations-forms, rfq-form, settings-hub.
+
+# Pembaruan 2026-08-25 - Finance Backlog Wave 1: Arus Kas, Disposal Aset, Penyesuaian Piutang
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| ACC-CF-001 | Accounting | Laporan arus kas metode langsung dari mutasi riil akun kas (is_cash + rekening bank ter-GL) | Tested | FinanceBacklogWave1Test | Kategori per akun di CoA; default operating; jurnal multi-lawan dibagi proporsional; transfer antar kas net-nol diabaikan; kas akhir = saldo riil |
+| ACC-FAD-001 | Accounting | Disposal aset tetap: hapus cost+akumulasi, hasil jual, gain/loss otomatis, idempotent, guard status | Tested | FinanceBacklogWave1Test | Mapping asset_disposal 5 sisi wajib lengkap; UI form + mapping drawer + badge DILEPAS |
+| AR-CN-001 | Accounting | Credit note AR: Debit revenue / Kredit AR, cap sisa piutang billing, idempotent | Tested | FinanceBacklogWave1Test | Nomor CN via NumberSequence auto-create; drawer di billing index + riwayat |
+| AR-WO-001 | Accounting | Write-off piutang dengan approval pemisah (self-approval dilarang), posting beban setelah approve | Tested | FinanceBacklogWave1Test | Cap outstanding saat request DAN saat approval; reject dengan catatan; audit trail |
+
+Route +5 (cash-flow report, dispose, credit-note, write-off request/decide) tanpa menghapus route lama. Verifikasi: 254 tests / 1126 assertions lulus, pint bersih, view:cache sukses.

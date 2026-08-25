@@ -193,6 +193,7 @@ Route::middleware(['auth', 'company', 'permission:report.view'])->prefix('admin/
     Route::get('/operations', [ReportController::class, 'operations'])->name('reports.operations');
     Route::get('/manufacturing', [ReportController::class, 'manufacturing'])->name('reports.manufacturing');
     Route::get('/financial-statements', [ReportController::class, 'financialStatements'])->name('reports.financial-statements');
+    Route::get('/cash-flow', [ReportController::class, 'cashFlow'])->name('reports.cash-flow');
     Route::get('/aging', [ReportController::class, 'aging'])->name('reports.aging');
     Route::get('/{type}/export', [ReportController::class, 'export'])->middleware('permission:report.export')->name('reports.export');
 });
@@ -271,6 +272,9 @@ Route::middleware(['auth', 'company', 'permission:finance.view'])->prefix('admin
     Route::post('/retention-releases/{release}/submit', [BillingController::class, 'submitRelease'])->middleware('permission:finance.manage');
     Route::post('/retention-releases/{release}/activate', [BillingController::class, 'activateRelease'])->middleware('permission:finance.manage');
     Route::post('/retention-releases/{release}/post', [BillingController::class, 'postRelease'])->middleware('permission:accounting.post');
+    Route::post('/{billing}/credit-notes', [BillingController::class, 'creditNote'])->middleware('permission:accounting.post');
+    Route::post('/{billing}/write-offs', [BillingController::class, 'requestWriteOff'])->middleware('permission:finance.manage');
+    Route::post('/write-offs/{writeOff}/decide', [BillingController::class, 'decideWriteOff'])->middleware('permission:finance.manage');
 });
 Route::middleware(['auth', 'company', 'permission:finance.view'])->prefix('admin/cash-bank')->group(function () {
     Route::get('/', [CashBankController::class, 'index'])->name('cash-bank.index');
@@ -297,6 +301,7 @@ Route::middleware(['auth', 'company', 'permission:finance.view'])->prefix('admin
     Route::post('/categories', [FixedAssetController::class, 'category'])->middleware('permission:finance.manage');
     Route::post('/', [FixedAssetController::class, 'asset'])->middleware('permission:finance.manage');
     Route::post('/{asset}/depreciate', [FixedAssetController::class, 'depreciate'])->middleware('permission:accounting.post');
+    Route::post('/{asset}/dispose', [FixedAssetController::class, 'dispose'])->middleware('permission:accounting.post');
 });
 Route::middleware(['auth', 'company', 'permission:hse.view'])->prefix('admin/hse')->group(function () {
     Route::get('/', [HseController::class, 'index'])->name('hse.index');

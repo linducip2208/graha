@@ -11,6 +11,7 @@ use App\Models\RiskOpportunity;
 use App\Models\StockBalance;
 use App\Models\StockMovement;
 use App\Models\Tender;
+use App\Services\CashFlowStatementService;
 use App\Services\FinancialStatementService;
 use App\Services\ManufacturingWipService;
 use App\Services\ReceivablePayableAgingService;
@@ -86,6 +87,13 @@ class ReportController extends Controller
         [$from, $to] = $this->range($request);
 
         return view('reports.financial-statements', [...$service->generate($current->id(), $from->toDateString(), $to->toDateString()), 'from' => $from, 'to' => $to]);
+    }
+
+    public function cashFlow(Request $request, CurrentCompany $current, CashFlowStatementService $service)
+    {
+        [$from, $to] = $this->range($request);
+
+        return view('reports.cash-flow', [...$service->generate($current->id(), $from->toDateString(), $to->toDateString()), 'from' => $from, 'to' => $to]);
     }
 
     public function aging(Request $request, CurrentCompany $current, ReceivablePayableAgingService $service)
