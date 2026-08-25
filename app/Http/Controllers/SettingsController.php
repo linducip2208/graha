@@ -56,12 +56,22 @@ class SettingsController extends Controller
             'require_cleaning_inspection' => ['nullable', 'boolean'],
             'require_jsa_active' => ['nullable', 'boolean'],
             'sediment_max_mm' => ['nullable', 'decimal:0,2', 'between:0,9999'],
+            'slurry_policy_enabled' => ['nullable', 'boolean'],
+            'slurry_density_min' => ['nullable', 'numeric', 'between:0,10'],
+            'slurry_density_max' => ['nullable', 'numeric', 'between:0,10'],
+            'slurry_viscosity_min' => ['nullable', 'numeric', 'between:0,200'],
+            'slurry_viscosity_max' => ['nullable', 'numeric', 'between:0,200'],
+            'slurry_ph_min' => ['nullable', 'numeric', 'between:0,14'],
+            'slurry_ph_max' => ['nullable', 'numeric', 'between:0,14'],
+            'slurry_sand_content_max' => ['nullable', 'numeric', 'between:0,100'],
+            'tremie_log_enabled' => ['nullable', 'boolean'],
+            'tremie_max_embedment_m' => ['nullable', 'decimal:0,2', 'between:0,99'],
             'invoice_footer_note' => ['nullable', 'max:500'],
         ]);
         abort_unless($request->user()->hasPermission('finance.manage', $current->id()), 403);
-        $data['require_pile_test_pass'] = $request->boolean('require_pile_test_pass') ? '1' : '0';
-        $data['require_cleaning_inspection'] = $request->boolean('require_cleaning_inspection') ? '1' : '0';
-        $data['require_jsa_active'] = $request->boolean('require_jsa_active') ? '1' : '0';
+        foreach (['require_pile_test_pass', 'require_cleaning_inspection', 'require_jsa_active', 'slurry_policy_enabled', 'tremie_log_enabled'] as $flag) {
+            $data[$flag] = $request->boolean($flag) ? '1' : '0';
+        }
         CompanySetting::put($current->id(), array_map(fn ($v) => (string) $v, $data));
 
         return back()->with('status', 'Pengaturan perusahaan tersimpan.');

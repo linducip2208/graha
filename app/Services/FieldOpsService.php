@@ -73,7 +73,9 @@ class FieldOpsService
             $pile = $this->resolvePile($pile->project->company_id, $pile->id);
             throw_unless(bccomp((string) $data['accepted_volume_m3'], (string) $data['delivered_volume_m3'], 4) !== 1, ValidationException::withMessages(['accepted_volume_m3' => 'Volume diterima tidak boleh melebihi volume tiba.']));
             throw_if(bccomp(bcadd((string) $data['accepted_volume_m3'], (string) $data['rejected_volume_m3'], 4), (string) $data['delivered_volume_m3'], 4) === 1, ValidationException::withMessages(['rejected_volume_m3' => 'Diterima + ditolak melebihi volume tiba.']));
-            $delivery = ConcreteDelivery::create([...$data, 'company_id' => $pile->project->company_id, 'project_id' => $pile->project_id, 'bored_pile_id' => $pile->id, 'recorded_by' => $actor->id]);
+            // Urutan truck per pile — deterministik dari data yang sudah ada.
+            $sequence = ((int) ConcreteDelivery::where('bored_pile_id', $pile->id)->max('sequence')) + 1;
+            $delivery = ConcreteDelivery::create([...$data, 'sequence' => $sequence, 'company_id' => $pile->project->company_id, 'project_id' => $pile->project_id, 'bored_pile_id' => $pile->id, 'recorded_by' => $actor->id]);
             $this->audit->record($pile->project->company_id, $actor->id, 'field.concrete_delivery_recorded', $delivery);
 
             return $delivery;

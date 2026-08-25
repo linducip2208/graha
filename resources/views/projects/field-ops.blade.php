@@ -7,10 +7,12 @@
 <div class="mt-6 no-print"><form method="get" class="flex gap-2"><select name="project" onchange="this.form.submit()" class="rounded-xl border p-3 text-sm"><option value="">Pilih proyek aktif</option>@foreach($projects as $p)<option value="{{ $p->id }}" @selected($project?->id === $p->id)>{{ $p->code }} — {{ $p->name }}</option>@endforeach</select></form></div>
 
 @if($project)
-<div class="mt-4 grid grid-cols-3 gap-2 lg:hidden no-print">
+<div class="mt-4 grid grid-cols-2 gap-2 lg:hidden no-print">
 <a href="#drilling" class="flex min-h-[56px] items-center justify-center rounded-2xl bg-[var(--brand-primary)] text-sm font-bold text-white shadow active:scale-95">⛏️ Drilling</a>
 <a href="#concrete" class="flex min-h-[56px] items-center justify-center rounded-2xl bg-amber-600 text-sm font-bold text-white shadow active:scale-95">🚛 Beton</a>
 <a href="#testing" class="flex min-h-[56px] items-center justify-center rounded-2xl bg-emerald-700 text-sm font-bold text-white shadow active:scale-95">🧪 Testing</a>
+<a href="#slurry" class="flex min-h-[56px] items-center justify-center rounded-2xl bg-cyan-700 text-sm font-bold text-white shadow active:scale-95">🌊 Slurry</a>
+<a href="#tremie" class="flex min-h-[56px] items-center justify-center rounded-2xl bg-slate-900 text-sm font-bold text-white shadow active:scale-95">🔧 Tremie</a>
 </div>
 @php($canManage = auth()->user()->hasPermission('project.manage', app(\App\Support\Tenancy\CurrentCompany::class)->id()))
 
@@ -69,8 +71,7 @@
 @elseif($cd->status === 'approved')<span class="text-xs text-slate-400">{{ $cd->approved_at?->format('d/m H:i') }}</span>@else<span class="text-xs text-red-500">{{ \Illuminate\Support\Str::limit($cd->rejection_reason, 30) }}</span>@endif</td></tr>
 @empty<tr><td colspan="9" class="p-8 text-center">Belum ada delivery beton.</td></tr>@endforelse</tbody></table></div>
 
-<h2 id="testing" class="mt-12 scroll-mt-24 text-lg font-black">3 · Pile Testing</h2>
-@if($canManage)
+<h2 id="testing" class="mt-12 scroll-mt-24 text-lg font-black">3 · Pile Testing</h2>@if($canManage)
 <form method="post" action="/admin/projects/field-ops/tests" class="mt-3 grid gap-3 rounded-2xl border bg-white p-5">@csrf
 <h3 class="text-sm font-bold">Jadwalkan Pengujian</h3>
 <div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
@@ -94,6 +95,61 @@
 <form method="post" action="/admin/projects/field-ops/tests/{{ $test->id }}/approve" class="inline">@csrf<button class="font-bold text-emerald-700">Approval konsultan</button></form>
 @else<span class="text-xs text-slate-400">{{ \Illuminate\Support\Str::limit($test->interpretation ?? '-', 40) }}</span>@endif</td></tr>
 @empty<tr><td colspan="8" class="p-8 text-center">Belum ada jadwal pengujian.</td></tr>@endforelse</tbody></table></div>
+
+<h2 id="slurry" class="mt-12 scroll-mt-24 text-lg font-black">4 · Slurry Control {{ $slurryPolicyEnabled ? '' : '· record only' }}</h2>
+<p class="mt-1 text-xs text-slate-500">{{ $slurryPolicyEnabled ? 'Kebijakan limit slurry aktif — uji di luar limit ditandai pelanggaran; keputusan accept/reject oleh QA.' : 'Kebijakan limit slurry tidak aktif (settings perusahaan) — data hanya terekam, tidak menjadi gate.' }}</p>
+@if($canManage)
+<form method="post" action="{{ route('field-ops.slurry.store') }}" class="mt-3 grid gap-3 rounded-2xl border bg-white p-5">@csrf
+<h3 class="text-sm font-bold">Rekam Uji Slurry</h3>
+<div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+<select name="bored_pile_id" required class="rounded-xl border p-3"><option value="">Titik pile</option>@foreach($piles as $pile)<option value="{{ $pile->id }}">{{ $pile->pile_number }}{{ $pile->slurry_type ? ' · '.ucfirst($pile->slurry_type) : '' }}</option>@endforeach</select>
+<select name="phase" required class="rounded-xl border p-3">@foreach(\App\Models\SlurryTest::PHASES as $phase)<option value="{{ $phase }}">{{ str($phase)->replace('_',' ')->title() }}</option>@endforeach</select>
+<select name="type" required class="rounded-xl border p-3">@foreach(\App\Models\SlurryTest::TYPES as $type)<option value="{{ $type }}">{{ ucfirst($type) }}</option>@endforeach</select>
+<label class="text-xs font-semibold">Waktu uji<input type="datetime-local" name="tested_at" required class="mt-1 w-full rounded-xl border p-2.5"></label>
+<label class="text-xs font-semibold">Density<input type="number" step=".001" name="density" class="mt-1 w-full rounded-xl border p-2.5"></label>
+<label class="text-xs font-semibold">Viskositas<input type="number" step=".01" name="viscosity" class="mt-1 w-full rounded-xl border p-2.5"></label>
+<label class="text-xs font-semibold">pH<input type="number" step=".01" min="0" max="14" name="ph" class="mt-1 w-full rounded-xl border p-2.5"></label>
+<label class="text-xs font-semibold">Sand content (%)<input type="number" step=".01" min="0" max="100" name="sand_content_percent" class="mt-1 w-full rounded-xl border p-2.5"></label>
+<label class="text-xs font-semibold">No. batch<input name="batch_number" class="mt-1 w-full rounded-xl border p-2.5"></label>
+<label class="text-xs font-semibold">Catatan<input name="notes" class="mt-1 w-full rounded-xl border p-2.5"></label>
+</div>
+<button class="w-fit rounded-xl bg-cyan-700 px-6 py-3 font-bold text-white">Simpan uji slurry</button>
+</form>
+@endif
+<div class="mt-4 overflow-x-auto rounded-2xl border bg-white"><table class="w-full min-w-[800px] text-sm table-sticky"><thead><tr><th>Pile</th><th>Fase</th><th>Jenis</th><th>Waktu</th><th>Density</th><th>Viskositas</th><th>pH</th><th>Sand %</th><th>Status</th></tr></thead><tbody>@forelse($slurryTests as $st)
+<tr>
+<td>{{ $st->pile?->pile_number }}</td><td>{{ str($st->phase)->replace('_',' ') }}</td><td>{{ $st->type }}</td><td class="font-mono text-xs">{{ $st->tested_at?->format('d/m/y H:i') }}</td>
+<td>{{ $st->density ?? '-' }}</td><td>{{ $st->viscosity ?? '-' }}</td><td>{{ $st->ph ?? '-' }}</td><td>{{ $st->sand_content_percent ?? '-' }}</td>
+<td><x-ui.badge :status="match($st->status) { 'accepted' => 'approved', 'rejected' => 'rejected', default => 'pending_approval' }" :label="$st->status" />
+@if($canManage && $st->status === 'pending')
+<form method="post" action="{{ route('field-ops.slurry.decide', $st) }}" class="mt-1 flex gap-1">@csrf<select name="decision" class="rounded border p-1 text-xs"><option value="accepted">Accept</option><option value="rejected">Reject</option></select><button class="font-bold text-[var(--brand-primary)]">Putuskan</button></form>
+@endif</td>
+</tr>
+@empty<tr><td colspan="9" class="p-8 text-center">Belum ada uji slurry.</td></tr>@endforelse</tbody></table></div>
+
+<h2 id="tremie" class="mt-12 scroll-mt-24 text-lg font-black">5 · Tremie Log</h2>
+<p class="mt-1 text-xs text-slate-500">Embedment dihitung otomatis: panjang tremie − kedalaman ujung. Flag warning/out-of-range hanya indikator — keputusan tetap engineer.</p>
+@if($canManage)
+<form method="post" action="{{ route('field-ops.tremie.store') }}" class="mt-3 grid gap-3 rounded-2xl border bg-white p-5">@csrf
+<h3 class="text-sm font-bold">Rekam Segmen Tremie</h3>
+<div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+<select name="bored_pile_id" required class="rounded-xl border p-3"><option value="">Titik pile</option>@foreach($piles as $pile)<option value="{{ $pile->id }}">{{ $pile->pile_number }}</option>@endforeach</select>
+<label class="text-xs font-semibold">Waktu<input type="datetime-local" name="recorded_at" required class="mt-1 w-full rounded-xl border p-2.5"></label>
+<label class="text-xs font-semibold">Panjang total tremie (m)<input type="number" step=".01" name="tremie_total_length_m" required class="mt-1 w-full rounded-xl border p-2.5"></label>
+<label class="text-xs font-semibold">Kedalaman ujung tremie (m)<input type="number" step=".01" name="tremie_tip_depth_m" required class="mt-1 w-full rounded-xl border p-2.5"></label>
+<label class="text-xs font-semibold">Level beton (m, opsional)<input type="number" step=".01" name="concrete_level_m" class="mt-1 w-full rounded-xl border p-2.5"></label>
+<label class="text-xs font-semibold xl:col-span-2">Catatan<input name="notes" class="mt-1 w-full rounded-xl border p-2.5"></label>
+</div>
+<button class="w-fit rounded-xl bg-slate-900 px-6 py-3 font-bold text-white">Simpan log tremie</button>
+</form>
+@endif
+<div class="mt-4 overflow-x-auto rounded-2xl border bg-white"><table class="w-full min-w-[700px] text-sm table-sticky"><thead><tr><th>#</th><th>Pile</th><th>Waktu</th><th>Panjang (m)</th><th>Ujung (m)</th><th>Embedment (m)</th><th>Flag</th></tr></thead><tbody>@forelse($tremieLogs as $tl)
+<tr>
+<td class="font-mono">{{ $tl->sequence }}</td><td>{{ $tl->pile?->pile_number }}</td><td class="font-mono text-xs">{{ $tl->recorded_at?->format('d/m/y H:i') }}</td>
+<td class="font-mono">{{ $tl->tremie_total_length_m }}</td><td class="font-mono">{{ $tl->tremie_tip_depth_m }}</td><td class="font-mono">{{ $tl->embedment_m }}</td>
+<td><span class="rounded-md px-2 py-0.5 text-[10px] font-bold uppercase {{ ['out_of_range' => 'bg-red-100 text-red-700', 'warning' => 'bg-amber-100 text-amber-800'][$tl->flag] ?? 'bg-emerald-100 text-emerald-800' }}">{{ str($tl->flag)->replace('_', ' ') }}</span></td>
+</tr>
+@empty<tr><td colspan="7" class="p-8 text-center">Belum ada log tremie.</td></tr>@endforelse</tbody></table></div>
 @else
 <x-ui.empty icon="cube" title="Belum ada proyek aktif" description="Aktifkan minimal satu proyek untuk memulai catatan lapangan." />
 @endif

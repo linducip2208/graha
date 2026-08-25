@@ -7,9 +7,13 @@ use App\Models\BoredPileDrilling;
 use App\Models\ConcreteDelivery;
 use App\Models\FieldEvidence;
 use App\Models\PileTest;
+use App\Models\PileTremieLog;
 use App\Models\Project;
+use App\Models\SlurryTest;
 use App\Models\Vendor;
 use App\Services\FieldOpsService;
+use App\Services\SlurryControlService;
+use App\Services\TremieLogService;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -27,11 +31,15 @@ class FieldOpsController extends Controller
         $drillings = collect();
         $deliveries = collect();
         $tests = collect();
+        $slurryTests = collect();
+        $tremieLogs = collect();
         if ($project) {
             $piles = BoredPile::where('project_id', $project->id)->orderBy('pile_number')->get();
             $drillings = BoredPileDrilling::whereIn('bored_pile_id', $piles->pluck('id'))->with(['pile', 'layers', 'recorder', 'verifier'])->latest()->limit(50)->get();
-            $deliveries = ConcreteDelivery::where('project_id', $project->id)->with(['pile', 'vendor'])->latest()->limit(50)->get();
+            $deliveries = ConcreteDelivery::where('project_id', $project->id)->with(['pile', 'vendor'])->orderBy('arrived_at')->limit(50)->get();
             $tests = PileTest::where('project_id', $project->id)->with('pile')->latest('scheduled_date')->limit(50)->get();
+            $slurryTests = SlurryTest::whereIn('bored_pile_id', $piles->pluck('id'))->with(['pile', 'verifier'])->latest('tested_at')->limit(50)->get();
+            $tremieLogs = PileTremieLog::whereIn('bored_pile_id', $piles->pluck('id'))->with('pile')->latest('recorded_at')->limit(50)->get();
         }
 
         return view('projects.field-ops', [
@@ -41,8 +49,11 @@ class FieldOpsController extends Controller
             'drillings' => $drillings,
             'deliveries' => $deliveries,
             'tests' => $tests,
+            'slurryTests' => $slurryTests,
+            'tremieLogs' => $tremieLogs,
             'vendors' => Vendor::where('company_id', $companyId)->orderBy('name')->get(),
             'testTypes' => PileTest::TYPES,
+            'slurryPolicyEnabled' => app(SlurryControlService::class)->policyEnabled($companyId),
         ]);
     }
 
@@ -129,6 +140,63 @@ class FieldOpsController extends Controller
         $service->rejectConcreteDelivery($delivery, $data['rejection_reason'], $request->user());
 
         return back()->with('status', 'Delivery ditolak.');
+    }
+
+    public function storeSlurry(Request $request, CurrentCompany $current, SlurryControlService $service)
+    {
+        $data = $request->validate([
+            'bored_pile_id' => ['required', 'integer'],
+            'phase' => ['required', Rule::in(SlurryTest::PHASES)],
+            'type' => ['required', Rule::in(SlurryTest::TYPES)],
+            'tested_at' => ['required', 'date'],
+            'batch_number' => ['nullable', 'max:60'],
+            'density' => ['nullable', 'decimal:0,3'],
+            'viscosity' => ['nullable', 'decimal:0,2'],
+            'ph' => ['nullable', 'decimal:0,2', 'between:0,14'],
+            'sand_content_percent' => ['nullable', 'decimal:0,2', 'between:0,100'],
+            'temperature' => ['nullable', 'decimal:0,2'],
+            'notes' => ['nullable', 'max:2000'],
+        ]);
+        $pile = BoredPile::whereHas('project', fn ($q) => $q->where('company_id', $current->id()))->findOrFail($data['bored_pile_id']);
+        unset($data['bored_pile_id']);
+        $test = $service->record($pile, $data, $request->user());
+        $violations = count($service->violations($test));
+
+        return back()->with('status', $service->policyEnabled($current->id())
+            ? "Uji slurry terekam — {$violations} pelanggaran limit terdeteksi (keputusan oleh QA)."
+            : 'Uji slurry terekam (record only — kebijakan limit tidak aktif).');
+    }
+
+    public function decideSlurry(Request $request, SlurryTest $slurryTest, CurrentCompany $current, SlurryControlService $service)
+    {
+        abort_unless($slurryTest->company_id === $current->id(), 404);
+        abort_unless($request->user()->hasPermission('qms.verify', $current->id()), 403);
+        $decision = $request->validate(['decision' => ['required', 'in:accepted,rejected']])['decision'];
+        $service->decide($slurryTest, $decision, $request->user());
+
+        return back()->with('status', "Uji slurry {$decision} oleh QA.");
+    }
+
+    public function storeTremie(Request $request, CurrentCompany $current, TremieLogService $service)
+    {
+        $data = $request->validate([
+            'bored_pile_id' => ['required', 'integer'],
+            'recorded_at' => ['required', 'date'],
+            'tremie_total_length_m' => ['required', 'decimal:0,2', 'gt:0'],
+            'tremie_tip_depth_m' => ['required', 'decimal:0,2', 'min:0'],
+            'concrete_level_m' => ['nullable', 'decimal:0,2', 'min:0'],
+            'notes' => ['nullable', 'max:2000'],
+        ]);
+        $pile = BoredPile::whereHas('project', fn ($q) => $q->where('company_id', $current->id()))->findOrFail($data['bored_pile_id']);
+        unset($data['bored_pile_id']);
+        $log = $service->record($pile, $data, $request->user());
+        $message = match ($log->flag) {
+            'out_of_range' => 'Log tremie terekam — EMBEDMENT DI LUAR RENTANG (indikator; keputusan tetap engineer).',
+            'warning' => 'Log tremie terekam — embedment mendekati batas atas (warning).',
+            default => 'Log tremie terekam.',
+        };
+
+        return back()->with('status', $message);
     }
 
     public function storeTest(Request $request, CurrentCompany $current, FieldOpsService $service)

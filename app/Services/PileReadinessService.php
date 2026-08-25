@@ -97,7 +97,16 @@ class PileReadinessService
             $add('casing_available', 'Casing tersedia', true, false, 'Pile tidak mensyaratkan casing.');
         }
 
-        // 8. JSA aktif bila company mewajibkan.
+        // 8. Slurry siap bila kebijakan slurry aktif (ADR-074).
+        if (CompanySetting::val($companyId, 'slurry_policy_enabled') === '1' && filled($pile->slurry_type)) {
+            $slurryOk = app(SlurryControlService::class)->preDrillAccepted($pile);
+            $add('slurry_ready', 'Uji slurry pra-drilling diterima', $slurryOk, true,
+                $slurryOk ? '' : 'Uji slurry before_drilling belum berstatus accepted.');
+        } else {
+            $add('slurry_ready', 'Slurry siap', true, false, 'Kebijakan slurry tidak aktif / pile tanpa slurry.');
+        }
+
+        // 9. JSA aktif bila company mewajibkan.
         if (CompanySetting::val($companyId, 'require_jsa_active') === '1') {
             $jsaActive = JobSafetyAnalysis::where('company_id', $companyId)
                 ->where('project_id', $pile->project_id)
@@ -195,7 +204,25 @@ class PileReadinessService
             $add('casing_valid', 'Status casing valid', true, false, 'Pile tidak mensyaratkan casing.');
         }
 
-        // 8. Booking/pengiriman beton tersiap (attestasi atau delivery nyata).
+        // 8. Tremie siap bila fitur log tremie aktif (ADR-074).
+        if (app(TremieLogService::class)->enabled($companyId)) {
+            $tremieReady = app(TremieLogService::class)->isReadyForCast($pile);
+            $add('tremie_ready', 'Log tremie tercatat', $tremieReady, true,
+                $tremieReady ? '' : 'Belum ada log tremie untuk pile ini.');
+        } else {
+            $add('tremie_ready', 'Tremie siap', true, false, 'Fitur tremie log tidak aktif.');
+        }
+
+        // 9. Slurry pre-cast diterima bila kebijakan aktif.
+        if (CompanySetting::val($companyId, 'slurry_policy_enabled') === '1' && filled($pile->slurry_type)) {
+            $slurryOk = app(SlurryControlService::class)->preCastAccepted($pile);
+            $add('slurry_pre_cast', 'Uji slurry pre-casting diterima', $slurryOk, true,
+                $slurryOk ? '' : 'Uji slurry before_casting belum berstatus accepted.');
+        } else {
+            $add('slurry_pre_cast', 'Uji slurry pre-casting', true, false, 'Kebijakan slurry tidak aktif / pile tanpa slurry.');
+        }
+
+        // 10. Booking/pengiriman beton tersiap (attestasi atau delivery nyata).
         $bookingOk = $pile->concrete_booking_confirmed_at !== null
             || ConcreteDelivery::where('bored_pile_id', $pile->id)->exists();
         $add('concrete_booking', 'Booking/pengiriman beton tersiap', $bookingOk, true,
