@@ -200,4 +200,29 @@ class FinanceController extends Controller
 
         return back()->with('status', 'Budget dihapus.');
     }
+
+    public function prepaids(CurrentCompany $current)
+    {
+        $prepaids = \App\Models\PrepaidExpense::where('company_id', $current->id())->orderBy('name')->get();
+
+        return view('finance.prepaids', [
+            'prepaids' => $prepaids,
+            'stats' => ['total' => $prepaids->count(), 'active' => $prepaids->where('status', 'active')->count(), 'due' => $prepaids->where('status', 'active')->filter(fn ($p) => count($p->duePeriods()) > 0)->count()],
+        ]);
+    }
+
+    public function storePrepaid(Request $request, CurrentCompany $current, PrepaidAmortizationService $service)
+    {
+        $data = $request->validate(['name' => ['required', 'max:150'], 'vendor_ref' => ['nullable', 'max:120'], 'total_amount' => ['required', 'decimal:0,2'], 'period_count' => ['required', 'integer', 'min:1', 'max:120'], 'first_period_date' => ['required', 'date'], 'notes' => ['nullable', 'max:500']]);
+        $service->create($current->id(), $data, $request->user());
+
+        return back()->with('status', 'Prepaid expense dibuat. Amortisasi bulanan via mapping prepaid_amortization.');
+    }
+
+    public function postPrepaidDue(Request $request, CurrentCompany $current, PrepaidAmortizationService $service)
+    {
+        $posted = $service->postAllDue($request->user());
+
+        return back()->with('status', "Amortisasi diposting: {$posted} jurnal.");
+    }
 }
