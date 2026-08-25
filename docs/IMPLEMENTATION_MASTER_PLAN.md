@@ -444,3 +444,12 @@ Route +6 tanpa menghapus route lama. Verifikasi: 269 tests / 1200 assertions lul
 | DOC-TRM-001 | Governance | Transmittal distribusi dokumen: header penerima/metode/status sent→acknowledged + item versi dokumen dari registry | Tested | BudgetsTransmittalsWave5Test | Nomor TRM via NumberSequence; guard versi lintas company; audit trail |
 
 Route +6 (budget index/store/delete + transmittal index/store/acknowledge) tanpa menghapus route lama. Verifikasi: 272 tests / 1219 assertions lulus, pint bersih.
+
+# Pembaruan 2026-08-25 (6) - Backlog Wave 6: Gate ITP Pile Completion + Reminder Kalibrasi
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| BP-ITP-002 | Bored Pile | Gate opsional require_itp_hold_points_passed: hold point tanpa pass menahan transisi pile ke completed | Tested | GateReminderWave6Test | Default OFF (backward-compatible); setting baru di CompanySetting::DEFAULTS |
+| QMS-CAL-002 | QMS | Reminder kalibrasi otomatis `qms:notify-calibration` harian 07:30: overdue + due ≤30 hari, sekali per record/hari | Tested | GateReminderWave6Test | Pola OperationalNotification sama dengan qms:notify-due |
+
+Verifikasi penutupan sesi: 274 tests / 1226 assertions lulus, pint bersih.

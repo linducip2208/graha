@@ -20,6 +20,7 @@ class CompanySetting extends Model
         'default_overbreak_tolerance_percent' => '8',
         'require_pile_test_pass' => '0',
         'require_cage_passed' => '0',
+        'require_itp_hold_points_passed' => '0',
         'evidence_rules_enabled' => '0',
         'min_photo_setting_out' => '1',
         'min_photo_bottom_cleaning' => '1',

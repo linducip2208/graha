@@ -36,8 +36,8 @@ yang "Blocked" menunggu keputusan/file eksternal.
 | Fixed asset | ✅ Ada | ✅ disposal flow lengkap (ADR-056, 2026-08-25) | Selesai |
 | Pajak ID | ✅ PPN/PPh23/4(2) | PPh 21 engine, rekonsiliasi UI | Backlog F |
 | QMS NCR/CAPA | ✅ Ada | ✅ customer complaint + supplier NCR (ADR-065, 2026-08-25) | Selesai |
-| **ITP** | ✅ Baru (ADR-059, 2026-08-25) | gate ke pile completion (opsional setting) | Backlog G lanjutan |
-| **Kalibrasi** | ✅ Baru (ADR-060, 2026-08-25) — register + due status otomatis | reminder scheduler | Kecil |
+| **ITP** | ✅ Baru (ADR-059) + ✅ gate pile completion opsional (ADR-069, 2026-08-25) | — | — |
+| **Kalibrasi** | ✅ Baru (ADR-060) — register + due status + ✅ reminder scheduler (2026-08-25) | — | — |
 | HSE | ✅ JSA/PTW/incident | ✅ observasi/PPE/FR-SR KPI (ADR-058, 2026-08-25) | Selesai |
 | Document control | ✅ Versi+hash | ✅ transmittal + acknowledged (ADR-068, 2026-08-25) | correspondence link tersisa |
 | Approval engine | ✅ SLA/quorum/delegasi | escalation reminder otomatis ada; kondisi project-scope | Backlog H |

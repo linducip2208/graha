@@ -8,6 +8,7 @@ use App\Models\BoredPileDrillingLayer;
 use App\Models\CompanySetting;
 use App\Models\ConcreteDelivery;
 use App\Models\FieldEvidence;
+use App\Models\InspectionTestPlan;
 use App\Models\PileTest;
 use App\Models\User;
 use App\Services\Storage\EvidenceStorageService;
@@ -218,6 +219,16 @@ class FieldOpsService
         if ($requirePassed) {
             $passed = PileTest::where('bored_pile_id', $pile->id)->where('result_status', 'passed')->exists();
             throw_unless($passed, ValidationException::withMessages(['status' => 'Pile wajib mempunyai minimal satu hasil uji passed sebelum completed.']));
+        }
+        // Gate ITP opsional (ADR-069): hold point tanpa hasil pass menahan penyelesaian pile.
+        if (CompanySetting::val($pile->project->company_id, 'require_itp_hold_points_passed') === '1') {
+            $openHolds = InspectionTestPlan::where('company_id', $pile->project->company_id)
+                ->where('bored_pile_id', $pile->id)
+                ->where('status', 'active')
+                ->with('items.inspections')
+                ->get()
+                ->flatMap(fn ($plan) => app(ItpService::class)->openHoldPoints($plan));
+            throw_if($openHolds->isNotEmpty(), ValidationException::withMessages(['status' => 'Masih ada '.$openHolds->count().' hold point ITP tanpa hasil pass. Tutup terlebih dahulu atau nonaktifkan setting require_itp_hold_points_passed.']));
         }
     }
 }
