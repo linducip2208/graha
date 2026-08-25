@@ -7,6 +7,7 @@ use App\Models\AccountBudget;
 use App\Models\AccountingMapping;
 use App\Models\FiscalPeriod;
 use App\Models\Journal;
+use App\Models\PrepaidExpense;
 use App\Models\ProgressBilling;
 use App\Models\Project;
 use App\Models\RecurringJournal;
@@ -14,6 +15,7 @@ use App\Models\VendorInvoice;
 use App\Services\AccountingService;
 use App\Services\BudgetVsActualService;
 use App\Services\CashFlowForecastService;
+use App\Services\PrepaidAmortizationService;
 use App\Services\ReceivablePayableAgingService;
 use App\Services\RecurringJournalService;
 use App\Support\Tenancy\CurrentCompany;
@@ -203,7 +205,7 @@ class FinanceController extends Controller
 
     public function prepaids(CurrentCompany $current)
     {
-        $prepaids = \App\Models\PrepaidExpense::where('company_id', $current->id())->orderBy('name')->get();
+        $prepaids = PrepaidExpense::where('company_id', $current->id())->orderBy('name')->get();
 
         return view('finance.prepaids', [
             'prepaids' => $prepaids,

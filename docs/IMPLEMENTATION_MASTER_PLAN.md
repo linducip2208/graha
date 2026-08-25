@@ -462,3 +462,12 @@ Verifikasi penutupan sesi: 274 tests / 1226 assertions lulus, pint bersih.
 | CON-CORR-001 | Kontrak | Register korespondensi kontrak in/out dengan nomor surat + tautan opsional versi dokumen registry | Tested | Pph21CorrespondenceWave7Test | Bagian baru di /admin/contract-admin; audit trail |
 
 Route +1. Verifikasi penutupan backlog: 278 tests / 1240 assertions lulus, pint bersih.
+
+# Pembaruan 2026-08-25 (8) - Backlog Wave 8: Beban Dibayar Dimuka (Prepaid Expense)
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| ACC-PPD-001 | Accounting | Prepaid expense dengan amortisasi bulanan otomatis: Dr Beban / Kr Prepaid via mapping `prepaid_amortization` (expense_debit, prepaid_credit) | Tested | PrepaidAmortizationWave8Test | Idempotent per periode; bulan terakhir menyerap sisa pembulatan; status completed otomatis; posting massal jatuh tempo; guard nilai positif & periode 1–120; mapping wajib saat create |
+| NAV-006 | UI | Halaman `/admin/prepaid-expenses` + menu GL children "Beban Dibayar Dimuka"; progres amortisasi per register, badge periode due, tombol posting massal | Tested | smoke HTTP | Drawer form daftar prepaid; guard finance.manage/accounting.post |
+
+Route +3 tanpa menghapus route lama. Verifikasi: 280 tests / 1257 assertions lulus, pint bersih, view:cache sukses.

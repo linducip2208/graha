@@ -109,6 +109,9 @@ Route::middleware(['auth', 'company', 'permission:finance.view'])->prefix('admin
     Route::get('/account-budgets', [FinanceController::class, 'budgets'])->name('finance.account-budgets');
     Route::post('/account-budgets', [FinanceController::class, 'storeBudget'])->middleware('permission:finance.manage');
     Route::post('/account-budgets/{budget}/delete', [FinanceController::class, 'destroyBudget'])->middleware('permission:finance.manage');
+    Route::get('/prepaid-expenses', [FinanceController::class, 'prepaids'])->name('finance.prepaids');
+    Route::post('/prepaid-expenses', [FinanceController::class, 'storePrepaid'])->middleware('permission:finance.manage');
+    Route::post('/prepaid-expenses/post-due', [FinanceController::class, 'postPrepaidDue'])->middleware('permission:accounting.post');
 });
 Route::middleware(['auth', 'company', 'permission:inventory.view'])->prefix('admin')->group(function () {
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');

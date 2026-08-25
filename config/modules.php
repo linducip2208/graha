@@ -61,6 +61,7 @@ return [
                 ['label' => 'Jurnal', 'href' => '/admin/finance/journals'],
                 ['label' => 'Jurnal Berulang', 'href' => '/admin/recurring-journals'],
                 ['label' => 'Budget vs Aktual', 'href' => '/admin/account-budgets'],
+                ['label' => 'Beban Dibayar Dimuka', 'href' => '/admin/prepaid-expenses'],
                 ['label' => 'Accounting Mapping', 'href' => '/admin/finance/accounting-mappings'],
                 ['label' => 'Trial Balance & Laporan Keuangan', 'href' => '/admin/reports/financial-statements'],
                 ['label' => 'Arus Kas (Metode Langsung)', 'href' => '/admin/reports/cash-flow'],
