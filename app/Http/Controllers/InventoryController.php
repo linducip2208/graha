@@ -106,4 +106,30 @@ class InventoryController extends Controller
 
         return back()->with('status', 'Movement berhasil diposting.');
     }
+
+    /** Tandai / pulihkan kondisi stok (damaged/obsolete) pada satu baris saldo. */
+    public function condition(Request $r, StockBalance $balance, CurrentCompany $current, InventoryService $service)
+    {
+        abort_unless($balance->company_id === $current->id(), 404);
+        $d = $r->validate(['action' => ['required', 'in:flag,restore'], 'bucket' => ['required', 'in:damaged,obsolete'], 'quantity' => ['required', 'decimal:0,4', 'gt:0']]);
+        abort_unless(Item::where('company_id', $current->id())->whereKey($balance->item_id)->exists(), 404);
+        if ($d['action'] === 'flag') {
+            $service->flagCondition($balance, $d['bucket'], $d['quantity'], $r->user());
+        } else {
+            $service->restoreCondition($balance, $d['bucket'], $d['quantity'], $r->user());
+        }
+
+        return back()->with('status', "Kondisi stok diperbarui ({$d['action']} {$d['bucket']}).");
+    }
+
+    /** Sesuaikan qty in-transit (+/-) pada satu baris saldo. */
+    public function inTransit(Request $r, CurrentCompany $current, InventoryService $service)
+    {
+        $d = $r->validate(['balance_id' => ['required', 'integer'], 'delta' => ['required', 'decimal:0,4', 'not_in:0']]);
+        $balance = StockBalance::where('company_id', $current->id())->findOrFail($d['balance_id']);
+        abort_unless(Item::where('company_id', $current->id())->whereKey($balance->item_id)->exists(), 404);
+        $service->adjustInTransit($balance, $d['delta'], $r->user());
+
+        return back()->with('status', 'In-transit disesuaikan.');
+    }
 }

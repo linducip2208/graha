@@ -97,6 +97,7 @@ class RfqService
                 'tech' => $quote->technical_score,
                 'comm' => $quote->commercial_score,
                 'payment_term' => $quote->payment_term,
+                'warranty' => $quote->warranty_months,
                 'status' => $quote->status,
             ])->sortBy('total')->values();
     }

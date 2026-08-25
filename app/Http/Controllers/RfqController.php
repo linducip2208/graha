@@ -67,6 +67,7 @@ class RfqController extends Controller
             'number' => ['required', 'max:80'],
             'delivery_lead_days' => ['nullable', 'integer', 'min:0'],
             'payment_term' => ['nullable', 'max:100'],
+            'warranty_months' => ['nullable', 'integer', 'min:0', 'max:120'],
             'technical_score' => ['nullable', 'decimal:0,2', 'between:0,100'],
             'commercial_score' => ['nullable', 'decimal:0,2', 'between:0,100'],
             'recommendation' => ['nullable', 'max:500'],

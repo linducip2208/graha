@@ -77,7 +77,9 @@ class PurchaseOrderService
             $subtotal = $invoice->effectiveSubtotal();
             $amountMatched = bccomp($subtotal, (string) $order->total, 2) === 0;
             $status = $qtyMatched && $amountMatched ? 'matched' : 'exception';
-            $invoice->update(['match_status' => $status, 'match_details' => ['po_total' => $order->total, 'invoice_subtotal' => $subtotal, 'invoice_total' => $invoice->total, 'tax_amount' => $invoice->tax_amount, 'quantity_received' => $qtyMatched]]);
+            $shortItems = $order->items->filter(fn ($item) => bccomp((string) $item->received_quantity, (string) $item->quantity, 4) < 0)
+                ->map(fn ($item) => ['purchase_order_item_id' => $item->id, 'ordered' => (string) $item->quantity, 'received' => (string) $item->received_quantity])->values()->all();
+            $invoice->update(['match_status' => $status, 'match_details' => ['po_total' => $order->total, 'invoice_subtotal' => $subtotal, 'invoice_total' => $invoice->total, 'tax_amount' => $invoice->tax_amount, 'quantity_received' => $qtyMatched, 'amount_difference' => bcsub((string) $order->total, $subtotal, 2), 'quantity_flag' => $qtyMatched ? 'full' : 'short', 'short_items' => $shortItems]]);
 
             return $invoice->refresh();
         }, 3);

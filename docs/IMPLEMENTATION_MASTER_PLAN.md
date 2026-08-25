@@ -471,3 +471,14 @@ Route +1. Verifikasi penutupan backlog: 278 tests / 1240 assertions lulus, pint 
 | NAV-006 | UI | Halaman `/admin/prepaid-expenses` + menu GL children "Beban Dibayar Dimuka"; progres amortisasi per register, badge periode due, tombol posting massal | Tested | smoke HTTP | Drawer form daftar prepaid; guard finance.manage/accounting.post |
 
 Route +3 tanpa menghapus route lama. Verifikasi: 280 tests / 1257 assertions lulus, pint bersih, view:cache sukses.
+
+# Pembaruan 2026-08-25 (9) - Backlog Wave 9: Gap Kecil Tersisa (API Kontrak, Garansi Quotation, Match Granular, State Ledger Stok)
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| API-CON-001 | Governance | Endpoint API v1 `GET /api/v1/contracts` (register perubahan kontrak, read-only, scoped company + permission contract.view) | Tested | Wave9SmallGapsTest | Melengkapi constraints & procurement-plans yang sudah ada |
+| PRQ-WAR-001 | Procurement | Kolom garansi (warranty_months) pada quotation + tampil di bid comparison | Tested | Wave9SmallGapsTest | Form input bulan garansi; kolom tabel perbandingan |
+| AP-MM-002 | Accounting | Three-way match flag granular: quantity_flag full/short + short_items rincian + amount_difference eksplisit | Tested | Wave9SmallGapsTest | match_details backward-compatible (key lama dipertahankan) |
+| INV-STT-001 | Inventory | State ledger stok: damaged/obsolete/in_transit per baris saldo; flag/restore guard available; in-transit delta ± | Tested | Wave9SmallGapsTest | Total fisik tidak berubah saat flag; audit trail; drawer Kondisi Stok + kolom baru di index |
+
+Route web +2, route api +1 tanpa menghapus route lama. Verifikasi: 285 tests / 1279 assertions lulus, pint bersih.

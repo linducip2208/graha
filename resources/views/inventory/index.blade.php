@@ -4,6 +4,9 @@
 <x-slot:actions>
 <button type="button" class="inline-flex min-h-[42px] items-center gap-2 rounded-xl border border-[var(--border-default)] px-4 text-sm font-bold hover:bg-[var(--surface-muted)]" data-drawer-open="inventory-setup-drawer"><x-ui.icon name="archive" class="h-4 w-4" />Item & Gudang</button>
 <button type="button" class="btn-brand inline-flex min-h-[42px] items-center gap-2 rounded-xl px-4 text-sm font-bold shadow-sm" data-drawer-open="inventory-movement-drawer"><x-ui.icon name="swap" class="h-4 w-4" />Posting Movement</button>
+@if(auth()->user()->hasPermission('inventory.manage', app(\App\Support\Tenancy\CurrentCompany::class)->id()))
+<button type="button" class="inline-flex min-h-[42px] items-center gap-2 rounded-xl border border-[var(--border-default)] px-4 text-sm font-bold hover:bg-[var(--surface-muted)]" data-drawer-open="inventory-condition-drawer"><x-ui.icon name="triangle-alert" class="h-4 w-4" />Kondisi Stok</button>
+@endif
 </x-slot:actions>
 </x-ui.page-header>
 
@@ -31,7 +34,7 @@
 </x-ui.filter-bar>
 
 <article class="mt-4 overflow-hidden rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-[var(--shadow-xs)]">
-<div class="overflow-x-auto"><table class="w-full text-sm table-sticky"><thead><tr><th>SKU</th><th>Gudang/Bin</th><th>Lot</th><th class="text-right">Qty</th><th class="text-right">Reserved</th></tr></thead><tbody>@forelse($balances as $b)<tr><td>{{ $b->item->sku }} <span class="block text-xs text-slate-400">{{ $b->item->name }}</span></td><td>{{ $b->warehouse->code }}/{{ $b->bin?->code }}</td><td class="font-mono text-xs">{{ $b->lot_number?:'-' }}</td><td class="text-right font-mono font-bold">{{ $b->quantity }}</td><td class="text-right font-mono">{{ $b->reserved_quantity }}</td></tr>@empty<tr><td colspan="5" class="p-8 text-center text-slate-500">Belum ada stok.</td></tr>@endforelse</tbody></table></div>
+<div class="overflow-x-auto"><table class="w-full text-sm table-sticky"><thead><tr><th>SKU</th><th>Gudang/Bin</th><th>Lot</th><th class="text-right">Qty</th><th class="text-right">Reserved</th><th class="text-right">Rusak/Usang</th><th class="text-right">In-Transit</th></tr></thead><tbody>@forelse($balances as $b)<tr><td>{{ $b->item->sku }} <span class="block text-xs text-slate-400">{{ $b->item->name }}</span></td><td>{{ $b->warehouse->code }}/{{ $b->bin?->code }}</td><td class="font-mono text-xs">{{ $b->lot_number?:'-' }}</td><td class="text-right font-mono font-bold">{{ $b->quantity }}</td><td class="text-right font-mono">{{ $b->reserved_quantity }}</td><td class="text-right font-mono {{ (float) ($b->damaged_quantity + $b->obsolete_quantity) > 0 ? 'font-bold text-red-600' : 'text-slate-400' }}">{{ $b->damaged_quantity + $b->obsolete_quantity }}</td><td class="text-right font-mono {{ (float) $b->in_transit_quantity > 0 ? 'font-bold text-sky-600' : 'text-slate-400' }}">{{ $b->in_transit_quantity }}</td></tr>@empty<tr><td colspan="7" class="p-8 text-center text-slate-500">Belum ada stok.</td></tr>@endforelse</tbody></table></div>
 @if($balances->hasPages())<div class="border-t px-5 py-3" style="border-color:var(--border-subtle)">{{ $balances->links() }}</div>@endif
 </article>
 
@@ -59,6 +62,25 @@
 <button type="button" class="min-h-[42px] rounded-xl border border-[var(--border-default)] px-4 text-sm font-bold hover:bg-[var(--surface-muted)]" data-drawer-close>Batal</button>
 <button class="btn-brand min-h-[42px] rounded-xl px-5 text-sm font-bold">Post Movement</button>
 </div>
+</x-ui.drawer>
+
+<x-ui.drawer id="inventory-condition-drawer" title="Kondisi & In-Transit" description="Tandai stok rusak/usang (keluar dari available tanpa movement fisik), pulihkan, atau sesuaikan qty in-transit. Semua tercatat di audit trail.">
+<form method="post" action="/admin/inventory/balances/0/condition" class="grid gap-4">@csrf
+<x-ui.field label="Baris saldo" name="balance_key" required><select name="balance_key" required class="w-full p-3">@foreach($balances as $b)<option value="{{ $b->id }}">{{ $b->item->sku }} — {{ $b->warehouse->code }}/{{ $b->bin?->code }} @if($b->lot_number)(lot {{ $b->lot_number }})@endif · qty {{ $b->quantity }}</option>@endforeach</select></x-ui.field>
+<x-ui.field label="Aksi" name="action"><select name="action" class="w-full p-3"><option value="flag">Tandai rusak/usang</option><option value="restore">Pulihkan ke available</option></select></x-ui.field>
+<x-ui.field label="Bucket" name="bucket"><select name="bucket" class="w-full p-3"><option value="damaged">Rusak (damaged)</option><option value="obsolete">Usang (obsolete)</option></select></x-ui.field>
+<x-ui.field label="Qty" name="quantity" required><input name="quantity" type="number" step=".0001" min=".0001" placeholder="0.0000" required class="w-full p-3"></x-ui.field>
+<div class="flex justify-end gap-2 pt-2">
+<button type="button" class="min-h-[42px] rounded-xl border border-[var(--border-default)] px-4 text-sm font-bold hover:bg-[var(--surface-muted)]" data-drawer-close>Batal</button>
+<button class="btn-brand min-h-[42px] rounded-xl px-5 text-sm font-bold">Simpan Kondisi</button>
+</div>
 </form>
+<div class="mt-6 border-t border-[var(--border-subtle)] pt-5">
+<form method="post" action="/admin/inventory/balances-in-transit" class="grid gap-4">@csrf
+<x-ui.field label="Baris saldo (in-transit)" name="balance_id" required><select name="balance_id" required class="w-full p-3">@foreach($balances as $b)<option value="{{ $b->id }}">{{ $b->item->sku }} — {{ $b->warehouse->code }} · in-transit {{ $b->in_transit_quantity }}</option>@endforeach</select></x-ui.field>
+<x-ui.field label="Delta (+ datang / - terima)" name="delta" required hint="Positif menambah in-transit; negatif saat diterima fisik."><input name="delta" type="number" step=".0001" placeholder="+10 atau -10" required class="w-full p-3"></x-ui.field>
+<div class="flex justify-end"><button class="min-h-[42px] rounded-xl border border-[var(--border-default)] px-4 text-sm font-bold hover:bg-[var(--surface-muted)]">Simpan In-Transit</button></div>
+</form>
+</div>
 </x-ui.drawer>
 </x-layouts.app>

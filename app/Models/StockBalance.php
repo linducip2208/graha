@@ -11,7 +11,7 @@ class StockBalance extends Model
 
     protected function casts(): array
     {
-        return ['quantity' => 'decimal:4', 'reserved_quantity' => 'decimal:4'];
+        return ['quantity' => 'decimal:4', 'reserved_quantity' => 'decimal:4', 'damaged_quantity' => 'decimal:4', 'obsolete_quantity' => 'decimal:4', 'in_transit_quantity' => 'decimal:4'];
     }
 
     public function item(): BelongsTo

@@ -1,6 +1,6 @@
 # ENTERPRISE GAP ANALYSIS — Graha Pondasi ERP
 
-Status per 2026-08-24. Baseline: main @712896d+. Matriks ringkas
+Status per 2026-08-25. Baseline: main @16de0f0+. Matriks ringkas
 Modul → Status → Gap → Rencana. Prinsip: tidak ada fitur palsu;
 yang "Blocked" menunggu keputusan/file eksternal.
 
@@ -12,24 +12,24 @@ yang "Blocked" menunggu keputusan/file eksternal.
 | **Bid/No-Bid scoring** | ✅ Baru (ADR-048) | Bobot default perlu kalibrasi data riil | Review tiap kuartal |
 | **Lost reason analytics** | ✅ Baru | Isi primary_reason saat outcome | Disiplin input |
 | Tender→Contract→Project | ✅ Ada (convert) | Contract creation eksplisit terpisah | Sudah sesuai desain |
-| Contract administration | ✅ Ada | ✅ milestone + insurance + correspondence (ADR-062/071, 2026-08-25) | Selesai |
+| Contract administration | ✅ Ada | ✅ milestone + insurance + correspondence + API v1 contracts (2026-08-25) | Selesai |
 | Project tabs (11) | ✅ Ada | Tab Documents masih registry umum | Backlog G |
-| WBS hierarki | ⚠️ Flat | parent_id + budget per baris | Backlog B |
-| Budget baseline versi | ❌ Belum | Tabel baseline versioned | Backlog B |
-| Cost control EAC | ✅ Ada | CPI/SPI ✅ baru; drill-down PO/GR/jurnal | Sebagian backlog |
+| WBS hierarki | ✅ Baru (ADR-055) — parent 4 level + budget per baris | — | Selesai |
+| Budget baseline versi | ✅ Baru (BudgetBaselineService) | — | Selesai |
+| Cost control EAC | ✅ Ada | CPI/SPI ✅; drill-down PO/GR/jurnal | Sebagian backlog |
 | Constraint log | ✅ Baru (ADR-049) | — | — |
-| Procurement plan | ✅ Baru (ADR-050) | Auto-status saat PR/PO dibuat dari flow | Backlog C |
-| PR→RFQ→PO→GR→Invoice | ✅ Ada | Bid comparison kolom delivery/warranty | Kecil |
-| Vendor scorecard | ✅ Ada evaluasi | status approved/suspended/blacklisted | Backlog C |
-| Inventory ledger | ✅ Ada | reserved/in-transit, damaged/obsolete state | Backlog C |
-| Material traceability lot | ✅ Ada (lot_number) | UI telusur lot end-to-end | Backlog D |
-| Reordering | ⚠️ Min stock alert | reorder point/max/lead time + rekomendasi | Backlog C |
-| Manufacturing WIP/OEE | ✅ Ada core | ✅ downtime terstruktur (ADR-063, 2026-08-25); formula OEE menyusul | Sebagian |
+| Procurement plan | ✅ Baru (ADR-050) | auto-status saat PR/PO dibuat dari flow | Backlog C |
+| PR→RFQ→PO→GR→Invoice | ✅ Ada | ✅ bid comparison kolom garansi (wave 9, 2026-08-25) | Selesai |
+| Vendor scorecard | ✅ Ada evaluasi + status approved/suspended/blacklisted | — | Selesai |
+| Inventory ledger | ✅ Ada | ✅ state damaged/obsolete/in-transit (wave 9, 2026-08-25); reserved ada | Selesai |
+| Material traceability lot | ✅ Ada (lot_number) | ✅ UI telusur lot end-to-end (ADR-056) | Selesai |
+| Reordering | ✅ Baru (reorder engine ADR-073/074) | — | Selesai |
+| Manufacturing WIP/OEE | ✅ Ada core | ✅ downtime terstruktur (ADR-063); formula OEE menyusul | Sebagian |
 | Equipment cost/hour | ✅ Ada | — | — |
 | Fuel tank↔equipment | ✅ Baru (ADR-044) | — | — |
-| Accounting core | ✅ Ada | ✅ recurring journal (ADR-066, 2026-08-25) | accrual/prepaid module tersisa |
+| Accounting core | ✅ Ada | ✅ recurring journal (ADR-066) + prepaid amortisasi (wave 8); accrual lain menyusul | Sebagian |
 | AR subledger | ✅ Ada aging | ✅ credit note + write-off approval (2026-08-25) | Selesai |
-| AP matching 3-way | ✅ Ada | flag mismatch granular di UI | Kecil |
+| AP matching 3-way | ✅ Ada | ✅ flag mismatch granular: quantity_flag + short_items + amount_difference (wave 9) | Selesai |
 | Cash flow forecast | ✅ Ada (CashFlowForecastService) | — | — |
 | Cash flow statement | ✅ Baru (ADR-055, 2026-08-25) | tagging kategori CoA perlu disiplin input | Disiplin input |
 | Budget vs actual account | ✅ Baru (ADR-067, 2026-08-25) — per akun per periode fiskal | disiplin input budget | Selesai |
@@ -41,10 +41,10 @@ yang "Blocked" menunggu keputusan/file eksternal.
 | HSE | ✅ JSA/PTW/incident | ✅ observasi/PPE/FR-SR KPI (ADR-058, 2026-08-25) | Selesai |
 | Document control | ✅ Versi+hash | ✅ transmittal + acknowledged + korespondensi kontrak (ADR-068/071, 2026-08-25) | Selesai |
 | Approval engine | ✅ SLA/quorum/delegasi | escalation reminder otomatis ada; kondisi project-scope | Backlog H |
-| Signing internal | ✅ hash-lock | QR verification page, batch sign | Backlog H |
+| Signing internal | ✅ hash-lock | ✅ QR verification page + batch sign (ADR-074 era) | Selesai |
 | Access scope per project | ❌ Belum | company_user.data_scope sudah disiapkan (WIP IAM paralel) | Menunggu landung IAM |
 | Audit diff viewer | ✅ Baru (ADR-064, 2026-08-25) | — | — |
-| API v1 | ✅ subset | contracts, plans, constraints endpoint | Backlog H |
+| API v1 | ✅ subset | ✅ constraints, plans, contracts endpoint lengkap (wave 9) | Selesai |
 
 ## Keputusan yang diblokir / menunggu owner
 

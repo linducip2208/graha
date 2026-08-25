@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Models\CasingUnit;
 use App\Models\ConstraintLog;
+use App\Models\ContractChange;
 use App\Models\Equipment;
 use App\Models\FuelTank;
 use App\Models\ProcurementPlan;
@@ -90,6 +91,17 @@ class AssetApiController extends Controller
             ->where('project_id', $projectId)
             ->when($request->query('status'), fn ($q, $v) => $q->where('status', $v))
             ->orderByDesc('raised_at')->orderByDesc('id')->limit(200)->get()]);
+    }
+
+    /** Register administrasi kontrak (perubahan kontrak) — API read-only. */
+    public function contracts(Request $request): JsonResponse
+    {
+        $companyId = $this->company($request);
+        abort_unless($request->user()->hasPermission('contract.view', $companyId), 403, 'Butuh permission contract.view.');
+
+        return response()->json(['data' => ContractChange::where('company_id', $companyId)
+            ->when($request->query('status'), fn ($q, $v) => $q->where('status', $v))
+            ->with('project:id,code,name')->orderByDesc('id')->paginate(50)]);
     }
 
     /** Rencana pengadaan proyek (ADR-050) + status taut PR/PO. */

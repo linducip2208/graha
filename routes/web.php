@@ -119,6 +119,8 @@ Route::middleware(['auth', 'company', 'permission:inventory.view'])->prefix('adm
     Route::get('/inventory/lots', [InventoryController::class, 'lotTrace'])->name('inventory.lot-trace');
     Route::get('/inventory/reorder', [InventoryController::class, 'reorder'])->name('inventory.reorder');
     Route::post('/inventory/items/{item}/reorder-settings', [InventoryController::class, 'updateReorderSettings'])->middleware('permission:inventory.manage');
+    Route::post('/inventory/balances/{balance}/condition', [InventoryController::class, 'condition'])->middleware('permission:inventory.manage');
+    Route::post('/inventory/balances-in-transit', [InventoryController::class, 'inTransit'])->middleware('permission:inventory.manage');
     Route::post('/inventory/opname', [StockOpnameController::class, 'store'])->middleware('permission:inventory.manage');
     Route::post('/inventory/opname/{count}/approve', [StockOpnameController::class, 'approve'])->middleware('permission:inventory.manage');
     Route::get('/inventory/material-requests', [MaterialRequestController::class, 'index'])->name('material-requests.index');
