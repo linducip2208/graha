@@ -7,10 +7,13 @@ use App\Models\AccountingMapping;
 use App\Models\FiscalPeriod;
 use App\Models\Journal;
 use App\Models\ProgressBilling;
+use App\Models\Project;
+use App\Models\RecurringJournal;
 use App\Models\VendorInvoice;
 use App\Services\AccountingService;
 use App\Services\CashFlowForecastService;
 use App\Services\ReceivablePayableAgingService;
+use App\Services\RecurringJournalService;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -115,5 +118,57 @@ class FinanceController extends Controller
         }$service->post($current->id(), $d['journal_date'], 'manual', $d['reference'], $d['description'], [['account_id' => $d['debit_account_id'], 'debit' => $d['amount'], 'credit' => '0'], ['account_id' => $d['credit_account_id'], 'debit' => '0', 'credit' => $d['amount']]], 'manual:'.$d['reference'], $r->user());
 
         return back()->with('status', 'Jurnal diposting dan seimbang.');
+    }
+
+    public function recurringJournals(CurrentCompany $current)
+    {
+        $templates = RecurringJournal::where('company_id', $current->id())->orderBy('name')->get();
+
+        return view('finance.recurring-journals', [
+            'templates' => $templates,
+            'accounts' => Account::where('company_id', $current->id())->where('is_active', true)->orderBy('code')->get(),
+            'projects' => Project::where('company_id', $current->id())->whereIn('status', ['active', 'in_progress'])->orderBy('code')->get(),
+            'stats' => ['total' => $templates->count(), 'active' => $templates->where('status', 'active')->count(), 'due' => $templates->where('status', 'active')->filter(fn ($t) => $t->next_run_at->isPast())->count()],
+        ]);
+    }
+
+    public function storeRecurringJournal(Request $request, CurrentCompany $current, RecurringJournalService $service)
+    {
+        $data = $request->validate([
+            'name' => ['required', 'max:120'], 'description' => ['required', 'max:255'],
+            'day_of_month' => ['required', 'integer', 'min:1', 'max:28'],
+            'account_id' => ['required', 'array', 'min:2'], 'account_id.*' => ['required', 'integer'],
+            'debit' => ['nullable', 'array'], 'debit.*' => ['nullable', 'decimal:0,2', 'min:0'],
+            'credit' => ['nullable', 'array'], 'credit.*' => ['nullable', 'decimal:0,2', 'min:0'],
+            'project_id_row' => ['nullable', 'array'], 'project_id_row.*' => ['nullable', 'integer'],
+        ]);
+        $lines = [];
+        foreach ($data['account_id'] as $index => $accountId) {
+            $debit = (string) ($data['debit'][$index] ?? '0');
+            $credit = (string) ($data['credit'][$index] ?? '0');
+            if (bccomp($debit, '0', 2) === 0 && bccomp($credit, '0', 2) === 0 && trim((string) $accountId) === '') {
+                continue;
+            }
+            $lines[] = ['account_id' => $accountId, 'debit' => bccomp($debit, '0', 2) === 1 ? $debit : '0', 'credit' => bccomp($credit, '0', 2) === 1 ? $credit : '0'] + (! empty($data['project_id_row'][$index]) ? ['project_id' => (int) $data['project_id_row'][$index]] : []);
+        }
+        $template = $service->create($current->id(), [...$data, 'lines' => $lines], $request->user());
+
+        return back()->with('status', "Template {$template->name} dibuat. Posting otomatis tiap tanggal {$template->day_of_month}.");
+    }
+
+    public function toggleRecurringJournal(RecurringJournal $recurring, CurrentCompany $current)
+    {
+        abort_unless($recurring->company_id === $current->id(), 404);
+        $recurring->update(['status' => $recurring->status === 'active' ? 'paused' : 'active']);
+
+        return back()->with('status', 'Template '.($recurring->status === 'active' ? 'diaktifkan.' : 'dijeda.'));
+    }
+
+    public function runRecurringJournalNow(Request $request, RecurringJournal $recurring, CurrentCompany $current, RecurringJournalService $service)
+    {
+        abort_unless($recurring->company_id === $current->id(), 404);
+        $service->runNow($recurring, $request->user());
+
+        return back()->with('status', "Template '{$recurring->name}' diposting hari ini (idempotent per periode).");
     }
 }

@@ -424,3 +424,14 @@ Route +7 tanpa menghapus route lama. Verifikasi: 261 tests / 1161 assertions lul
 | BUG-004 | UI | signatures/index.blade.php rusak (baris teracak sejak admin-v3) — direkonstruksi; lint semua compiled view kini bagian verifikasi | Fixed | Suite penuh | Latent bug dari commit 508b6c0 |
 
 Route +4 (contract-admin index/milestone/achieve/insurance + 2 downtime). Verifikasi: 264 tests / 1181 assertions lulus, pint bersih.
+
+# Pembaruan 2026-08-25 (4) - Backlog Wave 4: Keluhan Pelanggan, NCR Supplier, Jurnal Berulang
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| QMS-CC-001 | QMS | Register keluhan pelanggan ISO 9.1.2: kanal/severity/status open→resolved + resolusi ter-audit | Tested | QmsFinanceWave4Test | Halaman /admin/complaints; nomor CCM via NumberSequence; isolasi lintas company |
+| QMS-SUP-001 | QMS | NCR supplier: kolom vendor_id pada nonconformities, guard vendor hanya untuk source supplier | Tested | QmsFinanceWave4Test | Form NCR existing menerima vendor_id |
+| ACC-RJ-001 | Accounting | Jurnal berulang: template baris seimbang, posting otomatis harian via scheduler `journals:post-recurring` 01:00 | Tested | QmsFinanceWave4Test | Idempotency key recurring:{id}:{Y-m}; fiscal-period gate; skip-and-retry bila periode tutup; toggle pause/aktif; run-now manual |
+| BUG-005 | Accounting | Query jatuh tempo next_run_at gagal di SQLite (date cast menyimpan komponen jam) — bandingkan dengan end-of-day datetime | Fixed | QmsFinanceWave4Test | |
+
+Route +6 tanpa menghapus route lama. Verifikasi: 269 tests / 1200 assertions lulus, pint bersih.

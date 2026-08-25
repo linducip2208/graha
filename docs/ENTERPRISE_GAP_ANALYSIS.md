@@ -27,7 +27,7 @@ yang "Blocked" menunggu keputusan/file eksternal.
 | Manufacturing WIP/OEE | ✅ Ada core | ✅ downtime terstruktur (ADR-063, 2026-08-25); formula OEE menyusul | Sebagian |
 | Equipment cost/hour | ✅ Ada | — | — |
 | Fuel tank↔equipment | ✅ Baru (ADR-044) | — | — |
-| Accounting core | ✅ Ada | recurring journal, accrual/prepaid module | Backlog F |
+| Accounting core | ✅ Ada | ✅ recurring journal (ADR-066, 2026-08-25) | accrual/prepaid module tersisa |
 | AR subledger | ✅ Ada aging | ✅ credit note + write-off approval (2026-08-25) | Selesai |
 | AP matching 3-way | ✅ Ada | flag mismatch granular di UI | Kecil |
 | Cash flow forecast | ✅ Ada (CashFlowForecastService) | — | — |
@@ -35,7 +35,7 @@ yang "Blocked" menunggu keputusan/file eksternal.
 | Budget vs actual account | ❌ Belum | butuh budget akun per periode | Backlog F |
 | Fixed asset | ✅ Ada | ✅ disposal flow lengkap (ADR-056, 2026-08-25) | Selesai |
 | Pajak ID | ✅ PPN/PPh23/4(2) | PPh 21 engine, rekonsiliasi UI | Backlog F |
-| QMS NCR/CAPA | ✅ Ada | customer complaint, supplier NCR | Backlog G |
+| QMS NCR/CAPA | ✅ Ada | ✅ customer complaint + supplier NCR (ADR-065, 2026-08-25) | Selesai |
 | **ITP** | ✅ Baru (ADR-059, 2026-08-25) | gate ke pile completion (opsional setting) | Backlog G lanjutan |
 | **Kalibrasi** | ✅ Baru (ADR-060, 2026-08-25) — register + due status otomatis | reminder scheduler | Kecil |
 | HSE | ✅ JSA/PTW/incident | ✅ observasi/PPE/FR-SR KPI (ADR-058, 2026-08-25) | Selesai |

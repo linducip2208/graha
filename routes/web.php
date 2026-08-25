@@ -102,6 +102,10 @@ Route::middleware(['auth', 'company', 'permission:finance.view'])->prefix('admin
     Route::post('/finance/periods', [FinanceController::class, 'period'])->middleware('permission:finance.manage');
     Route::post('/finance/mappings', [FinanceController::class, 'mapping'])->middleware('permission:finance.manage');
     Route::post('/finance/journals', [FinanceController::class, 'journal'])->middleware('permission:accounting.post');
+    Route::get('/recurring-journals', [FinanceController::class, 'recurringJournals'])->name('finance.recurring-journals');
+    Route::post('/recurring-journals', [FinanceController::class, 'storeRecurringJournal'])->middleware('permission:finance.manage');
+    Route::post('/recurring-journals/{recurring}/toggle', [FinanceController::class, 'toggleRecurringJournal'])->middleware('permission:finance.manage');
+    Route::post('/recurring-journals/{recurring}/run', [FinanceController::class, 'runRecurringJournalNow'])->middleware('permission:accounting.post');
 });
 Route::middleware(['auth', 'company', 'permission:inventory.view'])->prefix('admin')->group(function () {
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
@@ -193,6 +197,10 @@ Route::middleware(['auth', 'company', 'permission:qms.view'])->prefix('admin')->
     Route::post('/qms/objectives', [QmsController::class, 'storeObjective'])->middleware('permission:qms.manage');
     Route::post('/qms/objectives/{objective}/actual', [QmsController::class, 'updateObjectiveActual'])->middleware('permission:qms.manage');
     Route::post('/qms/surveys', [QmsController::class, 'storeSurvey'])->middleware('permission:qms.manage');
+    Route::get('/complaints', [QmsController::class, 'complaints'])->name('qms.complaints');
+    Route::post('/complaints', [QmsController::class, 'storeComplaint'])->middleware('permission:qms.manage');
+    Route::post('/complaints/{complaint}/resolve', [QmsController::class, 'resolveComplaint'])->middleware('permission:qms.manage');
+    Route::post('/complaints/{complaint}/link-ncr', [QmsController::class, 'linkComplaintNcr'])->middleware('permission:qms.manage');
     Route::get('/itps', [QmsController::class, 'itps'])->name('qms.itps');
     Route::post('/itps', [QmsController::class, 'storeItp'])->middleware('permission:qms.manage');
     Route::post('/itp-items/{item}/inspections', [QmsController::class, 'storeInspection'])->middleware('permission:qms.manage');

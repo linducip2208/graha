@@ -15,6 +15,11 @@ class Nonconformity extends Model
         return $this->belongsTo(Project::class);
     }
 
+    public function vendor(): BelongsTo
+    {
+        return $this->belongsTo(Vendor::class);
+    }
+
     public function actions(): HasMany
     {
         return $this->hasMany(CorrectiveAction::class);

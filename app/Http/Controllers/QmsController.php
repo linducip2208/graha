@@ -5,18 +5,22 @@ namespace App\Http\Controllers;
 use App\Models\BoredPile;
 use App\Models\CorrectiveAction;
 use App\Models\Customer;
+use App\Models\CustomerComplaint;
 use App\Models\CustomerSatisfactionSurvey;
 use App\Models\Department;
 use App\Models\InspectionTestPlan;
 use App\Models\InternalAudit;
 use App\Models\ItpItem;
 use App\Models\Nonconformity;
+use App\Models\NumberSequence;
 use App\Models\Project;
 use App\Models\QualityObjective;
 use App\Models\RiskOpportunity;
 use App\Models\User;
+use App\Models\Vendor;
 use App\Services\AuditTrail;
 use App\Services\ItpService;
+use App\Services\NumberSequenceService;
 use App\Services\QmsService;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Http\Request;
@@ -90,11 +94,66 @@ class QmsController extends Controller
             'number' => ['required', 'max:80', 'unique:nonconformities,number,NULL,id,company_id,'.$current->id()],
             'source_type' => ['required', 'max:40'], 'severity' => ['required', 'in:major,minor,observation'],
             'description' => ['required'], 'containment' => ['nullable'], 'root_cause' => ['nullable'],
-            'due_at' => ['nullable', 'date'],
+            'due_at' => ['nullable', 'date'], 'vendor_id' => ['nullable', 'integer'],
         ]);
+        if (! empty($data['vendor_id'])) {
+            abort_unless(Vendor::where('company_id', $current->id())->whereKey($data['vendor_id'])->exists(), 422);
+            throw_if(! in_array($data['source_type'], ['supplier', 'supplier_product', 'supplier_service'], true), ValidationException::withMessages(['vendor_id' => 'Vendor hanya untuk sumber NCR supplier.']));
+        } else {
+            unset($data['vendor_id']);
+        }
         Nonconformity::create([...$data, 'company_id' => $current->id(), 'reported_by' => $request->user()->id]);
 
         return back()->with('status', 'NCR dicatat.');
+    }
+
+    public function complaints(CurrentCompany $current)
+    {
+        $complaints = CustomerComplaint::where('company_id', $current->id())->with(['customer', 'project', 'ncr'])->orderByDesc('complaint_date')->limit(100)->get();
+
+        return view('qms.complaints', [
+            'complaints' => $complaints,
+            'customers' => Customer::where('company_id', $current->id())->orderBy('name')->get(),
+            'projects' => Project::where('company_id', $current->id())->whereIn('status', ['active', 'in_progress'])->orderBy('code')->get(),
+            'stats' => ['total' => $complaints->count(), 'open' => $complaints->where('status', '!=', 'resolved')->count(), 'major' => $complaints->where('severity', 'major')->count(), 'resolved' => $complaints->where('status', 'resolved')->count()],
+        ]);
+    }
+
+    public function storeComplaint(Request $request, CurrentCompany $current, AuditTrail $audit)
+    {
+        $data = $request->validate(['customer_id' => ['required', 'integer'], 'project_id' => ['nullable', 'integer'], 'complaint_date' => ['required', 'date'], 'channel' => ['required', 'in:email,phone,visit,other'], 'subject' => ['required', 'max:200'], 'description' => ['required', 'max:3000'], 'severity' => ['required', 'in:minor,major']]);
+        abort_unless(Customer::where('company_id', $current->id())->whereKey($data['customer_id'])->exists(), 422);
+        if (! empty($data['project_id'])) {
+            abort_unless(Project::where('company_id', $current->id())->whereKey($data['project_id'])->exists(), 422);
+        } else {
+            unset($data['project_id']);
+        }
+        NumberSequence::firstOrCreate(['company_id' => $current->id(), 'document_type' => 'customer_complaint'], ['prefix' => 'CCM', 'padding' => 4, 'last_reset_year' => now()->year]);
+        $complaint = CustomerComplaint::create([...$data, 'company_id' => $current->id(), 'number' => app(NumberSequenceService::class)->next($current->id(), 'customer_complaint'), 'recorded_by' => $request->user()->id]);
+        $audit->record($current->id(), $request->user()->id, 'qms.customer_complaint_recorded', $complaint);
+
+        return back()->with('status', 'Keluhan pelanggan tercatat (ISO 9.1.2).');
+    }
+
+    public function resolveComplaint(Request $request, CustomerComplaint $complaint, CurrentCompany $current, AuditTrail $audit)
+    {
+        abort_unless($complaint->company_id === $current->id(), 404);
+        throw_unless($complaint->status !== 'resolved', ValidationException::withMessages(['status' => 'Keluhan sudah selesai.']));
+        $data = $request->validate(['resolution_notes' => ['required', 'max:3000']]);
+        $complaint->update(['status' => 'resolved', 'resolution_notes' => $data['resolution_notes'], 'resolved_by' => $request->user()->id, 'resolved_at' => now()]);
+        $audit->record($current->id(), $request->user()->id, 'qms.customer_complaint_resolved', $complaint);
+
+        return back()->with('status', 'Keluhan diselesaikan.');
+    }
+
+    public function linkComplaintNcr(Request $request, CustomerComplaint $complaint, CurrentCompany $current)
+    {
+        abort_unless($complaint->company_id === $current->id(), 404);
+        $data = $request->validate(['ncr_id' => ['required', 'integer']]);
+        $ncr = Nonconformity::where('company_id', $current->id())->findOrFail($data['ncr_id']);
+        $complaint->update(['ncr_id' => $ncr->id, 'status' => 'investigating']);
+
+        return back()->with('status', "Keluhan tertaut ke NCR {$ncr->number} dan masuk investigasi.");
     }
 
     public function capa(Request $request, Nonconformity $ncr, CurrentCompany $current)

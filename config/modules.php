@@ -59,6 +59,7 @@ return [
                 ['label' => 'Chart of Accounts', 'href' => '/admin/finance/accounts'],
                 ['label' => 'Periode Fiskal', 'href' => '/admin/finance/periods'],
                 ['label' => 'Jurnal', 'href' => '/admin/finance/journals'],
+                ['label' => 'Jurnal Berulang', 'href' => '/admin/recurring-journals'],
                 ['label' => 'Accounting Mapping', 'href' => '/admin/finance/accounting-mappings'],
                 ['label' => 'Trial Balance & Laporan Keuangan', 'href' => '/admin/reports/financial-statements'],
                 ['label' => 'Arus Kas (Metode Langsung)', 'href' => '/admin/reports/cash-flow'],
@@ -74,6 +75,7 @@ return [
         ]],
         ['key' => 'quality-hse', 'label' => '✅ Quality & HSE', 'items' => [
             ['label' => 'Risiko, NCR & Audit Mutu', 'href' => '/admin/qms', 'icon' => 'shield', 'permission' => 'qms.view'],
+            ['label' => 'Keluhan Pelanggan', 'href' => '/admin/complaints', 'icon' => 'bell', 'permission' => 'qms.view'],
             ['label' => 'Inspection & Test Plan', 'href' => '/admin/itps', 'icon' => 'clipboard-check', 'permission' => 'qms.view'],
             ['label' => 'HSE, JSA & Incident', 'href' => '/admin/hse', 'icon' => 'triangle-alert', 'permission' => 'hse.view'],
             ['label' => 'KPI Keselamatan (FR/SR)', 'href' => '/admin/hse/metrics', 'icon' => 'activity', 'permission' => 'hse.view'],
