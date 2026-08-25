@@ -12,7 +12,7 @@ yang "Blocked" menunggu keputusan/file eksternal.
 | **Bid/No-Bid scoring** | ✅ Baru (ADR-048) | Bobot default perlu kalibrasi data riil | Review tiap kuartal |
 | **Lost reason analytics** | ✅ Baru | Isi primary_reason saat outcome | Disiplin input |
 | Tender→Contract→Project | ✅ Ada (convert) | Contract creation eksplisit terpisah | Sudah sesuai desain |
-| Contract administration | ✅ Ada | ✅ milestone register + insurance register (ADR-062, 2026-08-25) | correspondence link tersisa |
+| Contract administration | ✅ Ada | ✅ milestone + insurance + correspondence (ADR-062/071, 2026-08-25) | Selesai |
 | Project tabs (11) | ✅ Ada | Tab Documents masih registry umum | Backlog G |
 | WBS hierarki | ⚠️ Flat | parent_id + budget per baris | Backlog B |
 | Budget baseline versi | ❌ Belum | Tabel baseline versioned | Backlog B |
@@ -34,12 +34,12 @@ yang "Blocked" menunggu keputusan/file eksternal.
 | Cash flow statement | ✅ Baru (ADR-055, 2026-08-25) | tagging kategori CoA perlu disiplin input | Disiplin input |
 | Budget vs actual account | ✅ Baru (ADR-067, 2026-08-25) — per akun per periode fiskal | disiplin input budget | Selesai |
 | Fixed asset | ✅ Ada | ✅ disposal flow lengkap (ADR-056, 2026-08-25) | Selesai |
-| Pajak ID | ✅ PPN/PPh23/4(2) | PPh 21 engine, rekonsiliasi UI | Backlog F |
+| Pajak ID | ✅ PPN/PPh23/4(2) | ✅ kalkulator PPh 21 estimasi (ADR-070, 2026-08-25) | e-Bupot tetap eksternal; rekonsiliasi UI |
 | QMS NCR/CAPA | ✅ Ada | ✅ customer complaint + supplier NCR (ADR-065, 2026-08-25) | Selesai |
 | **ITP** | ✅ Baru (ADR-059) + ✅ gate pile completion opsional (ADR-069, 2026-08-25) | — | — |
 | **Kalibrasi** | ✅ Baru (ADR-060) — register + due status + ✅ reminder scheduler (2026-08-25) | — | — |
 | HSE | ✅ JSA/PTW/incident | ✅ observasi/PPE/FR-SR KPI (ADR-058, 2026-08-25) | Selesai |
-| Document control | ✅ Versi+hash | ✅ transmittal + acknowledged (ADR-068, 2026-08-25) | correspondence link tersisa |
+| Document control | ✅ Versi+hash | ✅ transmittal + acknowledged + korespondensi kontrak (ADR-068/071, 2026-08-25) | Selesai |
 | Approval engine | ✅ SLA/quorum/delegasi | escalation reminder otomatis ada; kondisi project-scope | Backlog H |
 | Signing internal | ✅ hash-lock | QR verification page, batch sign | Backlog H |
 | Access scope per project | ❌ Belum | company_user.data_scope sudah disiapkan (WIP IAM paralel) | Menunggu landung IAM |

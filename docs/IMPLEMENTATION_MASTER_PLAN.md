@@ -453,3 +453,12 @@ Route +6 (budget index/store/delete + transmittal index/store/acknowledge) tanpa
 | QMS-CAL-002 | QMS | Reminder kalibrasi otomatis `qms:notify-calibration` harian 07:30: overdue + due ≤30 hari, sekali per record/hari | Tested | GateReminderWave6Test | Pola OperationalNotification sama dengan qms:notify-due |
 
 Verifikasi penutupan sesi: 274 tests / 1226 assertions lulus, pint bersih.
+
+# Pembaruan 2026-08-25 (7) - Backlog Wave 7 Penutup: Kalkulator PPh 21 + Korespondensi Kontrak
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| TAX-PH21-001 | Accounting | Kalkulator PPh 21 Pasal 17 progresif tahunan (biaya jabatan 5% maks 6jt, PTKP TK/K0-3, tarif 5/15/25/30%, surcharge +20% tanpa NPWP) | Tested | Pph21CorrespondenceWave7Test | Service murni untuk estimasi/preview — final tetap via perpajakan; tanpa skema baru |
+| CON-CORR-001 | Kontrak | Register korespondensi kontrak in/out dengan nomor surat + tautan opsional versi dokumen registry | Tested | Pph21CorrespondenceWave7Test | Bagian baru di /admin/contract-admin; audit trail |
+
+Route +1. Verifikasi penutupan backlog: 278 tests / 1240 assertions lulus, pint bersih.

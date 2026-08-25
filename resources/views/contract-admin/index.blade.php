@@ -54,6 +54,20 @@
 <tr class="h-[48px] border-t"><td class="font-mono">{{ $i->policy_number }}</td><td>{{ strtoupper($i->coverage_type) }}</td><td>Rp {{ number_format((float)$i->insured_amount / 1000000, 0) }} jt</td><td>{{ $i->start_date->format('d/m/y') }}–{{ $i->end_date->format('d/m/y') }}</td><td><span class="chip chip-default @if($st==='expired') bg-red-50 text-red-700 @elseif($st==='expiring') bg-amber-50 text-amber-700 @endif">{{ strtoupper($st) }}</span></td></tr>
 @empty<tr><td colspan="5" class="p-6 text-center text-slate-500">Belum ada polis terdaftar.</td></tr>@endforelse
 </tbody></table></div>
+<div class="rounded-2xl border bg-white p-5">
+<h2 class="font-bold">Korespondensi — {{ $selected->award_number }}</h2>
+<form method="post" action="/admin/contract-admin/{{ $selected->id }}/correspondences" class="mt-3 grid gap-2 md:grid-cols-2">@csrf
+<select name="direction" class="rounded-xl border p-2.5 text-sm"><option value="out">Keluar (kami kirim)</option><option value="in">Masuk (kami terima)</option></select>
+<input type="date" name="correspondence_date" value="{{ today()->toDateString() }}" required class="rounded-xl border p-2.5 text-sm">
+<input name="ref_number" required placeholder="Nomor surat" class="rounded-xl border p-2.5 text-sm">
+<input name="subject" required placeholder="Perihal" class="rounded-xl border p-2.5 text-sm md:col-span-2">
+<button class="rounded-xl bg-violet-700 p-2.5 text-sm font-bold text-white md:col-span-2">Catat Korespondensi</button>
+</form>
+<div class="mt-4 overflow-x-auto"><table class="w-full min-w-[480px] text-sm"><thead><tr><th>Tanggal</th><th>Arah</th><th>Nomor</th><th>Perihal</th></tr></thead><tbody>
+@forelse($correspondences as $c)
+<tr class="border-t h-[44px]"><td>{{ $c->correspondence_date->format('d/m/Y') }}</td><td><span class="chip chip-default">{{ $c->direction === 'in' ? 'MASUK' : 'KELUAR' }}</span></td><td class="font-mono">{{ $c->ref_number }}</td><td>{{ \Illuminate\Support\Str::limit($c->subject, 60) }}@if($c->version) <span class="text-xs text-violet-700">· dokumen terlampir</span>@endif</td></tr>
+@empty<tr><td colspan="4" class="p-6 text-center text-slate-500">Belum ada korespondensi.</td></tr>@endforelse
+</tbody></table></div>
 </div>
 </section>
 @endif

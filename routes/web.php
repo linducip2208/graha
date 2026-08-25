@@ -171,6 +171,7 @@ Route::middleware(['auth', 'company', 'permission:contract.view'])->prefix('admi
     Route::post('/{award}/milestones', [ContractAdminController::class, 'storeMilestone'])->middleware('permission:contract.manage');
     Route::post('/milestones/{milestone}/achieve', [ContractAdminController::class, 'achieveMilestone'])->middleware('permission:contract.manage');
     Route::post('/{award}/insurances', [ContractAdminController::class, 'storeInsurance'])->middleware('permission:contract.manage');
+    Route::post('/{award}/correspondences', [ContractAdminController::class, 'storeCorrespondence'])->middleware('permission:contract.manage');
 });
 Route::middleware(['auth', 'company', 'permission:tender.view'])->prefix('admin')->group(function () {
     Route::get('/tenders', [TenderController::class, 'index'])->name('tenders.index');
