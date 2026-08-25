@@ -35,7 +35,7 @@ class PileDocumentService
             'batch' => false,
         ])->setPaper('a4', 'portrait')->output();
 
-        $document = $this->resolveDocument($pile->project->company_id, 'pile_as_built', 'ASB', "As-Built Pile {$pile->pile_number} · {$pile->project->code}", $actor);
+        $document = $this->resolveDocument($pile->project->company_id, 'pile_as_built', 'ASB', "As-Built Pile {$pile->pile_number} · {$pile->project->code}", $actor, (int) $pile->project->id);
 
         return $this->register($pile, $document, 'as-built-'.$pile->pile_number.'.pdf', $bytes, 'as_built', 'asbuilt_generated', $actor);
     }
@@ -48,14 +48,14 @@ class PileDocumentService
         $data['acceptance'] = PileAcceptance::where('bored_pile_id', $pile->id)->latest()->first();
         $bytes = Pdf::loadView('pdf.pile-dossier', ['d' => $data])->setPaper('a4', 'portrait')->output();
 
-        $document = $this->resolveDocument($pile->project->company_id, 'pile_acceptance_dossier', 'DOSS', "Acceptance Dossier Pile {$pile->pile_number} · {$pile->project->code}", $actor);
+        $document = $this->resolveDocument($pile->project->company_id, 'pile_acceptance_dossier', 'DOSS', "Acceptance Dossier Pile {$pile->pile_number} · {$pile->project->code}", $actor, (int) $pile->project->id);
 
         return $this->register($pile, $document, 'dossier-'.$pile->pile_number.'.pdf', $bytes, 'dossier', 'acceptance_dossier_generated', $actor);
     }
 
-    private function resolveDocument(int $companyId, string $type, string $prefix, string $title, User $actor): Document
+    private function resolveDocument(int $companyId, string $type, string $prefix, string $title, User $actor, ?int $projectId = null): Document
     {
-        return DB::transaction(function () use ($companyId, $type, $prefix, $title, $actor) {
+        return DB::transaction(function () use ($companyId, $type, $prefix, $title, $actor, $projectId) {
             NumberSequence::firstOrCreate(
                 ['company_id' => $companyId, 'document_type' => $type],
                 ['prefix' => $prefix, 'padding' => 4, 'last_reset_year' => now()->year]
@@ -66,6 +66,7 @@ class PileDocumentService
                 [
                     'number' => app(NumberSequenceService::class)->next($companyId, $type),
                     'owner_id' => $actor->id,
+                    'project_id' => $projectId,
                 ]
             );
         }, 3);

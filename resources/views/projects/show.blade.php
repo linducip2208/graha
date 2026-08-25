@@ -12,6 +12,7 @@
     'cost' => 'Biaya & EAC',
     'billing' => 'Billing',
     'quality' => 'Quality & HSE',
+    'documents' => 'Dokumen',
     'activity' => 'Activity',
 ])
 <div class="page-container">

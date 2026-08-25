@@ -33,6 +33,10 @@ class DocumentController extends Controller
         if ($status = (string) $request->query('status')) {
             $query->where('workflow_status', $status);
         }
+        if ($projectId = (int) $request->query('project_id')) {
+            abort_unless(\App\Models\Project::where('company_id', $companyId)->whereKey($projectId)->exists(), 404);
+            $query->where('project_id', $projectId);
+        }
         $documents = $query->latest()->paginate(20)->withQueryString();
 
         // KPI dari data riil (bukan metrik palsu): workflow_status hanya

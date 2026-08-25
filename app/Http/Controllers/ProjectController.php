@@ -9,6 +9,7 @@ use App\Models\BudgetBaseline;
 use App\Models\ConcreteDelivery;
 use App\Models\ConstraintLog;
 use App\Models\ContractChange;
+use App\Models\Document;
 use App\Models\Customer;
 use App\Models\Item;
 use App\Models\MaterialRequest;
@@ -218,6 +219,10 @@ class ProjectController extends Controller
 
         if ($tab === 'piles') {
             $data['zones'] = $project->zones()->orderBy('code')->get();
+        }
+
+        if ($tab === 'documents' && $can('document.view')) {
+            $data['documents'] = Document::where('company_id', $companyId)->where('project_id', $project->id)->withCount('versions')->latest()->limit(50)->get();
         }
 
         return view('projects.show', $data);
