@@ -20,6 +20,11 @@ class ProjectAward extends Model
         return $this->belongsTo(Tender::class);
     }
 
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
     public function handover(): HasOne
     {
         return $this->hasOne(ProjectHandover::class);

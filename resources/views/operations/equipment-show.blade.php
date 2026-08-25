@@ -43,4 +43,20 @@
 </div>
 </x-ui.card>
 </div>
+
+<section class="mt-8 rounded-2xl border bg-white p-5"><h2 class="text-lg font-black">Downtime Terstruktur</h2><p class="mt-1 text-sm text-slate-500">Catat jam tidak beroperasi per alasan — bahan perhitungan availability/OEE dan evaluasi alat.</p>
+@if(auth()->user()->hasPermission('manufacturing.manage', app(\App\Support\Tenancy\CurrentCompany::class)->id()))
+<form method="post" action="/admin/operations/equipment/{{ $equipment->id }}/downtime" class="mt-3 grid gap-2 md:grid-cols-[170px_190px_1fr_150px]">@csrf
+<input type="datetime-local" name="started_at" value="{{ now()->format('Y-m-d\TH:i') }}" required class="rounded-xl border p-2 text-sm">
+<select name="reason" required class="rounded-xl border p-2 text-sm"><option value="breakdown">Breakdown</option><option value="maintenance">Maintenance</option><option value="changeover">Changeover</option><option value="waiting_material">Waiting Material</option><option value="weather">Cuaca</option><option value="other">Lainnya</option></select>
+<input name="notes" placeholder="Keterangan" class="rounded-xl border p-2 text-sm">
+<button class="rounded-xl bg-slate-800 p-2 text-sm font-bold text-white">Mulai Downtime</button>
+</form>
+@endif
+<div class="mt-4 overflow-x-auto"><table class="w-full min-w-[560px] text-sm"><thead><tr><th>Mulai</th><th>Selesai</th><th>Durasi</th><th>Alasan</th><th>Aksi</th></tr></thead><tbody>
+@forelse($downtimes as $log)
+<tr class="border-t"><td>{{ $log->started_at->format('d/m H:i') }}</td><td>@if($log->ended_at){{ $log->ended_at->format('d/m H:i') }}@else<span class="font-bold text-red-600">BERJALAN</span>@endif</td><td class="tabular-nums">{{ $log->hours() }} jam</td><td>{{ ucfirst($log->reason) }}</td><td>@if(! $log->ended_at && auth()->user()->hasPermission('manufacturing.manage', app(\App\Support\Tenancy\CurrentCompany::class)->id()))<form method="post" action="/admin/operations/equipment/{{ $equipment->id }}/downtime/{{ $log->id }}/close" class="flex gap-1">@csrf<input type="datetime-local" name="ended_at" value="{{ now()->format('Y-m-d\TH:i') }}" required class="rounded-lg border p-1 text-xs"><button class="rounded-lg bg-emerald-700 px-2 py-1 text-xs font-bold text-white">Tutup</button></form>@endif</td></tr>
+@empty<tr><td colspan="5" class="p-6 text-center text-slate-500">Belum ada downtime tercatat.</td></tr>@endforelse
+</tbody></table></div>
+</section>
 </div></x-layouts.app>

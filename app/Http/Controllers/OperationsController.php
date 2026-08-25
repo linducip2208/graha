@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BillOfMaterial;
 use App\Models\CalibrationRecord;
 use App\Models\Equipment;
+use App\Models\EquipmentDowntimeLog;
 use App\Models\FuelTank;
 use App\Models\FuelUsage;
 use App\Models\Item;
@@ -19,6 +20,7 @@ use App\Services\ManufacturingService;
 use App\Support\Tenancy\CurrentCompany;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class OperationsController extends Controller
 {
@@ -35,6 +37,7 @@ class OperationsController extends Controller
             'workOrders' => MaintenanceWorkOrder::where('equipment_id', $equipment->id)->latest()->limit(15)->get(),
             'costSummary' => $costs->summary($equipment, $from, $to),
             'costFrom' => $from, 'costTo' => $to,
+            'downtimes' => EquipmentDowntimeLog::where('equipment_id', $equipment->id)->latest('started_at')->limit(15)->get(),
         ]);
     }
 
@@ -156,5 +159,27 @@ class OperationsController extends Controller
         app(AuditTrail::class)->record($current->id(), $request->user()->id, 'qms.calibration_recorded', $record);
 
         return back()->with('status', 'Kalibrasi dicatat.');
+    }
+
+    public function startDowntime(Request $request, Equipment $equipment, CurrentCompany $current)
+    {
+        abort_unless($equipment->company_id === $current->id(), 404);
+        $data = $request->validate(['started_at' => ['required', 'date'], 'reason' => ['required', 'in:breakdown,maintenance,changeover,waiting_material,weather,other'], 'notes' => ['nullable', 'max:1000']]);
+        throw_if(EquipmentDowntimeLog::where('equipment_id', $equipment->id)->whereNull('ended_at')->exists(), ValidationException::withMessages(['downtime' => 'Masih ada downtime berjalan. Tutup dulu sebelum membuka baru.']));
+        $log = EquipmentDowntimeLog::create([...$data, 'company_id' => $current->id(), 'equipment_id' => $equipment->id, 'recorded_by' => $request->user()->id]);
+        app(AuditTrail::class)->record($current->id(), $request->user()->id, 'manufacturing.downtime_started', $log);
+
+        return back()->with('status', 'Downtime dicatat (berjalan).');
+    }
+
+    public function closeDowntime(Request $request, Equipment $equipment, EquipmentDowntimeLog $log, CurrentCompany $current)
+    {
+        abort_unless($equipment->company_id === $current->id() && $log->equipment_id === $equipment->id, 404);
+        $data = $request->validate(['ended_at' => ['required', 'date']]);
+        throw_unless($log->ended_at === null, ValidationException::withMessages(['ended_at' => 'Downtime sudah ditutup.']));
+        throw_if(strtotime($log->started_at) > strtotime($data['ended_at']), ValidationException::withMessages(['ended_at' => 'Waktu selesai harus setelah waktu mulai.']));
+        $log->update(['ended_at' => $data['ended_at']]);
+
+        return back()->with('status', 'Downtime ditutup.');
     }
 }

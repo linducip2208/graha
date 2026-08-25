@@ -412,3 +412,15 @@ Route +5 (cash-flow report, dispose, credit-note, write-off request/decide) tanp
 | NAV-004 | UI | Menu baru: Register Kalibrasi (Workshop), ITP & KPI Keselamatan (Quality & HSE), Arus Kas (GL children); ikon scale/activity/clipboard-check/trash dll ditambahkan | Tested | smoke HTTP | Edition module mapping calibrations→manufacturing |
 
 Route +7 tanpa menghapus route lama. Verifikasi: 261 tests / 1161 assertions lulus, pint bersih. Perbaikan regresi: klasifikasi modul kalibrasi di Navigation (ADR-065 tetap berlaku), cash-flow page menampilkan empty state ramah bila akun kas belum dikonfigurasi (bukan error 500).
+
+# Pembaruan 2026-08-25 (3) - Backlog Wave 3: Administrasi Kontrak, Downtime Equipment, Audit Diff
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| CON-MS-001 | Kontrak | Milestone register per kontrak (award) dengan bobot progres (total ≤ 100%) + status late otomatis | Tested | ContractAdminDowntimeWave3Test | Halaman /admin/contract-admin; achieve dengan tanggal realisasi |
+| CON-INS-001 | Kontrak | Register asuransi kontrak: polis/CAR/EAR/TPL/surety, status aktif/expiring(≤30hr)/expired | Tested | ContractAdminDowntimeWave3Test | Validasi end ≥ start; audit trail |
+| EQ-DT-001 | Equipment | Downtime terstruktur per alat: mulai/tutup dengan alasan breakdown/maintenance/changeover/waiting/weather | Tested | ContractAdminDowntimeWave3Test | Guard satu downtime berjalan; durasi jam dihitung; bahan OEE/availability |
+| AUD-DIFF-001 | Governance | Audit diff viewer: tabel kolom lama→baru dengan highlight baris berubah | Tested | smoke HTTP | Render pada /admin/audit; fallback JSON bila bukan diff |
+| BUG-004 | UI | signatures/index.blade.php rusak (baris teracak sejak admin-v3) — direkonstruksi; lint semua compiled view kini bagian verifikasi | Fixed | Suite penuh | Latent bug dari commit 508b6c0 |
+
+Route +4 (contract-admin index/milestone/achieve/insurance + 2 downtime). Verifikasi: 264 tests / 1181 assertions lulus, pint bersih.

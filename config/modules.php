@@ -16,7 +16,9 @@ return [
         ]],
         ['key' => 'komersial', 'label' => '💼 Komersial', 'items' => [
             ['label' => 'Tender & Pelanggan', 'href' => '/admin/tenders', 'icon' => 'flag', 'permission' => 'tender.view'],
-            ['label' => 'Administrasi Kontrak', 'href' => '/admin/contracts', 'icon' => 'document', 'permission' => 'contract.view'],
+            ['label' => 'Administrasi Kontrak', 'href' => '/admin/contracts', 'icon' => 'document', 'permission' => 'contract.view', 'children' => [
+                ['label' => 'Milestone & Asuransi', 'href' => '/admin/contract-admin'],
+            ]],
         ]],
         ['key' => 'proyek', 'label' => '🏗️ Proyek', 'items' => [
             ['label' => 'Daftar Proyek & Gantt', 'href' => '/admin/projects', 'icon' => 'cube', 'permission' => 'project.view'],

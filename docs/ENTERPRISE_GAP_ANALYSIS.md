@@ -12,7 +12,7 @@ yang "Blocked" menunggu keputusan/file eksternal.
 | **Bid/No-Bid scoring** | ✅ Baru (ADR-048) | Bobot default perlu kalibrasi data riil | Review tiap kuartal |
 | **Lost reason analytics** | ✅ Baru | Isi primary_reason saat outcome | Disiplin input |
 | Tender→Contract→Project | ✅ Ada (convert) | Contract creation eksplisit terpisah | Sudah sesuai desain |
-| Contract administration | ⚠️ Parsial | Milestone register, insurance register, correspondence link | Backlog F |
+| Contract administration | ✅ Ada | ✅ milestone register + insurance register (ADR-062, 2026-08-25) | correspondence link tersisa |
 | Project tabs (11) | ✅ Ada | Tab Documents masih registry umum | Backlog G |
 | WBS hierarki | ⚠️ Flat | parent_id + budget per baris | Backlog B |
 | Budget baseline versi | ❌ Belum | Tabel baseline versioned | Backlog B |
@@ -24,8 +24,8 @@ yang "Blocked" menunggu keputusan/file eksternal.
 | Inventory ledger | ✅ Ada | reserved/in-transit, damaged/obsolete state | Backlog C |
 | Material traceability lot | ✅ Ada (lot_number) | UI telusur lot end-to-end | Backlog D |
 | Reordering | ⚠️ Min stock alert | reorder point/max/lead time + rekomendasi | Backlog C |
-| Manufacturing WIP/OEE | ✅ Ada core | OEE butuh downtime terstruktur | Backlog E |
-| Equipment cost/hour | ⚠️ Data ada | agregasi fuel+maintenance+depresiasi → Rp/jam | Backlog E |
+| Manufacturing WIP/OEE | ✅ Ada core | ✅ downtime terstruktur (ADR-063, 2026-08-25); formula OEE menyusul | Sebagian |
+| Equipment cost/hour | ✅ Ada | — | — |
 | Fuel tank↔equipment | ✅ Baru (ADR-044) | — | — |
 | Accounting core | ✅ Ada | recurring journal, accrual/prepaid module | Backlog F |
 | AR subledger | ✅ Ada aging | ✅ credit note + write-off approval (2026-08-25) | Selesai |
@@ -43,7 +43,7 @@ yang "Blocked" menunggu keputusan/file eksternal.
 | Approval engine | ✅ SLA/quorum/delegasi | escalation reminder otomatis ada; kondisi project-scope | Backlog H |
 | Signing internal | ✅ hash-lock | QR verification page, batch sign | Backlog H |
 | Access scope per project | ❌ Belum | company_user.data_scope sudah disiapkan (WIP IAM paralel) | Menunggu landung IAM |
-| Audit diff viewer | ⚠️ old/new tersimpan | render diff | Backlog H |
+| Audit diff viewer | ✅ Baru (ADR-064, 2026-08-25) | — | — |
 | API v1 | ✅ subset | contracts, plans, constraints endpoint | Backlog H |
 
 ## Keputusan yang diblokir / menunggu owner

@@ -6,6 +6,7 @@ use App\Http\Controllers\BillingController;
 use App\Http\Controllers\CageController;
 use App\Http\Controllers\CashBankController;
 use App\Http\Controllers\CasingController;
+use App\Http\Controllers\ContractAdminController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentController;
@@ -158,6 +159,12 @@ Route::middleware(['auth', 'company', 'permission:project.view'])->prefix('admin
     Route::post('/projects/{project}/procurement-plans', [ProjectController::class, 'storePlan'])->middleware('permission:procurement.manage');
     Route::post('/procurement-plans/{plan}/link', [ProjectController::class, 'linkPlanDocument'])->middleware('permission:procurement.manage');
 });
+Route::middleware(['auth', 'company', 'permission:contract.view'])->prefix('admin/contract-admin')->group(function () {
+    Route::get('/', [ContractAdminController::class, 'index'])->name('contract-admin.index');
+    Route::post('/{award}/milestones', [ContractAdminController::class, 'storeMilestone'])->middleware('permission:contract.manage');
+    Route::post('/milestones/{milestone}/achieve', [ContractAdminController::class, 'achieveMilestone'])->middleware('permission:contract.manage');
+    Route::post('/{award}/insurances', [ContractAdminController::class, 'storeInsurance'])->middleware('permission:contract.manage');
+});
 Route::middleware(['auth', 'company', 'permission:tender.view'])->prefix('admin')->group(function () {
     Route::get('/tenders', [TenderController::class, 'index'])->name('tenders.index');
     Route::get('/tenders/{tender}', [TenderController::class, 'show'])->name('tenders.show');
@@ -210,6 +217,8 @@ Route::middleware(['auth', 'company', 'permission:manufacturing.view'])->prefix(
     Route::get('/operations/equipment/{equipment}', [OperationsController::class, 'showEquipment'])->name('equipment.show');
     Route::get('/calibrations', [OperationsController::class, 'calibrations'])->name('calibrations.index');
     Route::post('/calibrations', [OperationsController::class, 'storeCalibration'])->middleware('permission:manufacturing.manage');
+    Route::post('/operations/equipment/{equipment}/downtime', [OperationsController::class, 'startDowntime'])->middleware('permission:manufacturing.manage');
+    Route::post('/operations/equipment/{equipment}/downtime/{log}/close', [OperationsController::class, 'closeDowntime'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/cages', [CageController::class, 'store'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/cages/{cage}/qc', [CageController::class, 'qc'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/cages/{cage}/deliver', [CageController::class, 'deliver'])->middleware('permission:manufacturing.manage');
