@@ -106,6 +106,9 @@ Route::middleware(['auth', 'company', 'permission:finance.view'])->prefix('admin
     Route::post('/recurring-journals', [FinanceController::class, 'storeRecurringJournal'])->middleware('permission:finance.manage');
     Route::post('/recurring-journals/{recurring}/toggle', [FinanceController::class, 'toggleRecurringJournal'])->middleware('permission:finance.manage');
     Route::post('/recurring-journals/{recurring}/run', [FinanceController::class, 'runRecurringJournalNow'])->middleware('permission:accounting.post');
+    Route::get('/account-budgets', [FinanceController::class, 'budgets'])->name('finance.account-budgets');
+    Route::post('/account-budgets', [FinanceController::class, 'storeBudget'])->middleware('permission:finance.manage');
+    Route::post('/account-budgets/{budget}/delete', [FinanceController::class, 'destroyBudget'])->middleware('permission:finance.manage');
 });
 Route::middleware(['auth', 'company', 'permission:inventory.view'])->prefix('admin')->group(function () {
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
@@ -182,6 +185,9 @@ Route::middleware(['auth', 'company', 'permission:tender.view'])->prefix('admin'
 });
 Route::middleware(['auth', 'company', 'permission:document.view'])->prefix('admin')->group(function () {
     Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
+    Route::get('/documents/transmittals', [DocumentController::class, 'transmittals'])->name('documents.transmittals');
+    Route::post('/documents/transmittals', [DocumentController::class, 'storeTransmittal'])->middleware('permission:document.manage');
+    Route::post('/documents/transmittals/{transmittal}/acknowledge', [DocumentController::class, 'acknowledgeTransmittal'])->middleware('permission:document.manage');
     Route::get('/documents/{document}', [DocumentController::class, 'show'])->name('documents.show');
     Route::post('/documents', [DocumentController::class, 'store'])->middleware('permission:document.manage')->name('documents.store');
     Route::get('/document-versions/{version}/download', [DocumentController::class, 'download'])->name('documents.download');

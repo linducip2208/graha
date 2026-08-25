@@ -4,12 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
 use App\Models\Document;
+use App\Models\DocumentTransmittal;
 use App\Models\DocumentVersion;
+use App\Models\NumberSequence;
+use App\Services\AuditTrail;
 use App\Services\DocumentVersionService;
 use App\Services\NumberSequenceService;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 
 class DocumentController extends Controller
 {
@@ -91,5 +95,42 @@ class DocumentController extends Controller
         $filename = str_replace(['/', '\\'], '-', $version->document->number.'-v'.$version->version.'.'.pathinfo($version->path, PATHINFO_EXTENSION));
 
         return Storage::disk($version->disk)->download($version->path, $filename);
+    }
+
+    public function transmittals(CurrentCompany $current)
+    {
+        $transmittals = DocumentTransmittal::where('company_id', $current->id())->with('items.version.document')->orderByDesc('transmit_date')->limit(60)->get();
+
+        return view('documents.transmittals', [
+            'transmittals' => $transmittals,
+            'versions' => DocumentVersion::whereHas('document', fn ($q) => $q->where('company_id', $current->id()))->with('document')->orderByDesc('created_at')->limit(200)->get(),
+            'stats' => ['total' => $transmittals->count(), 'sent' => $transmittals->where('status', 'sent')->count(), 'acknowledged' => $transmittals->where('status', 'acknowledged')->count()],
+        ]);
+    }
+
+    public function storeTransmittal(Request $request, CurrentCompany $current, AuditTrail $audit)
+    {
+        $data = $request->validate(['recipient' => ['required', 'max:200'], 'purpose' => ['nullable', 'max:255'], 'transmit_date' => ['required', 'date'], 'method' => ['required', 'in:email,courier,hand,portal'], 'notes' => ['nullable', 'max:1000'], 'version_ids' => ['required', 'array', 'min:1'], 'version_ids.*' => ['integer']]);
+        foreach ($data['version_ids'] as $versionId) {
+            abort_unless(DocumentVersion::whereHas('document', fn ($q) => $q->where('company_id', $current->id()))->whereKey($versionId)->exists(), 422);
+        }
+        NumberSequence::firstOrCreate(['company_id' => $current->id(), 'document_type' => 'transmittal'], ['prefix' => 'TRM', 'padding' => 4, 'last_reset_year' => now()->year]);
+        $transmittal = DocumentTransmittal::create([...collect($data)->except('version_ids')->all(), 'company_id' => $current->id(), 'number' => app(NumberSequenceService::class)->next($current->id(), 'transmittal'), 'created_by' => $request->user()->id]);
+        foreach (array_unique($data['version_ids']) as $versionId) {
+            $transmittal->items()->create(['document_version_id' => $versionId]);
+        }
+        $audit->record($current->id(), $request->user()->id, 'document.transmittal_sent', $transmittal);
+
+        return back()->with('status', "Transmittal {$transmittal->number} tercatat (".count($data['version_ids']).' dokumen).');
+    }
+
+    public function acknowledgeTransmittal(DocumentTransmittal $transmittal, CurrentCompany $current, AuditTrail $audit)
+    {
+        abort_unless($transmittal->company_id === $current->id(), 404);
+        throw_unless($transmittal->status === 'sent', ValidationException::withMessages(['status' => 'Transmittal sudah diakui.']));
+        $transmittal->update(['status' => 'acknowledged', 'acknowledged_at' => now()]);
+        $audit->record($current->id(), auth()->id(), 'document.transmittal_acknowledged', $transmittal);
+
+        return back()->with('status', "Transmittal {$transmittal->number} ditandai diterima penerima.");
     }
 }

@@ -32,14 +32,14 @@ yang "Blocked" menunggu keputusan/file eksternal.
 | AP matching 3-way | ✅ Ada | flag mismatch granular di UI | Kecil |
 | Cash flow forecast | ✅ Ada (CashFlowForecastService) | — | — |
 | Cash flow statement | ✅ Baru (ADR-055, 2026-08-25) | tagging kategori CoA perlu disiplin input | Disiplin input |
-| Budget vs actual account | ❌ Belum | butuh budget akun per periode | Backlog F |
+| Budget vs actual account | ✅ Baru (ADR-067, 2026-08-25) — per akun per periode fiskal | disiplin input budget | Selesai |
 | Fixed asset | ✅ Ada | ✅ disposal flow lengkap (ADR-056, 2026-08-25) | Selesai |
 | Pajak ID | ✅ PPN/PPh23/4(2) | PPh 21 engine, rekonsiliasi UI | Backlog F |
 | QMS NCR/CAPA | ✅ Ada | ✅ customer complaint + supplier NCR (ADR-065, 2026-08-25) | Selesai |
 | **ITP** | ✅ Baru (ADR-059, 2026-08-25) | gate ke pile completion (opsional setting) | Backlog G lanjutan |
 | **Kalibrasi** | ✅ Baru (ADR-060, 2026-08-25) — register + due status otomatis | reminder scheduler | Kecil |
 | HSE | ✅ JSA/PTW/incident | ✅ observasi/PPE/FR-SR KPI (ADR-058, 2026-08-25) | Selesai |
-| Document control | ✅ Versi+hash | transmittal, distribution, superseded lifecycle | Backlog G |
+| Document control | ✅ Versi+hash | ✅ transmittal + acknowledged (ADR-068, 2026-08-25) | correspondence link tersisa |
 | Approval engine | ✅ SLA/quorum/delegasi | escalation reminder otomatis ada; kondisi project-scope | Backlog H |
 | Signing internal | ✅ hash-lock | QR verification page, batch sign | Backlog H |
 | Access scope per project | ❌ Belum | company_user.data_scope sudah disiapkan (WIP IAM paralel) | Menunggu landung IAM |

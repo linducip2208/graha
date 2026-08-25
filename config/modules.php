@@ -60,6 +60,7 @@ return [
                 ['label' => 'Periode Fiskal', 'href' => '/admin/finance/periods'],
                 ['label' => 'Jurnal', 'href' => '/admin/finance/journals'],
                 ['label' => 'Jurnal Berulang', 'href' => '/admin/recurring-journals'],
+                ['label' => 'Budget vs Aktual', 'href' => '/admin/account-budgets'],
                 ['label' => 'Accounting Mapping', 'href' => '/admin/finance/accounting-mappings'],
                 ['label' => 'Trial Balance & Laporan Keuangan', 'href' => '/admin/reports/financial-statements'],
                 ['label' => 'Arus Kas (Metode Langsung)', 'href' => '/admin/reports/cash-flow'],
@@ -81,7 +82,9 @@ return [
             ['label' => 'KPI Keselamatan (FR/SR)', 'href' => '/admin/hse/metrics', 'icon' => 'activity', 'permission' => 'hse.view'],
         ]],
         ['key' => 'documents-approval', 'label' => '📄 Dokumen & Approval', 'items' => [
-            ['label' => 'Document Control', 'href' => '/admin/documents', 'icon' => 'document', 'permission' => 'document.view'],
+            ['label' => 'Document Control', 'href' => '/admin/documents', 'icon' => 'document', 'permission' => 'document.view', 'children' => [
+                ['label' => 'Transmittal Dokumen', 'href' => '/admin/documents/transmittals'],
+            ]],
             ['label' => 'Approval Center', 'href' => '/admin/approvals', 'icon' => 'check', 'permission' => 'approval.view'],
             ['label' => 'Digital Signing', 'href' => '/admin/signatures', 'icon' => 'pen', 'permission' => 'signature.view'],
             ['label' => 'Audit Trail', 'href' => '/admin/audit', 'icon' => 'search', 'permission' => 'audit.view'],

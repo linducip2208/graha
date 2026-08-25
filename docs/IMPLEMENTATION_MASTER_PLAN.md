@@ -435,3 +435,12 @@ Route +4 (contract-admin index/milestone/achieve/insurance + 2 downtime). Verifi
 | BUG-005 | Accounting | Query jatuh tempo next_run_at gagal di SQLite (date cast menyimpan komponen jam) — bandingkan dengan end-of-day datetime | Fixed | QmsFinanceWave4Test | |
 
 Route +6 tanpa menghapus route lama. Verifikasi: 269 tests / 1200 assertions lulus, pint bersih.
+
+# Pembaruan 2026-08-25 (5) - Backlog Wave 5: Budget vs Aktual per Akun, Transmittal Dokumen
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| FIN-BUD-001 | Accounting | Budget vs aktual per akun per periode fiskal: variance + usage % + flag OVER (revenue under-target = over) | Tested | BudgetsTransmittalsWave5Test | Halaman /admin/account-budgets; updateOrCreate per kombinasi akun+periode |
+| DOC-TRM-001 | Governance | Transmittal distribusi dokumen: header penerima/metode/status sent→acknowledged + item versi dokumen dari registry | Tested | BudgetsTransmittalsWave5Test | Nomor TRM via NumberSequence; guard versi lintas company; audit trail |
+
+Route +6 (budget index/store/delete + transmittal index/store/acknowledge) tanpa menghapus route lama. Verifikasi: 272 tests / 1219 assertions lulus, pint bersih.

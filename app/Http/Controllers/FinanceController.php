@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Models\AccountBudget;
 use App\Models\AccountingMapping;
 use App\Models\FiscalPeriod;
 use App\Models\Journal;
@@ -11,6 +12,7 @@ use App\Models\Project;
 use App\Models\RecurringJournal;
 use App\Models\VendorInvoice;
 use App\Services\AccountingService;
+use App\Services\BudgetVsActualService;
 use App\Services\CashFlowForecastService;
 use App\Services\ReceivablePayableAgingService;
 use App\Services\RecurringJournalService;
@@ -170,5 +172,32 @@ class FinanceController extends Controller
         $service->runNow($recurring, $request->user());
 
         return back()->with('status', "Template '{$recurring->name}' diposting hari ini (idempotent per periode).");
+    }
+
+    public function budgets(CurrentCompany $current, BudgetVsActualService $report)
+    {
+        return view('finance.account-budgets', [
+            'report' => $report->generate($current->id()),
+            'accounts' => Account::where('company_id', $current->id())->where('is_active', true)->orderBy('code')->get(),
+            'periods' => FiscalPeriod::where('company_id', $current->id())->orderBy('starts_at')->get(),
+        ]);
+    }
+
+    public function storeBudget(Request $request, CurrentCompany $current)
+    {
+        $data = $request->validate(['account_id' => ['required', 'integer'], 'fiscal_period_id' => ['required', 'integer'], 'amount' => ['required', 'decimal:0,2'], 'notes' => ['nullable', 'max:500']]);
+        abort_unless(Account::where('company_id', $current->id())->whereKey($data['account_id'])->exists(), 422);
+        abort_unless(FiscalPeriod::where('company_id', $current->id())->whereKey($data['fiscal_period_id'])->exists(), 422);
+        AccountBudget::updateOrCreate(['company_id' => $current->id(), 'account_id' => $data['account_id'], 'fiscal_period_id' => $data['fiscal_period_id']], ['amount' => $data['amount'], 'notes' => $data['notes'] ?? null, 'created_by' => $request->user()->id]);
+
+        return back()->with('status', 'Budget akun tersimpan.');
+    }
+
+    public function destroyBudget(AccountBudget $budget, CurrentCompany $current)
+    {
+        abort_unless($budget->company_id === $current->id(), 404);
+        $budget->delete();
+
+        return back()->with('status', 'Budget dihapus.');
     }
 }
