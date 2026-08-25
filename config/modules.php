@@ -48,6 +48,7 @@ return [
             ['label' => 'Reinforcement Cage', 'href' => '/admin/manufacturing/cages', 'icon' => 'grid', 'permission' => 'manufacturing.view'],
             ['label' => 'Casing Pile', 'href' => '/admin/casings', 'icon' => 'archive', 'permission' => 'equipment.view'],
             ['label' => 'Equipment & Produksi', 'href' => '/admin/operations', 'icon' => 'wrench', 'permission' => 'manufacturing.view'],
+            ['label' => 'Register Kalibrasi', 'href' => '/admin/calibrations', 'icon' => 'scale', 'permission' => 'manufacturing.view'],
             ['label' => 'Tangki BBM', 'href' => '/admin/fuel-tanks', 'icon' => 'percent', 'permission' => 'equipment.view'],
         ]],
         ['key' => 'keuangan', 'label' => '💰 Keuangan', 'items' => [
@@ -58,6 +59,7 @@ return [
                 ['label' => 'Jurnal', 'href' => '/admin/finance/journals'],
                 ['label' => 'Accounting Mapping', 'href' => '/admin/finance/accounting-mappings'],
                 ['label' => 'Trial Balance & Laporan Keuangan', 'href' => '/admin/reports/financial-statements'],
+                ['label' => 'Arus Kas (Metode Langsung)', 'href' => '/admin/reports/cash-flow'],
             ]],
             ['label' => 'Penagihan & Pajak', 'href' => '/admin/billing', 'icon' => 'receipt', 'permission' => 'finance.view', 'children' => [
                 ['label' => 'Progress Billing & Retensi', 'href' => '/admin/billing'],
@@ -70,7 +72,9 @@ return [
         ]],
         ['key' => 'quality-hse', 'label' => '✅ Quality & HSE', 'items' => [
             ['label' => 'Risiko, NCR & Audit Mutu', 'href' => '/admin/qms', 'icon' => 'shield', 'permission' => 'qms.view'],
+            ['label' => 'Inspection & Test Plan', 'href' => '/admin/itps', 'icon' => 'clipboard-check', 'permission' => 'qms.view'],
             ['label' => 'HSE, JSA & Incident', 'href' => '/admin/hse', 'icon' => 'triangle-alert', 'permission' => 'hse.view'],
+            ['label' => 'KPI Keselamatan (FR/SR)', 'href' => '/admin/hse/metrics', 'icon' => 'activity', 'permission' => 'hse.view'],
         ]],
         ['key' => 'documents-approval', 'label' => '📄 Dokumen & Approval', 'items' => [
             ['label' => 'Document Control', 'href' => '/admin/documents', 'icon' => 'document', 'permission' => 'document.view'],

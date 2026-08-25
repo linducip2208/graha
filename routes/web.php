@@ -186,6 +186,10 @@ Route::middleware(['auth', 'company', 'permission:qms.view'])->prefix('admin')->
     Route::post('/qms/objectives', [QmsController::class, 'storeObjective'])->middleware('permission:qms.manage');
     Route::post('/qms/objectives/{objective}/actual', [QmsController::class, 'updateObjectiveActual'])->middleware('permission:qms.manage');
     Route::post('/qms/surveys', [QmsController::class, 'storeSurvey'])->middleware('permission:qms.manage');
+    Route::get('/itps', [QmsController::class, 'itps'])->name('qms.itps');
+    Route::post('/itps', [QmsController::class, 'storeItp'])->middleware('permission:qms.manage');
+    Route::post('/itp-items/{item}/inspections', [QmsController::class, 'storeInspection'])->middleware('permission:qms.manage');
+    Route::post('/itps/{plan}/close', [QmsController::class, 'closeItp'])->middleware('permission:qms.manage');
 });
 Route::middleware(['auth', 'company', 'permission:report.view'])->prefix('admin/reports')->group(function () {
     Route::get('/executive', [ReportController::class, 'executive'])->name('reports.executive');
@@ -204,6 +208,8 @@ Route::middleware(['auth', 'company', 'permission:manufacturing.view'])->prefix(
     Route::get('/manufacturing/costing', [ManufacturingController::class, 'costing'])->name('manufacturing.costing');
     Route::get('/manufacturing/cages', [CageController::class, 'index'])->name('cages.index');
     Route::get('/operations/equipment/{equipment}', [OperationsController::class, 'showEquipment'])->name('equipment.show');
+    Route::get('/calibrations', [OperationsController::class, 'calibrations'])->name('calibrations.index');
+    Route::post('/calibrations', [OperationsController::class, 'storeCalibration'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/cages', [CageController::class, 'store'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/cages/{cage}/qc', [CageController::class, 'qc'])->middleware('permission:manufacturing.manage');
     Route::post('/manufacturing/cages/{cage}/deliver', [CageController::class, 'deliver'])->middleware('permission:manufacturing.manage');
@@ -304,6 +310,7 @@ Route::middleware(['auth', 'company', 'permission:finance.view'])->prefix('admin
     Route::post('/{asset}/dispose', [FixedAssetController::class, 'dispose'])->middleware('permission:accounting.post');
 });
 Route::middleware(['auth', 'company', 'permission:hse.view'])->prefix('admin/hse')->group(function () {
+    Route::get('/metrics', [HseController::class, 'metrics'])->name('hse.metrics');
     Route::get('/', [HseController::class, 'index'])->name('hse.index');
     Route::post('/jsa', [HseController::class, 'jsa'])->middleware('permission:hse.manage');
     Route::post('/jsa/{jsa}/submit', [HseController::class, 'submitJsa'])->middleware('permission:hse.manage');
@@ -314,6 +321,11 @@ Route::middleware(['auth', 'company', 'permission:hse.view'])->prefix('admin/hse
     Route::post('/actions/{action}/verify', [HseController::class, 'verify'])->middleware('permission:hse.verify');
     Route::post('/incidents/{incident}/close', [HseController::class, 'close'])->middleware('permission:hse.verify');
     Route::post('/management-reviews', [HseController::class, 'review'])->middleware('permission:hse.manage');
+    Route::post('/observations', [HseController::class, 'storeObservation'])->middleware('permission:hse.manage');
+    Route::post('/observations/{observation}/resolve', [HseController::class, 'resolveObservation'])->middleware('permission:hse.verify');
+    Route::post('/ppe', [HseController::class, 'issuePpe'])->middleware('permission:hse.manage');
+    Route::post('/ppe/{issuance}/return', [HseController::class, 'returnPpe'])->middleware('permission:hse.manage');
+    Route::post('/exposure-logs', [HseController::class, 'storeExposure'])->middleware('permission:hse.manage');
 });
 Route::middleware(['auth', 'company'])->prefix('admin/notifications')->group(function () {
     Route::get('/', [NotificationController::class, 'index'])->name('notifications.index');

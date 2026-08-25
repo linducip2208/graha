@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BillOfMaterial;
+use App\Models\CalibrationRecord;
 use App\Models\Equipment;
 use App\Models\FuelTank;
 use App\Models\FuelUsage;
@@ -11,6 +12,7 @@ use App\Models\MaintenanceWorkOrder;
 use App\Models\ProductionOrder;
 use App\Models\Warehouse;
 use App\Models\WarehouseBin;
+use App\Services\AuditTrail;
 use App\Services\EquipmentCostService;
 use App\Services\EquipmentService;
 use App\Services\ManufacturingService;
@@ -132,5 +134,27 @@ class OperationsController extends Controller
         $service->closeMaintenanceOrder($wo->refresh(), $data, $request->user());
 
         return back()->with('status', 'Work order ditutup dan terdaftar di registry dokumen.');
+    }
+
+    public function calibrations(CurrentCompany $current)
+    {
+        $records = CalibrationRecord::where('company_id', $current->id())->with('equipment')->orderBy('next_due_at')->get();
+        $grouped = ['overdue' => $records->filter(fn ($r) => $r->statusNow() === 'overdue'), 'due_soon' => $records->filter(fn ($r) => $r->statusNow() === 'due_soon'), 'ok' => $records->filter(fn ($r) => $r->statusNow() === 'ok')];
+
+        return view('operations.calibrations', [
+            'equipments' => Equipment::where('company_id', $current->id())->orderBy('code')->get(),
+            'grouped' => $grouped,
+            'total' => $records->count(),
+        ]);
+    }
+
+    public function storeCalibration(Request $request, CurrentCompany $current)
+    {
+        $data = $request->validate(['equipment_id' => ['required', 'integer'], 'instrument_name' => ['required', 'max:255'], 'serial_number' => ['nullable', 'max:120'], 'calibrated_at' => ['required', 'date'], 'next_due_at' => ['required', 'date', 'after:calibrated_at'], 'certificate_no' => ['nullable', 'max:120'], 'provider' => ['nullable', 'max:150'], 'result' => ['required', 'in:pass,adjust,fail'], 'notes' => ['nullable', 'max:2000']]);
+        abort_unless(Equipment::where('company_id', $current->id())->whereKey($data['equipment_id'])->exists(), 422);
+        $record = CalibrationRecord::create([...$data, 'company_id' => $current->id(), 'created_by' => $request->user()->id]);
+        app(AuditTrail::class)->record($current->id(), $request->user()->id, 'qms.calibration_recorded', $record);
+
+        return back()->with('status', 'Kalibrasi dicatat.');
     }
 }

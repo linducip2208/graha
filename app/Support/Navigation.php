@@ -70,7 +70,7 @@ class Navigation
             return true;
         }
         $module = match (true) {
-            preg_match('#^/admin/(inventory|procurement|operations|manufacturing)#', $href) === 1 => 'manufacturing',
+            preg_match('#^/admin/(inventory|procurement|operations|manufacturing|calibrations)#', $href) === 1 => 'manufacturing',
             preg_match('#^/admin/(finance|billing|cash-bank|project-costing|fixed-assets|procurement-accounting)#', $href) === 1,
             str_starts_with($href, '/admin/reports/finance') => 'accounting',
             default => 'other',

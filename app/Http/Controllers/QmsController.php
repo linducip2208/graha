@@ -2,19 +2,25 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BoredPile;
 use App\Models\CorrectiveAction;
 use App\Models\Customer;
 use App\Models\CustomerSatisfactionSurvey;
 use App\Models\Department;
+use App\Models\InspectionTestPlan;
 use App\Models\InternalAudit;
+use App\Models\ItpItem;
 use App\Models\Nonconformity;
 use App\Models\Project;
 use App\Models\QualityObjective;
 use App\Models\RiskOpportunity;
 use App\Models\User;
+use App\Services\AuditTrail;
+use App\Services\ItpService;
 use App\Services\QmsService;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class QmsController extends Controller
 {
@@ -177,5 +183,60 @@ class QmsController extends Controller
     private function ensureCompanyUser(int $userId, int $companyId): void
     {
         abort_unless(User::whereKey($userId)->whereHas('companies', fn ($query) => $query->whereKey($companyId))->exists(), 422);
+    }
+
+    public function itps(CurrentCompany $current)
+    {
+        $plans = InspectionTestPlan::where('company_id', $current->id())->with(['project', 'boredPile', 'items.inspections'])->orderByDesc('created_at')->limit(100)->get();
+        $openHolds = $plans->flatMap->items->filter(fn ($item) => $item->holdOpen())->count();
+
+        return view('qms.itps', [
+            'plans' => $plans,
+            'projects' => Project::where('company_id', $current->id())->whereIn('status', ['active', 'in_progress'])->orderBy('code')->get(),
+            'users' => User::whereHas('companies', fn ($q) => $q->whereKey($current->id()))->get(),
+            'stats' => ['total' => $plans->count(), 'active' => $plans->where('status', 'active')->count(), 'hold_open' => $openHolds, 'inspections' => $plans->flatMap->items->flatMap->inspections->count()],
+        ]);
+    }
+
+    public function storeItp(Request $request, CurrentCompany $current, ItpService $service)
+    {
+        $data = $request->validate([
+            'project_id' => ['required', 'integer'], 'bored_pile_id' => ['nullable', 'integer'],
+            'title' => ['required', 'max:200'], 'notes' => ['nullable', 'max:2000'],
+            'stage' => ['required', 'array', 'min:1'], 'stage.*' => ['required', 'max:150'],
+            'method' => ['required', 'array'], 'method.*' => ['required', 'max:150'],
+            'acceptance_criteria' => ['required', 'array'], 'acceptance_criteria.*' => ['required', 'max:1000'],
+            'checkpoint_type' => ['required', 'array'], 'checkpoint_type.*' => ['required', 'in:hold,witness,review'],
+        ]);
+        $project = Project::where('company_id', $current->id())->findOrFail($data['project_id']);
+        $pile = ! empty($data['bored_pile_id']) ? BoredPile::where('project_id', $project->id)->findOrFail($data['bored_pile_id']) : null;
+        unset($data['bored_pile_id']);
+        $items = [];
+        foreach ($data['stage'] as $index => $stage) {
+            $items[] = ['stage' => $stage, 'method' => $data['method'][$index], 'acceptance_criteria' => $data['acceptance_criteria'][$index], 'checkpoint_type' => $data['checkpoint_type'][$index]];
+        }
+        $plan = $service->createPlan($project, $pile, [...$data, 'company_id' => $current->id(), 'items' => $items], $request->user());
+
+        return back()->with('status', "ITP {$plan->number} dibuat dengan ".count($items).' item inspeksi.');
+    }
+
+    public function storeInspection(Request $request, ItpItem $item, CurrentCompany $current, ItpService $service)
+    {
+        abort_unless($item->plan && (int) $item->plan->company_id === $current->id(), 404);
+        $data = $request->validate(['performed_at' => ['required', 'date'], 'result' => ['required', 'in:pass,fail,pending'], 'measured_value' => ['nullable', 'max:150'], 'notes' => ['nullable', 'max:2000'], 'inspector_id' => ['required', 'integer']]);
+        $this->ensureCompanyUser((int) $data['inspector_id'], $current->id());
+        $service->recordInspection($item, $data['performed_at'], $data['result'], $data['measured_value'] ?? null, $data['notes'] ?? null, $current->id(), User::findOrFail($data['inspector_id']), $request->user());
+
+        return back()->with('status', 'Hasil inspeksi dicatat.');
+    }
+
+    public function closeItp(Request $request, InspectionTestPlan $plan, CurrentCompany $current, ItpService $service)
+    {
+        abort_unless($plan->company_id === $current->id(), 404);
+        throw_unless(count($service->openHoldPoints($plan)) === 0, ValidationException::withMessages(['hold' => 'Masih ada hold point tanpa hasil pass.']));
+        $plan->update(['status' => 'closed']);
+        app(AuditTrail::class)->record($current->id(), $request->user()->id, 'qms.itp_closed', $plan);
+
+        return back()->with('status', 'ITP ditutup. Semua hold point tertutup.');
     }
 }

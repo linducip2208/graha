@@ -19,6 +19,7 @@ use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportController extends Controller
@@ -92,8 +93,13 @@ class ReportController extends Controller
     public function cashFlow(Request $request, CurrentCompany $current, CashFlowStatementService $service)
     {
         [$from, $to] = $this->range($request);
+        try {
+            $report = [...$service->generate($current->id(), $from->toDateString(), $to->toDateString()), 'from' => $from, 'to' => $to, 'error' => null];
+        } catch (ValidationException $e) {
+            $report = ['from' => $from, 'to' => $to, 'error' => $e->getMessage()];
+        }
 
-        return view('reports.cash-flow', [...$service->generate($current->id(), $from->toDateString(), $to->toDateString()), 'from' => $from, 'to' => $to]);
+        return view('reports.cash-flow', $report);
     }
 
     public function aging(Request $request, CurrentCompany $current, ReceivablePayableAgingService $service)

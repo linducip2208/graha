@@ -7,6 +7,8 @@
 @if($hseTab === 'jsa')<button type="button" class="btn-brand inline-flex min-h-[42px] items-center gap-2 rounded-xl px-4 text-sm font-bold shadow-sm" data-drawer-open="hse-jsa-drawer"><x-ui.icon name="plus" class="h-4 w-4" />Buat JSA</button>@endif
 @if($hseTab === 'incident')<button type="button" class="rounded-xl bg-red-700 inline-flex min-h-[42px] items-center gap-2 px-4 text-sm font-bold text-white shadow-sm" data-drawer-open="hse-incident-drawer"><x-ui.icon name="plus" class="h-4 w-4" />Laporkan Incident</button>@endif
 @if($hseTab === 'review')<button type="button" class="rounded-xl bg-violet-700 inline-flex min-h-[42px] items-center gap-2 px-4 text-sm font-bold text-white shadow-sm" data-drawer-open="hse-review-drawer"><x-ui.icon name="plus" class="h-4 w-4" />Management Review</button>@endif
+@if($hseTab === 'observe')<button type="button" class="btn-brand inline-flex min-h-[42px] items-center gap-2 rounded-xl px-4 text-sm font-bold shadow-sm" data-drawer-open="hse-observation-drawer"><x-ui.icon name="eye" class="h-4 w-4" />Catat Observasi</button>
+<button type="button" class="inline-flex min-h-[42px] items-center gap-2 rounded-xl border border-[var(--border-default)] px-4 text-sm font-bold shadow-sm hover:bg-[var(--surface-muted)]" data-drawer-open="ppe-drawer"><x-ui.icon name="shield-check" class="h-4 w-4" />Terbitkan PPE</button>@endif
 @endif
 </x-slot:actions>
 </x-ui.page-header>
@@ -20,7 +22,7 @@
 <x-ui.stat-card label="Action Overdue" value="{{ number_format($incidents->flatMap->actions->filter(fn ($a) => $a->status !== 'verified' && $a->due_at?->isPast())->count()) }}" icon="clock" tone="warning" :value-class="'text-[24px] leading-tight'" />
 </div>
 
-<x-ui.tabs :tabs="['overview' => 'JSA & Permit', 'incident' => 'Incident & Corrective Action', 'review' => 'Management Review']" :active="$hseTab" class="mt-6" />
+<x-ui.tabs :tabs="['overview' => 'JSA & Permit', 'incident' => 'Incident & Corrective Action', 'observe' => 'Observasi & PPE', 'review' => 'Management Review']" :active="$hseTab" class="mt-6" />
 
 {{-- ===== TAB: JSA & PERMIT ===== --}}
 @if($hseTab === 'overview')
@@ -36,6 +38,29 @@
 <section>
 <p class="text-sm text-slate-500">Alur: laporan kejadian → investigasi → action & PIC → evidence → verifikasi independen → close.</p>
 <div class="mt-4 space-y-4">@forelse($incidents as $incident)<x-ui.card><div class="flex flex-wrap justify-between gap-3"><div><strong>{{ $incident->number }} — {{ strtoupper(str_replace('_', ' ', $incident->type)) }}</strong><p class="text-sm text-slate-500">{{ $incident->occurred_at->format('d/m/Y H:i') }} · {{ $incident->location }} · severity {{ strtoupper($incident->severity) }}</p></div><span class="rounded-lg bg-red-50 px-3 py-1 text-xs font-bold text-red-700">{{ strtoupper($incident->status) }}</span></div><p class="mt-3">{{ $incident->description }}</p><form method="post" action="/admin/hse/incidents/{{ $incident->id }}/actions" class="mt-4 grid gap-2 rounded-xl bg-slate-50 p-4 md:grid-cols-4">@csrf<input name="action" required placeholder="Corrective action" class="rounded-xl border p-2"><select name="owner_id" required class="rounded-xl border p-2">@foreach($users as $user)<option value="{{ $user->id }}">{{ $user->name }}</option>@endforeach</select><input type="date" name="due_at" required class="rounded-xl border p-2"><button class="rounded-xl bg-slate-800 p-2 text-white">Tambah Action</button></form>@foreach($incident->actions as $action)<form method="post" action="/admin/hse/actions/{{ $action->id }}/verify" class="mt-2 grid gap-2 rounded-xl border p-3 md:grid-cols-[1fr_1fr_160px]">@csrf<span>{{ $action->action }} · {{ strtoupper($action->status) }}</span><input name="evidence" value="{{ $action->evidence }}" placeholder="Referensi evidence" class="rounded-xl border p-2"><button class="rounded-xl bg-emerald-700 px-3 text-white">Verifikasi Efektif</button></form>@endforeach @if($incident->status!=='closed')<form method="post" action="/admin/hse/incidents/{{ $incident->id }}/close" class="mt-3 text-right">@csrf<button class="font-bold text-red-700">Tutup setelah seluruh action verified</button></form>@endif</x-ui.card>@empty<div class="rounded-2xl border border-dashed bg-white p-8 text-center"><h3 class="font-bold">Belum ada near miss atau incident</h3><p class="mt-1 text-sm text-slate-500">Gunakan tombol "Laporkan Incident" untuk memulai investigasi dan corrective action.</p></div>@endforelse</div>
+</section>
+@endif
+
+{{-- ===== TAB: OBSERVASI & PPE ===== --}}
+@if($hseTab === 'observe')
+<section>
+<p class="text-sm text-slate-500">Observasi proaktif (unsafe act/condition, near-miss ringan) ditutup setelah diperbaiki dan diverifikasi. PPE tercatat keluar-masuk per personil.</p>
+<div class="mt-4 space-y-3">@forelse($observations as $observation)<x-ui.card><div class="flex flex-wrap items-start justify-between gap-3"><div><strong class="font-mono">{{ $observation->number }}</strong> — {{ strtoupper($observation->category) }}<p class="mt-0.5 text-sm text-slate-500">{{ $observation->observed_at->format('d/m/Y H:i') }} · {{ $observation->location }}@if($observation->project) · {{ $observation->project?->code }}@endif</p><p class="mt-2">{{ $observation->description }}</p>@if($observation->immediate_action)<p class="mt-1 text-sm text-emerald-700">Tindakan langsung: {{ $observation->immediate_action }}</p>@endif @if($observation->status === 'resolved')<p class="mt-1 text-xs text-slate-500">Diselesaikan {{ $observation->resolved_at?->format('d/m/Y') }}: {{ $observation->resolution_notes }}</p>@endif</div>
+<div class="flex flex-col items-end gap-2">
+<span class="chip chip-default">{{ strtoupper($observation->status) }}</span>
+@if($observation->status === 'open' && auth()->user()->hasPermission('hse.verify', app(\App\Support\Tenancy\CurrentCompany::class)->id()))
+<form method="post" action="/admin/hse/observations/{{ $observation->id }}/resolve" class="flex gap-1.5">@csrf<input name="resolution_notes" required placeholder="Hasil perbaikan" class="w-44 rounded-lg border p-1.5 text-xs"><button class="rounded-lg bg-emerald-700 px-3 py-1.5 text-xs font-bold text-white">Tutup</button></form>
+@endif
+</div></div></x-ui.card>@empty<div class="rounded-2xl border border-dashed bg-white p-8 text-center"><h3 class="font-bold">Belum ada observasi</h3><p class="mt-1 text-sm text-slate-500">Dorong budaya pelaporan proaktif — unsafe condition yang dilaporkan lebih murah daripada incident.</p></div>@endforelse</div>
+
+<h2 class="mt-10 text-lg font-black">PPE Keluar-Masuk</h2>
+<div class="mt-3 overflow-x-auto rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-[var(--shadow-xs)]"><table class="w-full min-w-[640px] text-sm"><thead><tr><th>Tanggal</th><th>Personil</th><th>Item</th><th>Qty</th><th>Kondisi Keluar</th><th>Kembali</th><th>Aksi</th></tr></thead><tbody>
+@forelse($ppeIssuances as $issuance)
+<tr class="h-[52px]"><td>{{ $issuance->issued_at->format('d/m/Y') }}</td><td>{{ $issuance->person?->name }}</td><td>{{ $issuance->item_name }}{{ $issuance->size ? ' ('.$issuance->size.')' : '' }}</td><td>{{ $issuance->quantity }}</td><td>{{ strtoupper($issuance->condition_out) }}</td><td>@if($issuance->returned_at){{ $issuance->returned_at->format('d/m/Y') }} · {{ strtoupper($issuance->condition_in) }}@else<span class="font-bold text-amber-600">Belum kembali</span>@endif</td><td>@if(! $issuance->returned_at && auth()->user()->hasPermission('hse.manage', app(\App\Support\Tenancy\CurrentCompany::class)->id()))<form method="post" action="/admin/hse/ppe/{{ $issuance->id }}/return" class="flex gap-1.5">@csrf<input type="date" name="returned_at" value="{{ today()->toDateString() }}" required class="rounded-lg border p-1.5 text-xs"><select name="condition_in" class="rounded-lg border p-1.5 text-xs"><option value="good">Good</option><option value="worn">Worn</option><option value="damaged">Damaged</option></select><button class="rounded-lg bg-slate-800 px-2.5 py-1.5 text-xs font-bold text-white">Catat</button></form>@endif</td></tr>
+@empty
+<tr><td colspan="7" class="p-2"><x-ui.empty icon="shield-check" title="Belum ada PPE diterbitkan" description="Rekam penyerahan APD per personil untuk auditabilitas." /></td></tr>
+@endforelse
+</tbody></table></div>
 </section>
 @endif
 
@@ -93,6 +118,32 @@
 <x-ui.field label="Nomor review" name="number" required><input name="number" required class="w-full rounded-xl border border-[var(--border-default)] px-3.5"></x-ui.field>
 <x-ui.field label="Tanggal rapat" name="meeting_date" required><input type="date" name="meeting_date" required class="w-full rounded-xl border border-[var(--border-default)] px-3.5"></x-ui.field>
 <div class="flex justify-end gap-2 pt-2"><button type="button" class="min-h-[42px] rounded-xl border border-[var(--border-default)] px-4 text-sm font-bold hover:bg-[var(--surface-muted)]" data-drawer-close>Batal</button><button class="rounded-xl bg-violet-700 min-h-[42px] px-5 text-sm font-bold text-white">Buat Snapshot Evidence</button></div>
+</form>
+</x-ui.drawer>
+
+<x-ui.drawer id="hse-observation-drawer" title="Observasi Keselamatan" description="Catat unsafe act/condition atau near-miss ringan. Ditutup oleh verifier setelah perbaikan.">
+<form method="post" action="/admin/hse/observations" class="grid gap-4">@csrf
+<x-ui.field label="Kategori" name="category"><select name="category" class="w-full rounded-xl border border-[var(--border-default)] px-3.5"><option value="unsafe_act">Unsafe Act</option><option value="unsafe_condition">Unsafe Condition</option><option value="near_miss">Near Miss</option></select></x-ui.field>
+<x-ui.field label="Proyek (opsional)" name="project_id"><select name="project_id" class="w-full rounded-xl border border-[var(--border-default)] px-3.5"><option value="">Umum / workshop</option>@foreach($projects as $project)<option value="{{ $project->id }}">{{ $project->code }}</option>@endforeach</select></x-ui.field>
+<x-ui.field label="Waktu observasi" name="observed_at" required><input type="datetime-local" name="observed_at" required class="w-full rounded-xl border border-[var(--border-default)] px-3.5"></x-ui.field>
+<x-ui.field label="Lokasi" name="location" required><input name="location" required class="w-full rounded-xl border border-[var(--border-default)] px-3.5"></x-ui.field>
+<x-ui.field label="Deskripsi" name="description" required><textarea name="description" required rows="3" class="w-full rounded-xl border border-[var(--border-default)] px-3.5"></textarea></x-ui.field>
+<x-ui.field label="Tindakan langsung (opsional)" name="immediate_action"><textarea name="immediate_action" rows="2" class="w-full rounded-xl border border-[var(--border-default)] px-3.5"></textarea></x-ui.field>
+<div class="flex justify-end gap-2 pt-2"><button type="button" class="min-h-[42px] rounded-xl border border-[var(--border-default)] px-4 text-sm font-bold hover:bg-[var(--surface-muted)]" data-drawer-close>Batal</button><button class="btn-brand min-h-[42px] rounded-xl px-5 text-sm font-bold">Simpan Observasi</button></div>
+</form>
+</x-ui.drawer>
+
+<x-ui.drawer id="ppe-drawer" title="Terbitkan PPE" description="Rekam penyerahan APD per personil. Pengembalian dicatat saat personel berhenti/ganti APD.">
+<form method="post" action="/admin/hse/ppe" class="grid gap-4">@csrf
+<x-ui.field label="Personil" name="user_id" required><select name="user_id" required class="w-full rounded-xl border border-[var(--border-default)] px-3.5"><option value="">Pilih personil</option>@foreach($users as $user)<option value="{{ $user->id }}">{{ $user->name }}</option>@endforeach</select></x-ui.field>
+<x-ui.field label="Item PPE" name="item_name" required><input name="item_name" required placeholder="mis. Helm, Harness" class="w-full rounded-xl border border-[var(--border-default)] px-3.5"></x-ui.field>
+<div class="grid grid-cols-3 gap-3">
+<x-ui.field label="Ukuran" name="size"><input name="size" class="w-full rounded-xl border border-[var(--border-default)] px-3.5"></x-ui.field>
+<x-ui.field label="Jumlah" name="quantity"><input type="number" min="1" value="1" name="quantity" class="w-full rounded-xl border border-[var(--border-default)] px-3.5"></x-ui.field>
+<x-ui.field label="Tanggal" name="issued_at"><input type="date" name="issued_at" value="{{ today()->toDateString() }}" required class="w-full rounded-xl border border-[var(--border-default)] px-3.5"></x-ui.field>
+</div>
+<x-ui.field label="Kondisi keluar" name="condition_out"><select name="condition_out" class="w-full rounded-xl border border-[var(--border-default)] px-3.5"><option value="good">Good</option><option value="worn">Worn</option><option value="damaged">Damaged</option></select></x-ui.field>
+<div class="flex justify-end gap-2 pt-2"><button type="button" class="min-h-[42px] rounded-xl border border-[var(--border-default)] px-4 text-sm font-bold hover:bg-[var(--surface-muted)]" data-drawer-close>Batal</button><button class="btn-brand min-h-[42px] rounded-xl px-5 text-sm font-bold">Terbitkan</button></div>
 </form>
 </x-ui.drawer>
 @endif

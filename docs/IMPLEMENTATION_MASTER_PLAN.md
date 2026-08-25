@@ -399,3 +399,16 @@ Verifikasi akhir fasa UI: 198 tests / 808 assertions, pint bersih, build sukses.
 | AR-WO-001 | Accounting | Write-off piutang dengan approval pemisah (self-approval dilarang), posting beban setelah approve | Tested | FinanceBacklogWave1Test | Cap outstanding saat request DAN saat approval; reject dengan catatan; audit trail |
 
 Route +5 (cash-flow report, dispose, credit-note, write-off request/decide) tanpa menghapus route lama. Verifikasi: 254 tests / 1126 assertions lulus, pint bersih, view:cache sukses.
+
+# Pembaruan 2026-08-25 (2) - QMS/HSE Backlog Wave 2: Kalibrasi, ITP, Observasi, PPE, KPI FR/SR
+
+| ID | Domain | Requirement | Status | Test | Catatan |
+|---|---|---|---|---|---|
+| HSE-OBS-001 | HSE | Observasi keselamatan proaktif (unsafe act/condition/near-miss) open→resolved dengan verifier pemisah | Tested | HseQmsBacklogWave2Test | Nomor OBS via NumberSequence; tab baru di HSE workspace; audit trail |
+| QMS-CAL-001 | QMS | Register kalibrasi alat ukur ter-link equipment + status otomatis ok/due_soon(≤30hr)/overdue | Tested | HseQmsBacklogWave2Test | Halaman /admin/calibrasi dikelompokkan per status; ISO 7.1.5 |
+| QMS-ITP-001 | QMS | Inspection & Test Plan per proyek/pile: header + item (hold/witness/review) + hasil inspeksi | Tested | HseQmsBacklogWave2Test | Fail wajib catatan; pemeriksa ≠ perekam; hold point tanpa pass menahan penutupan ITP |
+| HSE-PPE-001 | HSE | Register PPE keluar-masuk per personil dengan kondisi out/in | Tested | HseQmsBacklogWave2Test | Pengembalian dicatat saat ganti/berhenti |
+| HSE-KPI-001 | HSE | KPI FR/SR/TRIR dari exposure log bulanan nyata (man-hours dari payroll) | Tested | HseQmsBacklogWave2Test | FR = lost-time ×1jt/jam kerja; SR = hari hilang ×1jt/jam kerja; tanpa data = tampil kosong jelas, bukan dikarang |
+| NAV-004 | UI | Menu baru: Register Kalibrasi (Workshop), ITP & KPI Keselamatan (Quality & HSE), Arus Kas (GL children); ikon scale/activity/clipboard-check/trash dll ditambahkan | Tested | smoke HTTP | Edition module mapping calibrations→manufacturing |
+
+Route +7 tanpa menghapus route lama. Verifikasi: 261 tests / 1161 assertions lulus, pint bersih. Perbaikan regresi: klasifikasi modul kalibrasi di Navigation (ADR-065 tetap berlaku), cash-flow page menampilkan empty state ramah bila akun kas belum dikonfigurasi (bukan error 500).
