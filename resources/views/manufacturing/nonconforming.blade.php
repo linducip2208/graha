@@ -1,7 +1,7 @@
 <x-layouts.app title="Output Produksi Ditolak">
     <div class="page-container">
         <a href="/admin/manufacturing/quality" class="text-sm font-bold text-[var(--brand-primary)]">&larr; Quality Control Produksi</a>
-        <h1 class="mt-3 text-2xl font-bold tracking-tight">Output Ditolak dan Keputusan Disposition</h1>
+        <x-ui.page-header title="Output Ditolak dan Keputusan Disposition" />
         <p class="mt-2 max-w-3xl text-slate-500">Tentukan tindak lanjut setiap hasil produksi yang tidak memenuhi kriteria. Output ditolak tidak pernah menambah stok barang jadi: pilih <strong>rework</strong> untuk diperbaiki dan diperiksa ulang, atau <strong>scrap</strong> untuk membebankan nilainya dari WIP ke biaya scrap.</p>
 
         @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4 text-emerald-800">{{ session('status') }}</div>@endif

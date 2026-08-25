@@ -18,7 +18,16 @@ class OrganizationController extends Controller
 {
     public function index(CurrentCompany $current): View
     {
-        return view('organization.index', ['company' => $current->get(), 'branches' => Branch::where('company_id', $current->id())->orderBy('code')->paginate(15, ['*'], 'branches'), 'departments' => Department::where('company_id', $current->id())->with('branch')->orderBy('code')->paginate(15, ['*'], 'departments')]);
+        $roleCount = Role::where('company_id', $current->id())->count();
+        $memberCount = (int) DB::table('company_user')->where('company_id', $current->id())->where('is_active', true)->count();
+
+        return view('organization.index', [
+            'company' => $current->get(),
+            'branches' => Branch::where('company_id', $current->id())->orderBy('code')->paginate(15, ['*'], 'branches'),
+            'departments' => Department::where('company_id', $current->id())->with('branch')->orderBy('code')->paginate(15, ['*'], 'departments'),
+            'roleCount' => $roleCount,
+            'memberCount' => $memberCount,
+        ]);
     }
 
     public function storeBranch(Request $request, CurrentCompany $current, AuditTrail $audit): RedirectResponse

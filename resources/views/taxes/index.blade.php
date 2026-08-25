@@ -1,6 +1,7 @@
 <x-layouts.app title="Pajak & Bukti Potong"><div class="page-container">
-<h1 class="text-2xl font-bold tracking-tight">Pajak & Bukti Potong</h1>
+<x-ui.page-header title="Pajak & Bukti Potong" />
 <p class="mt-2 text-slate-500">Rekapitulasi PPN keluaran/masukan dan PPh yang dipotong atau dipotongkan, plus master tarif pajak perusahaan.</p>
+<button type="button" class="inline-flex inline-flex min-h-[42px] items-center gap-2 rounded-xl px-4 text-sm font-bold shadow-sm" data-drawer-open="tax-rate-drawer" aria-haspopup="dialog"><x-ui.icon name="plus" class="h-4 w-4" />Tarif Pajak</button>
 @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4">{{ session('status') }}</div>@endif
 @if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{{ $errors->first() }}</div>@endif
 
@@ -25,16 +26,7 @@
 
 <div class="mt-10 grid gap-5 lg:grid-cols-2">
 @if(auth()->user()->hasPermission('finance.manage',app(\App\Support\Tenancy\CurrentCompany::class)->id()))
-<form method="post" action="/admin/taxes/rates" class="grid gap-3 rounded-2xl border bg-white p-5">@csrf
-<h2 class="font-bold">Tambah Tarif Pajak</h2>
-<input name="code" required placeholder="Kode (mis. PPN11)" class="rounded-xl border p-3">
-<input name="name" required placeholder="Nama tarif" class="rounded-xl border p-3">
-<select name="kind" required class="rounded-xl border p-3"><option value="ppn_output">PPN Keluaran (penjualan)</option><option value="ppn_input">PPN Masukan (pembelian)</option><option value="withholding">Pemotongan PPh (bukti potong)</option></select>
-<input type="number" step=".0001" min="0" max="100" name="rate_percent" required placeholder="Tarif % (mis. 11)" class="rounded-xl border p-3">
-<input name="description" placeholder="Keterangan (opsional)" class="rounded-xl border p-3">
-<button class="rounded-xl bg-[var(--brand-primary)] p-3 text-white">Simpan tarif</button>
-<p class="text-xs text-slate-500">Contoh umum: PPN keluaran 11%, PPN masukan 11%, PPh 23 2%, PPh final konstruksi 0,5–2%.</p>
-</form>
+
 @endif
 <div class="overflow-x-auto rounded-2xl border bg-white p-5"><h2 class="font-bold mb-3">Master Tarif Pajak</h2>
 <table class="w-full text-sm"><thead><tr class="border-b text-left uppercase text-[11px] tracking-wide text-slate-500"><th>Kode</th><th>Jenis</th><th class="text-right">Tarif</th><th>Status</th>@if(auth()->user()->hasPermission('finance.manage',app(\App\Support\Tenancy\CurrentCompany::class)->id()))<th>Aksi</th>@endif</tr></thead>
@@ -63,4 +55,17 @@
 <div class="overflow-x-auto rounded-2xl border bg-white p-5"><h2 class="font-bold">Bukti Potong Diterbitkan (ke vendor)</h2>
 <table class="mt-3 w-full text-sm"><thead><tr class="border-b text-left uppercase text-[11px] tracking-wide text-slate-500"><th>No. Bukti</th><th>Pembayaran</th><th>Vendor</th><th class="text-right">Dipotong</th></tr></thead>
 <tbody>@forelse($certificatesIn as $cert)<tr class="border-b last:border-0"><td class="py-2 font-mono text-xs">{{ $cert->bukti_potong_number }}<span class="block text-slate-400">{{ optional($cert->bukti_potong_date)->format('d/m/Y') }}</span></td><td>{{ $cert->number }}</td><td>{{ $cert->invoice?->vendor?->name }}</td><td class="text-right font-mono">{{ number_format($cert->withholding_amount, 2, ',', '.') }}</td></tr>@empty<tr><td colspan="4" class="p-6 text-center text-slate-500">Belum ada bukti potong ke vendor.</td></tr>@endforelse</tbody></table></div></div>
-</div></x-layouts.app>
+</div>
+<x-ui.drawer id="tax-rate-drawer" title="Tarif Pajak">
+<form method="post" action="/admin/taxes/rates" class="grid gap-4">@csrf
+<h2 class="font-bold">Tambah Tarif Pajak</h2>
+<input name="code" required placeholder="Kode (mis. PPN11)" class="rounded-xl border p-3">
+<input name="name" required placeholder="Nama tarif" class="rounded-xl border p-3">
+<select name="kind" required class="rounded-xl border p-3"><option value="ppn_output">PPN Keluaran (penjualan)</option><option value="ppn_input">PPN Masukan (pembelian)</option><option value="withholding">Pemotongan PPh (bukti potong)</option></select>
+<input type="number" step=".0001" min="0" max="100" name="rate_percent" required placeholder="Tarif % (mis. 11)" class="rounded-xl border p-3">
+<input name="description" placeholder="Keterangan (opsional)" class="rounded-xl border p-3">
+<button class="rounded-xl bg-[var(--brand-primary)] p-3 text-white">Simpan tarif</button>
+<p class="text-xs text-slate-500">Contoh umum: PPN keluaran 11%, PPN masukan 11%, PPh 23 2%, PPh final konstruksi 0,5–2%.</p>
+</form>
+</x-ui.drawer>
+</x-layouts.app>

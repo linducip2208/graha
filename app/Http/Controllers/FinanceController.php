@@ -51,9 +51,20 @@ class FinanceController extends Controller
         return view('finance.index', ['accounts' => Account::where('company_id', $current->id())->orderBy('code')->get(), 'mappings' => AccountingMapping::where('company_id', $current->id())->with('account')->orderBy('event_type')->get(), 'periods' => FiscalPeriod::where('company_id', $current->id())->latest('starts_at')->get(), 'journals' => Journal::where('company_id', $current->id())->with('entries')->latest('journal_date')->paginate(25)]);
     }
 
-    public function accounts(CurrentCompany $current)
+    public function accounts(Request $request, CurrentCompany $current)
     {
-        return view('finance.accounts', ['accounts' => Account::where('company_id', $current->id())->orderBy('code')->paginate(50)]);
+        $query = Account::where('company_id', $current->id())->orderBy('code');
+        if ($term = trim((string) $request->query('q'))) {
+            $query->where(fn ($w) => $w->where('code', 'like', "%{$term}%")->orWhere('name', 'like', "%{$term}%"));
+        }
+        if ($type = $request->query('type')) {
+            $query->where('type', $type);
+        }
+        if ($status = $request->query('status')) {
+            $query->where('is_active', $status === 'active');
+        }
+
+        return view('finance.accounts', ['accounts' => $query->paginate(50)->withQueryString()]);
     }
 
     public function periods(CurrentCompany $current)

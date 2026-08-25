@@ -1,20 +1,13 @@
 <x-layouts.app title="RFQ & Perbandingan Harga"><div class="page-container">
 <x-ui.page-header title="RFQ & Perbandingan Harga" />
 <p class="mt-2 text-slate-500">Alur pra-PO: buka RFQ → undang vendor → terima quotation → bandingkan total/skor/lead time → pilih pemenang (RFQ otomatis tertutup).</p>
+<button type="button" class="btn-brand inline-flex min-h-[42px] items-center gap-2 rounded-xl px-4 text-sm font-bold shadow-sm" data-drawer-open="rfq-create-drawer" aria-haspopup="dialog"><x-ui.icon name="plus" class="h-4 w-4" />RFQ Baru</button>
 @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4">{{ session('status') }}</div>@endif
 @if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{{ $errors->first() }}</div>@endif
 
 <div class="mt-6 no-print"><form method="get" class="flex gap-2"><select name="rfq" onchange="this.form.submit()" class="rounded-xl border p-3 text-sm"><option value="">Pilih RFQ</option>@foreach($rfqs as $r)<option value="{{ $r->id }}" @selected($rfq?->id === $r->id)>{{ $r->number }} — {{ $r->title }} ({{ $r->status }})</option>@endforeach</select></form></div>
 
-<form method="post" action="/admin/procurement/rfq" class="mt-6 no-print">@csrf
-<x-ui.form-section title="Buat RFQ Baru" description="Undang vendor, terima penawaran, lalu pilih pemenang — RFQ otomatis tertutup.">
-<div class="grid gap-4 sm:grid-cols-2"><x-ui.field label="Nomor RFQ" name="number" hint="Unik per perusahaan" required><input name="number" placeholder="mis. RFQ-2026-001" required class="w-full p-3"></x-ui.field><x-ui.field label="Judul pengadaan" name="title" required><input name="title" placeholder="mis. Pengadaan Besi Beton" required class="w-full p-3"></x-ui.field><x-ui.field label="Batas penawaran" name="due_date"><input type="date" name="due_date" class="w-full p-3"></x-ui.field><x-ui.field label="Catatan" name="notes" hint="Opsional"><input name="notes" placeholder="Instruksi untuk vendor" class="w-full p-3"></x-ui.field></div>
-<div class="mt-4">
-<label class="block"><span class="mb-1 block text-xs font-bold text-slate-600 dark:text-slate-300">Item — satu per baris <span class="font-mono text-slate-400">SKU|kuantitas</span></span><textarea name="items" rows="3" placeholder="ITM-BESI|5&#10;ITM-BENTONITE|200" required class="w-full rounded-xl border p-2.5 font-mono text-xs"></textarea></label>
-</div>
-<div class="mt-4"><button class="rounded-xl bg-[var(--brand-primary)] px-6 py-3 font-bold text-white">Buat RFQ</button></div>
-</x-ui.form-section>
-</form>
+
 
 @if($rfq)
 @php($canManage = auth()->user()->hasPermission('procurement.manage', app(\App\Support\Tenancy\CurrentCompany::class)->id()))
@@ -48,4 +41,16 @@
 @else
 <x-ui.empty icon="swap" title="Belum ada RFQ" description="Buat RFQ pertama untuk memulai proses pengadaan kompetitif sebelum PO." />
 @endif
-</div></x-layouts.app>
+</div>
+<x-ui.drawer id="rfq-create-drawer" title="Buat RFQ">
+<form method="post" action="/admin/procurement/rfq" class="grid gap-4">@csrf
+<x-ui.form-section title="Buat RFQ Baru" description="Undang vendor, terima penawaran, lalu pilih pemenang — RFQ otomatis tertutup.">
+<div class="grid gap-4 sm:grid-cols-2"><x-ui.field label="Nomor RFQ" name="number" hint="Unik per perusahaan" required><input name="number" placeholder="mis. RFQ-2026-001" required class="w-full p-3"></x-ui.field><x-ui.field label="Judul pengadaan" name="title" required><input name="title" placeholder="mis. Pengadaan Besi Beton" required class="w-full p-3"></x-ui.field><x-ui.field label="Batas penawaran" name="due_date"><input type="date" name="due_date" class="w-full p-3"></x-ui.field><x-ui.field label="Catatan" name="notes" hint="Opsional"><input name="notes" placeholder="Instruksi untuk vendor" class="w-full p-3"></x-ui.field></div>
+<div class="mt-4">
+<label class="block"><span class="mb-1 block text-xs font-bold text-slate-600 dark:text-slate-300">Item — satu per baris <span class="font-mono text-slate-400">SKU|kuantitas</span></span><textarea name="items" rows="3" placeholder="ITM-BESI|5&#10;ITM-BENTONITE|200" required class="w-full rounded-xl border p-2.5 font-mono text-xs"></textarea></label>
+</div>
+<div class="mt-4"><button class="rounded-xl bg-[var(--brand-primary)] px-6 py-3 font-bold text-white">Buat RFQ</button></div>
+</x-ui.form-section>
+</form>
+</x-ui.drawer>
+</x-layouts.app>

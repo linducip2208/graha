@@ -1,20 +1,11 @@
 <x-layouts.app title="Permintaan Material"><div class="page-container">
-<h1 class="text-2xl font-bold tracking-tight">Permintaan Material Proyek</h1>
+<x-ui.page-header title="Permintaan Material Proyek" />
 <p class="mt-2 text-slate-500">Permintaan → approval pemisah → pengeluaran gudang dengan jurnal <strong>Biaya Material (D) / Gudang (K)</strong> berdimensi proyek, otomatis masuk project cost ledger.</p>
+<button type="button" class="btn-brand inline-flex min-h-[42px] items-center gap-2 rounded-xl px-4 text-sm font-bold shadow-sm" data-drawer-open="mr-create-drawer" aria-haspopup="dialog"><x-ui.icon name="plus" class="h-4 w-4" />Permintaan Material</button>
 @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4">{{ session('status') }}</div>@endif
 @if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{{ $errors->first() }}</div>@endif
 
-<form method="post" action="/admin/inventory/material-requests" class="mt-6 grid gap-3 rounded-2xl border bg-white p-5 no-print">@csrf
-<h2 class="font-bold">Permintaan Baru</h2>
-<div class="grid gap-2 sm:grid-cols-4">
-<input name="number" required placeholder="Nomor (MR-2026-001)" class="rounded-xl border p-3">
-<select name="project_id" required class="rounded-xl border p-3"><option value="">Proyek</option>@foreach($projects as $p)<option value="{{ $p->id }}">{{ $p->code }} — {{ $p->name }}</option>@endforeach</select>
-<select name="warehouse_id" required class="rounded-xl border p-3"><option value="">Gudang sumber</option>@foreach($warehouses as $w)<option value="{{ $w->id }}">{{ $w->code }}</option>@endforeach</select>
-<select name="bored_pile_id" class="rounded-xl border p-3"><option value="">Titik pile (opsional)</option>@foreach($piles as $pile)<option value="{{ $pile->id }}">{{ $pile->project?->code }}/{{ $pile->pile_number }}</option>@endforeach</select>
-</div>
-<label class="block text-xs font-semibold">Item — satu per baris: <code>SKU|qty</code><textarea name="lines" rows="3" required placeholder="ITM-BESI|1.5&#10;ITM-BENTONITE|20" class="mt-1 w-full rounded-xl border p-2.5 font-mono text-xs"></textarea></label>
-<button class="w-fit rounded-xl bg-[var(--brand-primary)] px-6 py-3 font-bold text-white">Ajukan permintaan</button>
-</form>
+
 
 <h2 class="mt-10 text-lg font-black">Daftar Permintaan</h2>
 <div class="mt-3 space-y-3">@forelse($requests as $mr)
@@ -34,4 +25,18 @@
 @endif
 </x-ui.card>
 @empty<x-ui.empty icon="archive" title="Belum ada permintaan" description="Ajukan permintaan material pertama untuk proyek aktif." />@endforelse</div>
-</div></x-layouts.app>
+</div>
+<x-ui.drawer id="mr-create-drawer" title="Permintaan Material">
+<form method="post" action="/admin/inventory/material-requests" class="grid gap-4">@csrf
+<h2 class="font-bold">Permintaan Baru</h2>
+<div class="grid gap-2 sm:grid-cols-4">
+<input name="number" required placeholder="Nomor (MR-2026-001)" class="rounded-xl border p-3">
+<select name="project_id" required class="rounded-xl border p-3"><option value="">Proyek</option>@foreach($projects as $p)<option value="{{ $p->id }}">{{ $p->code }} — {{ $p->name }}</option>@endforeach</select>
+<select name="warehouse_id" required class="rounded-xl border p-3"><option value="">Gudang sumber</option>@foreach($warehouses as $w)<option value="{{ $w->id }}">{{ $w->code }}</option>@endforeach</select>
+<select name="bored_pile_id" class="rounded-xl border p-3"><option value="">Titik pile (opsional)</option>@foreach($piles as $pile)<option value="{{ $pile->id }}">{{ $pile->project?->code }}/{{ $pile->pile_number }}</option>@endforeach</select>
+</div>
+<label class="block text-xs font-semibold">Item — satu per baris: <code>SKU|qty</code><textarea name="lines" rows="3" required placeholder="ITM-BESI|1.5&#10;ITM-BENTONITE|20" class="mt-1 w-full rounded-xl border p-2.5 font-mono text-xs"></textarea></label>
+<button class="w-fit rounded-xl bg-[var(--brand-primary)] px-6 py-3 font-bold text-white">Ajukan permintaan</button>
+</form>
+</x-ui.drawer>
+</x-layouts.app>

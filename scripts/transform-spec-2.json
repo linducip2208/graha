@@ -1,0 +1,5 @@
+[
+  {"file": "cash-bank\\index.blade.php", "action": "{{ $action }}", "id": "cash-action-drawer", "title": "Transaksi Kas & Bank", "button": "Catat Transaksi", "buttonTone": "inline-flex", "anchor": "<x-ui.drawer id=\"statement-drawer\""},
+  {"file": "fixed-assets\\index.blade.php", "action": "/admin/finance/mappings", "id": "dep-mapping-drawer", "title": "Mapping Depresiasi", "button": "Mapping Depresiasi", "buttonTone": "inline-flex", "anchor": "<x-ui.drawer id=\"category-drawer\""},
+  {"file": "tenders\\index.blade.php", "action": "/admin/tenders/competitors", "id": "competitor-drawer", "title": "Kompetitor Baru", "button": "Kompetitor", "buttonTone": "inline-flex", "anchor": "<x-ui.drawer id=\"customer-drawer\""}
+]

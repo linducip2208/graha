@@ -1,7 +1,7 @@
 <x-layouts.app title="Routing dan Biaya Produksi">
 <div class="page-container">
     <div class="flex flex-wrap gap-4"><a href="/admin/manufacturing" class="text-sm font-bold text-[var(--brand-primary)]">&larr; Manufacturing Control</a>@if(auth()->user()->hasPermission('report.view',app(\App\Support\Tenancy\CurrentCompany::class)->id()))<a href="/admin/reports/manufacturing" class="text-sm font-bold text-emerald-700">Lihat Rekonsiliasi WIP &rarr;</a>@endif</div>
-    <h1 class="mt-3 text-2xl font-bold tracking-tight">Routing, Work Center, dan Biaya Konversi</h1>
+    <x-ui.page-header title="Routing, Work Center, dan Biaya Konversi" />
     <p class="mt-2 max-w-4xl text-slate-500">Tetapkan urutan kerja dan waktu standar pada BOM. Ketika jam aktual dicatat, sistem menghitung tenaga kerja serta overhead dari tarif work center, mendebit Manufacturing WIP, dan menampilkan variance waktu/biaya.</p>
     @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4 text-emerald-800">{{ session('status') }}</div>@endif
     @if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{{ $errors->first() }}</div>@endif

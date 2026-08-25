@@ -1,0 +1,4 @@
+[
+  {"file": "signatures\\index.blade.php", "action": "/admin/signatures/batch-internal", "id": "sign-batch-drawer", "title": "Batch Signing Internal", "button": "Batch Signing", "anchor": "@if(session('status'))"},
+  {"file": "procurement\\rfq.blade.php", "action": "/admin/procurement/rfq", "id": "rfq-create-drawer", "title": "Buat RFQ", "button": "RFQ Baru", "anchor": "@if(session('status'))"}
+]

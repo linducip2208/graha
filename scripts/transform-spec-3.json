@@ -1,0 +1,11 @@
+[
+  {"file": "signatures\\index.blade.php", "action": "/admin/signatures/sign", "id": "sign-drawer", "title": "Tanda Tangan Dokumen", "button": "Tanda Tangan", "anchor": "@if(session('status'))"},
+  {"file": "inventory\\opname.blade.php", "action": "/admin/inventory/opname", "id": "opname-drawer", "title": "Buat Stock Opname", "button": "Stock Opname", "anchor": "@if(session('status'))"},
+  {"file": "inventory\\tools.blade.php", "action": "/admin/tools", "id": "tool-register-drawer", "title": "Register Tools", "button": "Register Tool", "anchor": "@if(session('status'))"},
+  {"file": "inventory\\material-requests.blade.php", "action": "/admin/inventory/material-requests", "id": "mr-create-drawer", "title": "Permintaan Material", "button": "Permintaan Material", "anchor": "@if(session('status'))"},
+  {"file": "procurement\\rfq.blade.php", "action": "/admin/rfq", "id": "rfq-create-drawer", "title": "Buat RFQ", "button": "RFQ Baru", "anchor": "@if(session('status'))"},
+  {"file": "taxes\\index.blade.php", "action": "/admin/taxes/rates", "id": "tax-rate-drawer", "title": "Tarif Pajak", "button": "Tarif Pajak", "buttonTone": "inline-flex", "anchor": "@if(session('status'))"},
+  {"file": "billing\\index.blade.php", "action": "/admin/billing/retention-releases", "id": "retention-release-drawer", "title": "Release Retensi", "button": "Release Retensi", "buttonTone": "inline-flex", "anchor": "<x-ui.drawer id=\"billing-create-drawer\""},
+  {"file": "operations\\casings.blade.php", "action": "/admin/casings", "id": "casing-register-drawer", "title": "Register Casing", "button": "Register Casing", "anchor": "@if(session('status'))"},
+  {"file": "operations\\fuel-tanks.blade.php", "action": "/admin/fuel-tanks", "id": "tank-register-drawer", "title": "Tangki BBM Baru", "button": "Tangki BBM", "anchor": "@if(session('status'))"}
+]

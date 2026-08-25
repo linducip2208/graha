@@ -1,7 +1,7 @@
 <x-layouts.app title="Quality Control Produksi">
     <div class="page-container">
         <a href="/admin/manufacturing" class="text-sm font-bold text-[var(--brand-primary)]">&larr; Manufacturing Control</a>
-        <h1 class="mt-3 text-2xl font-bold tracking-tight">Pemeriksaan dan Pelepasan Hasil Produksi</h1>
+        <x-ui.page-header title="Pemeriksaan dan Pelepasan Hasil Produksi" />
         <p class="mt-2 max-w-3xl text-slate-500">Quality Control memeriksa output terhadap kriteria yang ditetapkan. Hanya kuantitas berstatus diterima yang dapat dipindahkan dari WIP menjadi barang jadi.</p>
         @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4">{{ session('status') }}</div>@endif
         @if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{{ $errors->first() }}</div>@endif

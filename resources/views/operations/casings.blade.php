@@ -7,20 +7,11 @@
 </div>
 
 <p class="mt-2 text-slate-500">Register casing (milik/sewa): instalasi, ekstraksi, ditinggal di titik, kerusakan, perbaikan, hilang — setiap perpindahan punya riwayat dan biaya tercatat.</p>
+<button type="button" class="btn-brand inline-flex min-h-[42px] items-center gap-2 rounded-xl px-4 text-sm font-bold shadow-sm" data-drawer-open="casing-register-drawer" aria-haspopup="dialog"><x-ui.icon name="plus" class="h-4 w-4" />Register Casing</button>
 @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4">{{ session('status') }}</div>@endif
 @if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{{ $errors->first() }}</div>@endif
 
-<form method="post" action="/admin/casings" class="mt-6 grid gap-3 rounded-2xl border bg-white p-5 no-print">@csrf
-<h2 class="font-bold">Daftarkan Casing</h2>
-<div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
-<input name="code" required placeholder="Kode (CS-001)" class="rounded-xl border p-3">
-<input type="number" step=".01" name="diameter_mm" required placeholder="Diameter (mm)" class="rounded-xl border p-3">
-<input type="number" step=".001" name="length_m" required placeholder="Panjang (m)" class="rounded-xl border p-3">
-<select name="ownership" required class="rounded-xl border p-3"><option value="owned">Milik sendiri</option><option value="rented">Sewa</option></select>
-<input name="supplier_name" placeholder="Pemilik/supplier" class="rounded-xl border p-3">
-</div>
-<button class="w-fit rounded-xl bg-slate-900 px-6 py-3 font-bold text-white">Simpan casing</button>
-</form>
+
 
 <div class="mt-8 space-y-4">@forelse($units as $unit)
 <x-ui.card>
@@ -57,4 +48,18 @@
 @endforelse
 </x-ui.card>
 @empty<x-ui.empty icon="archive" title="Belum ada casing" description="Daftarkan casing pertama untuk mulai melacak siklus pemakaiannya." />@endforelse</div>
-</div></x-layouts.app>
+</div>
+<x-ui.drawer id="casing-register-drawer" title="Register Casing">
+<form method="post" action="/admin/casings" class="grid gap-4">@csrf
+<h2 class="font-bold">Daftarkan Casing</h2>
+<div class="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+<input name="code" required placeholder="Kode (CS-001)" class="rounded-xl border p-3">
+<input type="number" step=".01" name="diameter_mm" required placeholder="Diameter (mm)" class="rounded-xl border p-3">
+<input type="number" step=".001" name="length_m" required placeholder="Panjang (m)" class="rounded-xl border p-3">
+<select name="ownership" required class="rounded-xl border p-3"><option value="owned">Milik sendiri</option><option value="rented">Sewa</option></select>
+<input name="supplier_name" placeholder="Pemilik/supplier" class="rounded-xl border p-3">
+</div>
+<button class="w-fit rounded-xl bg-slate-900 px-6 py-3 font-bold text-white">Simpan casing</button>
+</form>
+</x-ui.drawer>
+</x-layouts.app>

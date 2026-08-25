@@ -40,6 +40,12 @@ document.querySelectorAll('details.nav-group').forEach((d)=>{const k='navgrp:'+(
 const wsNav=document.querySelector('#workspace-nav');
 if(wsNav){wsNav.querySelectorAll('details.ws-group').forEach((d)=>{d.addEventListener('toggle',()=>{if(d.open){wsNav.querySelectorAll('details.ws-group[open]').forEach((o)=>{if(o!==d)o.open=false})}})})}
 
+// ===== Role & Permission: pencarian permission + pilih semua per modul =====
+const permSearch=document.querySelector('[data-perm-search]');
+if(permSearch){const groups=document.querySelectorAll('[data-perm-module]');permSearch.addEventListener('input',()=>{const q=permSearch.value.trim().toLowerCase();groups.forEach((g)=>{let visible=0;g.querySelectorAll('[data-perm-label]').forEach((label)=>{const text=(label.querySelector('[data-perm-text]')?.textContent||'').toLowerCase();const show=!q||text.includes(q);label.style.display=show?'':'none';if(show)visible++});g.style.display=visible?'':'none'})});
+document.querySelectorAll('[data-select-module]').forEach((btn)=>{btn.addEventListener('click',()=>{const mod=btn.closest('[data-perm-module]');if(!mod)return;const boxes=mod.querySelectorAll('[data-perm-checkbox]');const all=[...boxes].every((b)=>b.checked);boxes.forEach((b)=>{b.checked=!all});const count=document.querySelector('[data-perm-count]');if(count)count.textContent=document.querySelectorAll('[data-perm-checkbox]:checked').length})});
+document.querySelectorAll('[data-perm-checkbox]').forEach((b)=>b.addEventListener('change',()=>{const count=document.querySelector('[data-perm-count]');if(count)count.textContent=document.querySelectorAll('[data-perm-checkbox]:checked').length}))}
+
 // ===== Form submit: kunci double-submit + loading state pada tombol =====
 document.addEventListener('submit',(e)=>{
 const form=e.target;

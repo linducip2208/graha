@@ -1,14 +1,11 @@
 <x-layouts.app title="Tools Check-out"><div class="page-container">
-<h1 class="text-2xl font-bold tracking-tight">Tools Check-out / Check-in</h1>
+<x-ui.page-header title="Tools Check-out / Check-in" />
 <p class="mt-2 text-slate-500">Kartu kendali alat bantu: siapa meminjam, kapan harus kembali, kondisi saat kembali, dan pelaporan kehilangan.</p>
+<button type="button" class="btn-brand inline-flex min-h-[42px] items-center gap-2 rounded-xl px-4 text-sm font-bold shadow-sm" data-drawer-open="tool-register-drawer" aria-haspopup="dialog"><x-ui.icon name="plus" class="h-4 w-4" />Register Tool</button>
 @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4">{{ session('status') }}</div>@endif
 @if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{{ $errors->first() }}</div>@endif
 
-<form method="post" action="/admin/tools" class="mt-6 grid gap-3 rounded-2xl border bg-white p-5 no-print">@csrf
-<h2 class="font-bold">Daftarkan Alat</h2>
-<div class="grid gap-2 sm:grid-cols-4"><input name="code" required placeholder="Kode (TL-001)" class="rounded-xl border p-3"><input name="name" required placeholder="Nama alat" class="rounded-xl border p-3"><input name="category" placeholder="Kategori" class="rounded-xl border p-3"><input type="number" step=".01" name="purchase_cost" placeholder="Harga perolehan" class="rounded-xl border p-3"></div>
-<button class="w-fit rounded-xl bg-slate-900 px-6 py-3 font-bold text-white">Simpan alat</button>
-</form>
+
 
 <h2 class="mt-10 text-lg font-black">Daftar Alat</h2>
 <div class="mt-3 space-y-4">@forelse($tools as $tool)
@@ -50,4 +47,12 @@
 </details>
 </x-ui.card>
 @empty<x-ui.empty icon="wrench" title="Belum ada alat terdaftar" description="Daftarkan alat bantu pertama untuk mulai kontrol keluar-masuk." />@endforelse</div>
-</div></x-layouts.app>
+</div>
+<x-ui.drawer id="tool-register-drawer" title="Register Tools">
+<form method="post" action="/admin/tools" class="grid gap-4">@csrf
+<h2 class="font-bold">Daftarkan Alat</h2>
+<div class="grid gap-2 sm:grid-cols-4"><input name="code" required placeholder="Kode (TL-001)" class="rounded-xl border p-3"><input name="name" required placeholder="Nama alat" class="rounded-xl border p-3"><input name="category" placeholder="Kategori" class="rounded-xl border p-3"><input type="number" step=".01" name="purchase_cost" placeholder="Harga perolehan" class="rounded-xl border p-3"></div>
+<button class="w-fit rounded-xl bg-slate-900 px-6 py-3 font-bold text-white">Simpan alat</button>
+</form>
+</x-ui.drawer>
+</x-layouts.app>

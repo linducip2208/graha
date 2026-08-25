@@ -1,20 +1,11 @@
 <x-layouts.app title="Stock Opname"><div class="page-container">
-<h1 class="text-2xl font-bold tracking-tight">Stock Opname</h1>
+<x-ui.page-header title="Stock Opname" />
 <p class="mt-2 text-slate-500">Penghitungan fisik per gudang. Approval oleh user lain (bukan penghitung) akan memposting adjustment in/out ke ledger secara idempotent — hanya baris dengan selisih.</p>
+<button type="button" class="btn-brand inline-flex min-h-[42px] items-center gap-2 rounded-xl px-4 text-sm font-bold shadow-sm" data-drawer-open="opname-drawer" aria-haspopup="dialog"><x-ui.icon name="plus" class="h-4 w-4" />Stock Opname</button>
 @if(session('status'))<div class="mt-4 rounded-xl bg-emerald-50 p-4">{{ session('status') }}</div>@endif
 @if($errors->any())<div class="mt-4 rounded-xl bg-red-50 p-4 text-red-700">{{ $errors->first() }}</div>@endif
 
-<form method="post" action="/admin/inventory/opname" class="mt-6 grid gap-3 rounded-2xl border bg-white p-5">@csrf
-<h2 class="font-bold">Buat Opname Baru</h2>
-<div class="grid gap-2 sm:grid-cols-3">
-<input name="number" required placeholder="Nomor opname (mis. OPN-2026-001)" class="rounded-xl border p-3">
-<select name="warehouse_id" required class="rounded-xl border p-3"><option value="">Gudang</option>@foreach($warehouses as $w)<option value="{{ $w->id }}">{{ $w->code }} — {{ $w->name }}</option>@endforeach</select>
-<input name="notes" placeholder="Catatan (opsional)" class="rounded-xl border p-3">
-</div>
-<label class="block text-xs font-semibold">Hasil hitung fisik — satu baris per item: <code>SKU|qty_fisik</code><textarea name="lines" rows="4" required placeholder="ITM-BESI|49.5&#10;ITM-BENTONITE|52" class="mt-1 w-full rounded-xl border p-2.5 font-mono text-xs"></textarea></label>
-<p class="text-xs text-slate-500">Saldo sistem diambil otomatis dari ledger saat dibuat; approval hanya memproses baris bervariansi dan menolak stok negatif tanpa override item.</p>
-<button class="w-fit rounded-xl bg-[var(--brand-primary)] px-6 py-3 font-bold text-white">Simpan draft opname</button>
-</form>
+
 
 <h2 class="mt-10 text-lg font-black">Riwayat Opname</h2>
 <div class="mt-3 space-y-3">@forelse($counts as $count)
@@ -31,4 +22,18 @@
 @endif
 </x-ui.card>
 @empty<x-ui.empty icon="archive" title="Belum ada opname" description="Buat penghitungan fisik pertama untuk gudang Anda." />@endforelse</div>
-</div></x-layouts.app>
+</div>
+<x-ui.drawer id="opname-drawer" title="Buat Stock Opname">
+<form method="post" action="/admin/inventory/opname" class="grid gap-4">@csrf
+<h2 class="font-bold">Buat Opname Baru</h2>
+<div class="grid gap-2 sm:grid-cols-3">
+<input name="number" required placeholder="Nomor opname (mis. OPN-2026-001)" class="rounded-xl border p-3">
+<select name="warehouse_id" required class="rounded-xl border p-3"><option value="">Gudang</option>@foreach($warehouses as $w)<option value="{{ $w->id }}">{{ $w->code }} — {{ $w->name }}</option>@endforeach</select>
+<input name="notes" placeholder="Catatan (opsional)" class="rounded-xl border p-3">
+</div>
+<label class="block text-xs font-semibold">Hasil hitung fisik — satu baris per item: <code>SKU|qty_fisik</code><textarea name="lines" rows="4" required placeholder="ITM-BESI|49.5&#10;ITM-BENTONITE|52" class="mt-1 w-full rounded-xl border p-2.5 font-mono text-xs"></textarea></label>
+<p class="text-xs text-slate-500">Saldo sistem diambil otomatis dari ledger saat dibuat; approval hanya memproses baris bervariansi dan menolak stok negatif tanpa override item.</p>
+<button class="w-fit rounded-xl bg-[var(--brand-primary)] px-6 py-3 font-bold text-white">Simpan draft opname</button>
+</form>
+</x-ui.drawer>
+</x-layouts.app>

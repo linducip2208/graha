@@ -1,0 +1,17 @@
+[
+  {"file": "cash-bank\\index.blade.php", "action": "/admin/cash-bank/accounts", "id": "bank-account-drawer", "title": "Bank Account Baru", "button": "Bank Account"},
+  {"file": "cash-bank\\index.blade.php", "action": "/admin/cash-bank/receipts", "id": "receipt-drawer", "title": "Customer Receipt", "button": "Receipt", "buttonTone": "inline-flex"},
+  {"file": "cash-bank\\index.blade.php", "action": "/admin/cash-bank/payments", "id": "payment-drawer", "title": "Vendor Payment", "button": "Vendor Payment", "buttonTone": "inline-flex"},
+  {"file": "cash-bank\\index.blade.php", "action": "/admin/cash-bank/statements", "id": "statement-drawer", "title": "Baris Rekening Koran", "button": "Statement Line", "buttonTone": "inline-flex"},
+  {"file": "fixed-assets\\index.blade.php", "action": "/admin/fixed-assets/categories", "id": "category-drawer", "title": "Kategori Aset", "button": "Kategori", "buttonTone": "inline-flex"},
+  {"file": "fixed-assets\\index.blade.php", "action": "/admin/fixed-assets", "id": "asset-register-drawer", "title": "Register Aset Tetap", "button": "Register Aset"},
+  {"file": "fixed-assets\\index.blade.php", "action": "/admin/fixed-assets/depreciation-mappings", "id": "dep-mapping-drawer", "title": "Mapping Depresiasi", "button": "Mapping Depresiasi", "buttonTone": "inline-flex"},
+  {"file": "approvals\\index.blade.php", "action": "/admin/approvals/workflows", "id": "workflow-drawer", "title": "Workflow Baru", "button": "Workflow", "buttonTone": "inline-flex"},
+  {"file": "approvals\\index.blade.php", "action": "/admin/approvals/delegations", "id": "delegation-drawer", "title": "Delegasi Kewenangan", "button": "Delegasi", "buttonTone": "inline-flex"},
+  {"file": "tenders\\index.blade.php", "action": "/admin/customers", "id": "customer-drawer", "title": "Pelanggan Baru", "button": "Pelanggan", "buttonTone": "inline-flex"},
+  {"file": "tenders\\index.blade.php", "action": "/admin/competitors", "id": "competitor-drawer", "title": "Kompetitor Baru", "button": "Kompetitor", "buttonTone": "inline-flex"},
+  {"file": "tenders\\index.blade.php", "action": "/admin/tenders", "id": "tender-create-drawer", "title": "Tender Baru", "button": "Tender Baru"},
+  {"file": "billing\\index.blade.php", "action": "/admin/billing", "id": "billing-create-drawer", "title": "Draft Progress Billing", "button": "Progress Billing"},
+  {"file": "operations\\index.blade.php", "action": "/admin/manufacturing/boms", "id": "ops-bom-drawer", "title": "BOM Produksi", "button": "BOM", "buttonTone": "inline-flex"},
+  {"file": "operations\\index.blade.php", "action": "/admin/manufacturing/orders", "id": "ops-order-drawer", "title": "Perintah Produksi", "button": "Production Order", "buttonTone": "inline-flex"}
+]

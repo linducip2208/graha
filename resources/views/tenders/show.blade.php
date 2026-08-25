@@ -1,7 +1,7 @@
 <x-layouts.app title="Tender {{ $tender->number }}">
 @php($tabs = ['overview' => 'Ringkasan', 'estimate' => 'Estimasi & Margin', 'decision' => 'Bid / No-Bid', 'participants' => 'Peserta', 'outcome' => 'Outcome', 'lessons' => 'Lessons Learned'])
 <section class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-<p class="text-xs font-bold uppercase tracking-widest text-[var(--brand-primary)]">{{ $tender->number }} Â· {{ $tender->year }}</p>
+<p class="text-xs font-bold uppercase tracking-widest text-[var(--brand-primary)]">{{ $tender->number }} · {{ $tender->year }}</p>
 <x-ui.page-header title="{{ $tender->project_name }}" subtitle="Pelanggan: {{ $tender->customer?->name }}@if($tender->location) · {{ $tender->location }}@endif@if($tender->bid_value) · Bid Rp {{ number_format((float) $tender->bid_value, 0, ',', '.') }}@endif" status="{{ str_replace('_',' ', $tender->status) }}">
 @if($project)<a href="/admin/projects/{{ $project->id }}" class="font-semibold text-[var(--brand-primary)] hover:underline">Proyek terkait →</a>@endif
 </x-ui.page-header>
@@ -34,7 +34,7 @@
 <section class="mt-6 overflow-x-auto rounded-2xl border bg-white">
 <table class="w-full text-sm table-sticky"><thead><tr><th>Peserta</th><th class="text-right">Bid</th><th>Rank</th><th>Pemenang</th></tr></thead><tbody>
 @forelse($tender->participants as $participant)
-<tr><td>{{ $participant->name }}</td><td class="text-right font-mono">{{ $participant->bid_value ? number_format((float) $participant->bid_value, 0, ',', '.') : '-' }}</td><td>{{ $participant->rank ?? '-' }}</td><td>@if($participant->is_winner)ðŸ† @endif{{ $participant->is_winner ? 'Ya' : '-' }}</td></tr>
+<tr><td>{{ $participant->name }}</td><td class="text-right font-mono">{{ $participant->bid_value ? number_format((float) $participant->bid_value, 0, ',', '.') : '-' }}</td><td>{{ $participant->rank ?? '-' }}</td><td>@if($participant->is_winner)🏆 @endif{{ $participant->is_winner ? 'Ya' : '-' }}</td></tr>
 @empty
 <tr><td colspan="4" class="p-8 text-center text-slate-500">Belum ada peserta yang dicatat.</td></tr>
 @endforelse
@@ -84,7 +84,7 @@
 <section class="mt-6">
 @if($tender->outcome)
 <div class="grid gap-5 sm:grid-cols-2">
-<x-ui.card bodyClass="p-6"><h2 class="font-bold">Hasil</h2><dl class="mt-3 space-y-2 text-sm"><div class="flex justify-between"><dt>Status</dt><dd class="font-black uppercase {{ $tender->outcome->outcome === 'won' ? 'text-emerald-700' : 'text-red-600' }}">{{ $tender->outcome->outcome === 'won' ? 'ðŸ† MENANG' : 'KALAH' }}</dd></div><div class="flex justify-between"><dt>Diumumkan</dt><dd>{{ $tender->outcome->announced_at?->format('d/m/Y') }}</dd></div>@if($tender->outcome->contract_value)<div class="flex justify-between"><dt>Nilai Kontrak</dt><dd class="font-mono">Rp {{ number_format((float) $tender->outcome->contract_value, 0, ',', '.') }}</dd></div>@endif @if($tender->outcome->winner_name)<div class="flex justify-between"><dt>Pemenang</dt><dd>{{ $tender->outcome->winner_name }}</dd></div>@endif @if($tender->outcome->winning_bid_value)<div class="flex justify-between"><dt>Bid Pemenang</dt><dd class="font-mono">Rp {{ number_format((float) $tender->outcome->winning_bid_value, 0, ',', '.') }}</dd></div>@endif</dl></x-ui.card>
+<x-ui.card bodyClass="p-6"><h2 class="font-bold">Hasil</h2><dl class="mt-3 space-y-2 text-sm"><div class="flex justify-between"><dt>Status</dt><dd class="font-black uppercase {{ $tender->outcome->outcome === 'won' ? 'text-emerald-700' : 'text-red-600' }}">{{ $tender->outcome->outcome === 'won' ? '🏆 MENANG' : 'KALAH' }}</dd></div><div class="flex justify-between"><dt>Diumumkan</dt><dd>{{ $tender->outcome->announced_at?->format('d/m/Y') }}</dd></div>@if($tender->outcome->contract_value)<div class="flex justify-between"><dt>Nilai Kontrak</dt><dd class="font-mono">Rp {{ number_format((float) $tender->outcome->contract_value, 0, ',', '.') }}</dd></div>@endif @if($tender->outcome->winner_name)<div class="flex justify-between"><dt>Pemenang</dt><dd>{{ $tender->outcome->winner_name }}</dd></div>@endif @if($tender->outcome->winning_bid_value)<div class="flex justify-between"><dt>Bid Pemenang</dt><dd class="font-mono">Rp {{ number_format((float) $tender->outcome->winning_bid_value, 0, ',', '.') }}</dd></div>@endif</dl></x-ui.card>
 <x-ui.card bodyClass="p-6"><h2 class="font-bold">Analisis</h2><dl class="mt-3 space-y-2 text-sm">@if($tender->outcome->primary_reason)<div><dt class="font-semibold">Alasan Utama</dt><dd class="text-slate-600">{{ $tender->outcome->primary_reason }}</dd></div>@endif @if(! empty($tender->outcome->additional_reasons))<div><dt class="font-semibold">Alasan Tambahan</dt><dd class="text-slate-600">{{ implode('; ', $tender->outcome->additional_reasons) }}</dd></div>@endif</dl></x-ui.card>
 </div>
 @else
@@ -103,6 +103,6 @@
 </section>
 @endif
 
-<a href="/admin/tenders" class="mt-8 inline-block text-sm font-bold text-[var(--brand-primary)] print:hidden">â† Kembali ke daftar tender</a>
+<a href="/admin/tenders" class="mt-8 inline-block text-sm font-bold text-[var(--brand-primary)] print:hidden">← Kembali ke daftar tender</a>
 </section>
 </x-layouts.app>

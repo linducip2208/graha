@@ -1,5 +1,5 @@
 <x-layouts.app title="Lot Traceability"><div class="page-container">
-<h1 class="text-2xl font-bold tracking-tight">Material Traceability per Lot</h1>
+<x-ui.page-header title="Material Traceability per Lot" />
 <p class="mt-1 text-sm text-slate-500">Telusuri satu lot: dari penerimaan (GR/vendor) hingga konsumsi (proyek/pile/produksi/cage). Ledger immutable — jejak tidak dapat diubah.</p>
 <form method="get" action="/admin/inventory/lots" class="mt-5 flex flex-wrap gap-2 no-print">
 <input name="lot" value="{{ $lot }}" required placeholder="Nomor lot / heat (mis. HEAT-2026-01)" class="min-w-64 flex-1 rounded-xl border p-3 font-mono text-sm">
