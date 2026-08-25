@@ -26,6 +26,7 @@ use App\Http\Controllers\OperationsController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\PileGenealogyController;
 use App\Http\Controllers\PilePassportController;
+use App\Http\Controllers\PileReadinessController;
 use App\Http\Controllers\ProcurementController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectCostingController;
@@ -149,6 +150,10 @@ Route::middleware(['auth', 'company', 'permission:project.view'])->prefix('admin
     Route::get('/field-evidence/{evidence}/file', [FieldOpsController::class, 'fileEvidence'])->name('evidence.file');
     Route::get('/bored-piles/{pile}/genealogy', [PileGenealogyController::class, 'show'])->name('piles.genealogy');
     Route::get('/bored-piles/{pile}/passport', [PilePassportController::class, 'show'])->name('piles.passport');
+    Route::post('/bored-piles/{pile}/readiness-check', [PileReadinessController::class, 'check'])->middleware('permission:project.manage')->name('piles.readiness.check');
+    Route::post('/bored-piles/{pile}/attest', [PileReadinessController::class, 'attest'])->middleware('permission:project.manage')->name('piles.attest');
+    Route::post('/bored-piles/{pile}/cleaning-inspections', [PileReadinessController::class, 'storeCleaning'])->middleware('permission:project.manage')->name('piles.cleaning.store');
+    Route::post('/cleaning-inspections/{inspection}/decide', [PileReadinessController::class, 'decideCleaning'])->middleware('permission:qms.verify')->name('piles.cleaning.decide');
     Route::post('/bored-piles/{pile}/photos', [PilePassportController::class, 'uploadPhoto'])->middleware('permission:project.manage')->name('piles.photos.store');
     Route::post('/bored-piles/{pile}/as-built/store', [PilePassportController::class, 'storeAsBuilt'])->middleware('permission:project.manage')->name('piles.as-built.store');
     Route::post('/bored-piles/{pile}/dossier/store', [PilePassportController::class, 'storeDossier'])->middleware('permission:project.manage')->name('piles.dossier.store');

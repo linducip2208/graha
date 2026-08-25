@@ -39,6 +39,8 @@
     </div>
 
     {{-- Anomali / kesehatan --}}
+    @include('projects.partials.readiness')
+
     @if($anomalies)
     <div class="mt-4 grid gap-2 sm:grid-cols-2">
         @foreach($anomalies as $flag)

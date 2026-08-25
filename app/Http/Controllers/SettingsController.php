@@ -53,10 +53,15 @@ class SettingsController extends Controller
             'bid_threshold_recommended' => ['required', 'numeric', 'between:1,100'],
             'bid_threshold_no_bid' => ['required', 'numeric', 'between:0,99'],
             'require_pile_test_pass' => ['nullable', 'boolean'],
+            'require_cleaning_inspection' => ['nullable', 'boolean'],
+            'require_jsa_active' => ['nullable', 'boolean'],
+            'sediment_max_mm' => ['nullable', 'decimal:0,2', 'between:0,9999'],
             'invoice_footer_note' => ['nullable', 'max:500'],
         ]);
         abort_unless($request->user()->hasPermission('finance.manage', $current->id()), 403);
         $data['require_pile_test_pass'] = $request->boolean('require_pile_test_pass') ? '1' : '0';
+        $data['require_cleaning_inspection'] = $request->boolean('require_cleaning_inspection') ? '1' : '0';
+        $data['require_jsa_active'] = $request->boolean('require_jsa_active') ? '1' : '0';
         CompanySetting::put($current->id(), array_map(fn ($v) => (string) $v, $data));
 
         return back()->with('status', 'Pengaturan perusahaan tersimpan.');

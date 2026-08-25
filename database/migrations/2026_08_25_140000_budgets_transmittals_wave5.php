@@ -42,7 +42,7 @@ return new class extends Migration
             $t->unsignedInteger('copies')->default(1);
             $t->text('note')->nullable();
             $t->timestamps();
-            $t->unique(['document_transmittal_id', 'document_version_id']);
+            $t->unique(['document_transmittal_id', 'document_version_id'], 'dti_transmittal_version_unique');
         });
     }
 

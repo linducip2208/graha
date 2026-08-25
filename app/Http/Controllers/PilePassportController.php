@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\BoredPile;
 use App\Models\PileAcceptance;
 use App\Models\StoredFile;
+use App\Models\User;
 use App\Services\AuditTrail;
 use App\Services\BoredPileGenealogyService;
 use App\Services\PileAcceptanceService;
 use App\Services\PileDocumentService;
 use App\Services\PileQrService;
+use App\Services\PileReadinessService;
 use App\Services\Storage\EvidenceStorageService;
 use App\Support\Tenancy\CurrentCompany;
 use Carbon\Carbon;
@@ -67,6 +69,9 @@ class PilePassportController extends Controller
             'qrSvg' => $this->qr->svgForPileUrl(route('piles.public', $pile->public_uuid)),
             'acceptance' => PileAcceptance::where('bored_pile_id', $pile->id)->latest()->first(),
             'gates' => app(PileAcceptanceService::class)->gateChecks($pile),
+            'readiness' => app(PileReadinessService::class)->latestChecks($pile),
+            'cleaningInspections' => $pile->cleaningInspections()->with(['inspector', 'witness'])->get(),
+            'companyUsers' => User::whereHas('companies', fn ($q) => $q->whereKey($pile->project->company_id))->orderBy('name')->get(),
         ]);
     }
 

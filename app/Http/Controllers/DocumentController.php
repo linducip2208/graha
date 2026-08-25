@@ -7,6 +7,7 @@ use App\Models\Document;
 use App\Models\DocumentTransmittal;
 use App\Models\DocumentVersion;
 use App\Models\NumberSequence;
+use App\Models\Project;
 use App\Services\AuditTrail;
 use App\Services\DocumentVersionService;
 use App\Services\NumberSequenceService;
@@ -34,7 +35,7 @@ class DocumentController extends Controller
             $query->where('workflow_status', $status);
         }
         if ($projectId = (int) $request->query('project_id')) {
-            abort_unless(\App\Models\Project::where('company_id', $companyId)->whereKey($projectId)->exists(), 404);
+            abort_unless(Project::where('company_id', $companyId)->whereKey($projectId)->exists(), 404);
             $query->where('project_id', $projectId);
         }
         $documents = $query->latest()->paginate(20)->withQueryString();
