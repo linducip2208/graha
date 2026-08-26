@@ -42,6 +42,8 @@ class CompanySetting extends Model
         'slurry_ph_min' => '',
         'slurry_ph_max' => '',
         'slurry_sand_content_max' => '',
+        'archive_after_project_closed_days' => '',
+        'delete_after_archive_days' => '',
         'concrete_max_gap_minutes' => '45',
         'survey_tolerance_m' => '0.05',
         'steel_variance_tolerance_percent' => '5',

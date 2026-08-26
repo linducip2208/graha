@@ -39,6 +39,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\SignatureController;
 use App\Http\Controllers\SignatureImageController;
 use App\Http\Controllers\StockOpnameController;
+use App\Http\Controllers\StorageController;
 use App\Http\Controllers\StoredFileController;
 use App\Http\Controllers\TaxController;
 use App\Http\Controllers\TenderController;
@@ -408,3 +409,7 @@ Route::get('/admin/experience/export', [ExperienceController::class, 'export'])-
 Route::post('/admin/experience/import', [ExperienceController::class, 'import'])->middleware(['auth', 'company']);
 Route::get('/admin/settings', [SettingsController::class, 'index'])->middleware(['auth', 'company'])->name('settings.index');
 Route::post('/admin/settings', [SettingsController::class, 'save'])->middleware(['auth', 'company', 'permission:finance.manage'])->name('settings.save');
+Route::get('/admin/storage', [StorageController::class, 'dashboard'])->middleware(['auth', 'company', 'permission:document.view'])->name('storage.dashboard');
+Route::post('/admin/storage/{file}/retention', [StorageController::class, 'retentionAction'])->middleware(['auth', 'company', 'permission:storage.manage'])->name('storage.retention');
+Route::post('/admin/storage/request-upload', [StorageController::class, 'requestUpload'])->middleware(['auth', 'company', 'permission:project.manage'])->name('storage.request-upload');
+Route::post('/admin/storage/finalize-upload', [StorageController::class, 'finalizeUpload'])->middleware(['auth', 'company', 'permission:project.manage'])->name('storage.finalize-upload');

@@ -66,6 +66,8 @@ class SettingsController extends Controller
             'slurry_sand_content_max' => ['nullable', 'numeric', 'between:0,100'],
             'tremie_log_enabled' => ['nullable', 'boolean'],
             'tremie_max_embedment_m' => ['nullable', 'decimal:0,2', 'between:0,99'],
+            'archive_after_project_closed_days' => ['nullable', 'integer', 'between:0,3650'],
+            'delete_after_archive_days' => ['nullable', 'integer', 'between:0,3650'],
             'invoice_footer_note' => ['nullable', 'max:500'],
         ]);
         abort_unless($request->user()->hasPermission('finance.manage', $current->id()), 403);
