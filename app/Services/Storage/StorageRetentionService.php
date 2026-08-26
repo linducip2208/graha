@@ -78,10 +78,10 @@ class StorageRetentionService
         throw_if(in_array($file->category, self::PROTECTED_CATEGORIES, true), ValidationException::withMessages(['category' => "Kategori {$file->category} adalah dokumen historis/legal — penghapusan fisik diblokir."]));
         DB::transaction(function () use ($file, $actor) {
             foreach ($file->variants as $variant) {
-                $this->storage->delete($variant->object_key, $variant->disk);
+                $this->storage->deleteFile($variant);
                 $variant->update(['status' => 'deleted']);
             }
-            $this->storage->delete($file->object_key, $file->disk);
+            $this->storage->deleteFile($file);
             $file->update(['status' => 'deleted']);
             $this->audit->record($file->company_id, $actor->id, 'storage.file_deleted_physically', $file);
         });

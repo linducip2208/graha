@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BoredPile;
 use App\Models\Project;
 use App\Models\StoredFile;
+use App\Services\Storage\CompanyStorageManager;
 use App\Services\Storage\DirectUploadService;
 use App\Services\Storage\StorageRetentionService;
 use App\Support\Tenancy\CurrentCompany;
@@ -17,7 +18,7 @@ use Illuminate\Http\Request;
  */
 class StorageController extends Controller
 {
-    public function dashboard(Request $request, CurrentCompany $current)
+    public function dashboard(Request $request, CurrentCompany $current, CompanyStorageManager $storageManager)
     {
         $companyId = $current->id();
         $projectId = $request->query('project');
@@ -55,6 +56,8 @@ class StorageController extends Controller
             'byDisk' => $byDisk,
             'bySubCategory' => $bySubCategory,
             'byProject' => $byProject,
+            'evidenceProfile' => $storageManager->profile($companyId, 'evidence'),
+            'documentProfile' => $storageManager->profile($companyId, 'document'),
         ]);
     }
 

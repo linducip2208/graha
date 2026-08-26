@@ -7,13 +7,13 @@ use App\Models\DocumentVersion;
 use App\Models\SignatureProvider;
 use App\Models\SignatureWebhookReceipt;
 use App\Models\User;
+use App\Services\Storage\CompanyStorageManager;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class DocumentSignatureService
 {
-    public function __construct(private DocumentVersionService $versions, private AuditTrail $audit) {}
+    public function __construct(private DocumentVersionService $versions, private AuditTrail $audit, private CompanyStorageManager $storageManager) {}
 
     public function signInternal(DocumentVersion $version, User $signer, string $position, ?string $ip = null, ?string $agent = null): DocumentSignature
     {
@@ -64,8 +64,9 @@ class DocumentSignatureService
 
     private function assertIntegrity(DocumentVersion $version): void
     {
-        throw_unless(Storage::disk($version->disk)->exists($version->path), ValidationException::withMessages(['file' => 'File tidak tersedia.']));
-        $actual = hash_file('sha256', Storage::disk($version->disk)->path($version->path));
+        $disk = $this->storageManager->forDocumentVersion($version);
+        throw_unless($disk->exists($version->path), ValidationException::withMessages(['file' => 'File tidak tersedia.']));
+        $actual = hash('sha256', (string) $disk->get($version->path));
         throw_unless(hash_equals($version->sha256, $actual), ValidationException::withMessages(['hash' => 'Integritas file gagal.']));
     }
 }

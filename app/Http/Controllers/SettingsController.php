@@ -22,6 +22,7 @@ class SettingsController extends Controller
             'canApprove' => $user->hasPermission('approval.view', $companyId),
             'canSignature' => $user->hasPermission('signature.view', $companyId),
             'canOrganization' => $user->hasPermission('organization.view', $companyId),
+            'canStorage' => $user->hasPermission('storage.manage', $companyId),
             'values' => collect(CompanySetting::DEFAULTS)->mapWithKeys(fn ($default, $key) => [$key => CompanySetting::val($companyId, $key)]),
             'taxRates' => TaxRate::where('company_id', $companyId)->count(),
             'activeTaxRates' => TaxRate::where('company_id', $companyId)->where('is_active', true)->count(),

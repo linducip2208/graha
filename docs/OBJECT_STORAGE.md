@@ -1,55 +1,35 @@
-# Object Storage — Operations Maturity
+# Object Storage Architecture
 
-Status per 2026-08-26 (ADR-078). Fondasi: ADR-048 (`StoredFile` metadata +
-`ObjectStorageService` abstraksi provider-agnostic).
+Graha memahami dua driver: **local** dan **S3-compatible**. Cloudflare R2, AWS S3, Wasabi, MinIO, Backblaze B2, DigitalOcean Spaces, dan endpoint custom hanyalah pilihan deployment/preset UI.
+
+## Resolution precedence
+
+1. Profil company aktif untuk usage Evidence atau Document.
+2. Disk legacy dari `EVIDENCE_DISK` / `DOCUMENT_DISK` (generic `OBJECT_STORAGE_DISK` menjadi default baru bila legacy variable tidak diisi).
+3. Private local disk.
+
+Disk `docs` selalu lokal di `storage/app/docs` dan tidak masuk resolution profile.
+
+Credential profil memakai encrypted cast Laravel, hidden dari serialization, dimasking pada UI, dan tidak dimasukkan ke audit/event/error. `StoredFile.storage_profile_id` bersifat nullable agar file legacy tetap memakai kolom `disk`. Snapshot locator menyimpan driver, endpoint, region, bucket, base URL, dan Path Style tanpa secret agar perubahan default tidak mengubah lokasi historis.
+
+## Connection and capabilities
+
+Connection test membuat object kecil di `.healthcheck/{company_uuid}/{uuid}.txt`, membaca dan memverifikasi isinya, menghapus object, lalu mencoba temporary URL. Cleanup selalu dicoba. Presigned PUT dan temporary URL dipilih berdasarkan capability adapter, bukan nama provider; bila tidak tersedia, server upload dan authorized streaming tetap digunakan.
+
+## Migration backlog
+
+Command `storage:migrate` dan secondary replication belum diaktifkan pada fase ini. Implementasi kelak wajib copy → checksum verify → register locator baru, tidak menghapus sumber kecuali `--delete-source` diberikan secara eksplisit.
 
 ## Storage Dashboard — DONE
 
-`GET /admin/storage` (permission `document.view`) —
-`resources/views/storage/dashboard.blade.php`.
-
-- Total objek + bytes, per kategori (photo/document/as_built/dossier/handover),
-  per status lifecycle, per disk, foto per fase (top), dan per proyek.
-- Filter per proyek via dropdown.
-- **Semua agregasi dari metadata DB** (`stored_files`) dengan group-by — tidak
-  ada bucket scan per request.
+`GET /admin/storage` (permission `document.view`) mengagregasi total object/bytes, kategori, lifecycle, disk/profile, fase foto, dan proyek hanya dari metadata `stored_files`; tidak ada bucket scan per request. Dashboard kini juga menampilkan target Evidence dan Documents aktif tanpa credential.
 
 ## Retention Policy — DONE
 
-Metadata states: `ready → archived → pending_delete → deleted`
-(kolom `archived_at`, `retention_due_at`). `StorageRetentionService`:
-
-- `archive()` / `restore()` — teraudit.
-- `markPendingDelete()` — hanya bila company mengaktifkan
-  `delete_after_archive_days`; default OFF = **tidak ada penghapusan otomatis**.
-- `physicalDelete()` — butuh permission baru **`storage.manage`**, file harus
-  berstatus pending_delete, dan kategori **as_built / dossier / handover
-  DIBLOKIR** (dokumen historis/legal tidak boleh dihapus senyap). Setiap aksi
-  masuk audit log hash-chained.
-- `archiveCandidates(project)` — daftar kandidat saat proyek closed > N hari
-  (`archive_after_project_closed_days`, default OFF). Hanya menghasilkan
-  daftar; eksekusi tetap eksplisit.
+Lifecycle existing `ready → archived → pending_delete → deleted` tetap ditangani `StorageRetentionService`. Policy delete default OFF, seluruh aksi teraudit, dan kategori as-built/dossier/handover diblokir dari physical delete. `archiveCandidates()` hanya menghasilkan kandidat; eksekusi tetap eksplisit.
 
 ## Presigned / Direct Upload — DONE
 
-`DirectUploadService::requestUpload()`:
+`DirectUploadService::requestUpload()` memilih presigned PUT bila adapter aktif memiliki capability `temporaryUploadUrl`; selain itu mengembalikan mode server. Finalize tetap idempotent memakai `upload_id`, memverifikasi ukuran object, dan mencatat SHA-256. Pemilihan ini tidak memeriksa nama provider.
 
-- Disk S3-compatible + adapter mendukung `temporaryUploadUrl` → mode
-  `presigned` (URL berbatas waktu 30 menit).
-- Selain itu → mode `server` fallback (jalur upload server existing).
-- Metadata divalidasi di awal; StoredFile dibuat berstatus `uploading` dengan
-  `upload_id` UUID dari client.
-
-## Upload Queue — DONE
-
-`POST /admin/storage/finalize-upload` {upload_id, sha256?, size?}:
-
-- **Idempotent**: finalize ulang dengan upload_id sama mengembalikan hasil yang
-  sama tanpa duplikasi (file sudah READY → langsung dikembalikan).
-- Verifikasi ukuran fisik object di disk vs yang dilaporkan client.
-- Checksum SHA-256 client diterima dan terekam pada registry.
-- Status UI queue (pending/uploading/success/failed) dipetakan dari status
-  StoredFile; retry aman karena idempotensi di atas.
-
-Catatan jujur: belum ada service-worker offline PWA penuh — antrean lokal di
-sisi browser adalah pekerjaan lanjutan bila arsitektur frontend mendukung.
+Catatan: service-worker offline PWA penuh belum tersedia dan tetap menjadi pekerjaan lanjutan bila frontend mengadopsi antrean lokal.

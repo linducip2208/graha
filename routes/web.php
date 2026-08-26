@@ -43,6 +43,7 @@ use App\Http\Controllers\SignatureController;
 use App\Http\Controllers\SignatureImageController;
 use App\Http\Controllers\StockOpnameController;
 use App\Http\Controllers\StorageController;
+use App\Http\Controllers\StorageProfileController;
 use App\Http\Controllers\StoredFileController;
 use App\Http\Controllers\TaxController;
 use App\Http\Controllers\TenderController;
@@ -423,6 +424,14 @@ Route::post('/admin/experience/preview/stop', [ExperienceController::class, 'sto
 Route::get('/admin/experience/export', [ExperienceController::class, 'export'])->middleware(['auth', 'company']);
 Route::post('/admin/experience/import', [ExperienceController::class, 'import'])->middleware(['auth', 'company']);
 Route::get('/admin/settings', [SettingsController::class, 'index'])->middleware(['auth', 'company'])->name('settings.index');
+Route::prefix('/admin/settings/storage')->middleware(['auth', 'company', 'permission:storage.manage'])->group(function () {
+    Route::get('/', [StorageProfileController::class, 'index'])->name('settings.storage');
+    Route::post('/profiles', [StorageProfileController::class, 'store'])->name('storage-profiles.store');
+    Route::put('/profiles/{profile}', [StorageProfileController::class, 'update'])->name('storage-profiles.update');
+    Route::post('/profiles/{profile}/test', [StorageProfileController::class, 'test'])->name('storage-profiles.test');
+    Route::post('/profiles/{profile}/activate', [StorageProfileController::class, 'activate'])->name('storage-profiles.activate');
+    Route::post('/profiles/{profile}/disable', [StorageProfileController::class, 'disable'])->name('storage-profiles.disable');
+});
 Route::post('/admin/settings', [SettingsController::class, 'save'])->middleware(['auth', 'company', 'permission:finance.manage'])->name('settings.save');
 Route::get('/admin/storage', [StorageController::class, 'dashboard'])->middleware(['auth', 'company', 'permission:document.view'])->name('storage.dashboard');
 Route::post('/admin/storage/{file}/retention', [StorageController::class, 'retentionAction'])->middleware(['auth', 'company', 'permission:storage.manage'])->name('storage.retention');

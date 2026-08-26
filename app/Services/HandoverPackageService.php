@@ -55,8 +55,8 @@ class HandoverPackageService
                 $dossierSha = '';
                 foreach (['as_built' => 'as-built', 'dossier' => 'dossier'] as $category => $folder) {
                     $file = StoredFile::where('bored_pile_id', $pile->id)->where('category', $category)->latest()->first();
-                    if ($file !== null && $this->storage->exists($file->object_key, $file->disk)) {
-                        $zip->addFromString("{$folder}/{$pile->pile_number}-{$folder}.pdf", $this->storage->get($file->object_key, $file->disk));
+                    if ($file !== null && $this->storage->existsFile($file)) {
+                        $zip->addFromString("{$folder}/{$pile->pile_number}-{$folder}.pdf", $this->storage->getFile($file));
                         if ($category === 'as_built') {
                             $asBuiltSha = $file->sha256;
                         } else {

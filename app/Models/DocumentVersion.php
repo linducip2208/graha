@@ -11,7 +11,7 @@ class DocumentVersion extends Model
 
     protected function casts(): array
     {
-        return ['is_signed' => 'boolean', 'locked_at' => 'datetime'];
+        return ['is_signed' => 'boolean', 'locked_at' => 'datetime', 'storage_locator' => 'array'];
     }
 
     public function document(): BelongsTo
@@ -22,6 +22,11 @@ class DocumentVersion extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function storageProfile(): BelongsTo
+    {
+        return $this->belongsTo(CompanyStorageProfile::class);
     }
 
     protected static function booted(): void

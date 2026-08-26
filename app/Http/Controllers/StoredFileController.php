@@ -28,7 +28,7 @@ class StoredFileController extends Controller
             $resolved = $variant === 'original' ? ($file->variant_type === null ? $file : $file->originalFile) : $file->variant($variant) ?? $file;
             $file = $this->authorizeAccess($resolved, $current, $request, 'file_viewed');
         }
-        if (! $this->storage->exists($file->object_key, $file->disk)) {
+        if (! $this->storage->existsFile($file)) {
             abort(404);
         }
 
@@ -38,7 +38,7 @@ class StoredFileController extends Controller
     public function download(Request $request, StoredFile $file, CurrentCompany $current): mixed
     {
         $file = $this->authorizeAccess($file, $current, $request, 'file_downloaded');
-        if (! $this->storage->exists($file->object_key, $file->disk)) {
+        if (! $this->storage->existsFile($file)) {
             abort(404);
         }
 
@@ -73,14 +73,14 @@ class StoredFileController extends Controller
         $disposition = $inline ? 'inline' : 'attachment';
         $filename = $inline ? basename($file->object_key) : $file->downloadName();
 
-        if (($url = $this->storage->temporaryUrl($file->object_key, $file->disk, options: [
+        if (($url = $this->storage->temporaryUrlFor($file, options: [
             'ResponseContentDisposition' => "{$disposition}; filename=\"{$filename}\"",
             'ResponseContentType' => $file->mime_type,
         ])) !== null) {
             return redirect()->away($url);
         }
 
-        $disk = $this->storage->disk($file->disk);
+        $disk = $this->storage->diskFor($file);
         if ($inline) {
             return response($disk->get($file->object_key), 200, [
                 'Content-Type' => $file->mime_type,

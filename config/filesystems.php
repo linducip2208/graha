@@ -82,6 +82,20 @@ return [
             'report' => false,
         ],
 
+        // Generic S3-compatible fallback. Company profiles take precedence at runtime.
+        'object-storage' => [
+            'driver' => 's3',
+            'key' => env('OBJECT_STORAGE_KEY'),
+            'secret' => env('OBJECT_STORAGE_SECRET'),
+            'region' => env('OBJECT_STORAGE_REGION', 'auto'),
+            'bucket' => env('OBJECT_STORAGE_BUCKET'),
+            'endpoint' => env('OBJECT_STORAGE_ENDPOINT'),
+            'url' => env('OBJECT_STORAGE_URL'),
+            'use_path_style_endpoint' => env('OBJECT_STORAGE_PATH_STYLE', true),
+            'throw' => false,
+            'report' => false,
+        ],
+
         /*
         | Disk S3-compatible untuk object storage privat (mis. Cloudflare R2).
         | Semua nilai dari env — tanpa kredensial di kode. Endpoint contoh:

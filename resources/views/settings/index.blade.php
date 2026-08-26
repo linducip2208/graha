@@ -55,6 +55,9 @@
 @endif
 
 <div class="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+@if($canStorage)
+<article class="card-lift rounded-2xl border bg-white p-6 dark:bg-slate-900"><h2 class="font-bold">🗄️ Storage & File</h2><p class="mt-2 text-sm text-slate-500">Profil Local atau S3-compatible per perusahaan, test koneksi, health, retensi, dan penggunaan.</p><a href="{{ route('settings.storage') }}" class="mt-4 inline-block rounded-xl bg-sky-700 px-4 py-2 text-sm font-bold text-white">Kelola storage</a></article>
+@endif
 @if($canOrganization)
 <article class="card-lift rounded-2xl border bg-white p-6">
 <h2 class="font-bold">🏢 Organisasi & Keanggotaan</h2>

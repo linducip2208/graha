@@ -7,6 +7,7 @@ use App\Models\CompanyExperience;
 use App\Models\FieldEvidence;
 use App\Models\Nonconformity;
 use App\Models\PileTest;
+use App\Services\Storage\ObjectStorageService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
@@ -20,6 +21,7 @@ class PilePdfService
 {
     public function __construct(
         private BoredPileGenealogyService $genealogy,
+        private ObjectStorageService $objectStorage,
     ) {}
 
     /** Section siap render untuk satu pile (kompatibel template pile-as-built). */
@@ -41,8 +43,8 @@ class PilePdfService
             try {
                 $stored = $ev->storedFile;
                 $candidate = $stored?->variant('preview') ?? $stored;
-                if ($candidate !== null && Storage::disk($candidate->disk)->exists($candidate->object_key)) {
-                    $ev->setAttribute('src', 'data:'.$candidate->mime_type.';base64,'.base64_encode(Storage::disk($candidate->disk)->get($candidate->object_key)));
+                if ($candidate !== null && $this->objectStorage->existsFile($candidate)) {
+                    $ev->setAttribute('src', 'data:'.$candidate->mime_type.';base64,'.base64_encode($this->objectStorage->getFile($candidate)));
 
                     return $ev;
                 }

@@ -2,7 +2,7 @@
 
 namespace App\Services\Storage;
 
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use RuntimeException;
 
 /**
@@ -20,9 +20,9 @@ class ImageProcessor
     /**
      * @return array{contents: string, mime: string, extension: string}
      */
-    public function makeVariant(string $disk, string $key, int $maxDimension): array
+    public function makeVariant(Filesystem $disk, string $key, int $maxDimension): array
     {
-        $source = Storage::disk($disk)->get($key);
+        $source = $disk->get($key);
         $image = @imagecreatefromstring($source);
         throw_unless($image !== false, RuntimeException::class, 'Gambar tidak dapat diproses.');
 

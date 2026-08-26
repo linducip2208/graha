@@ -18,6 +18,7 @@ class GenericEvidenceStorage
     public function __construct(
         private ObjectStorageService $storage,
         private FileValidationService $validator,
+        private CompanyStorageManager $storageManager,
     ) {}
 
     public function store(int $companyId, string $type, Model $subject, UploadedFile $file, User $actor): StoredFile
@@ -29,7 +30,8 @@ class GenericEvidenceStorage
             $extension = $this->validator->extensionFromName($file->getClientOriginalName()) ?: 'jpg';
             $companyUuid = DB::table('companies')->where('id', $companyId)->value('uuid') ?? 'c'.$companyId;
             $key = sprintf('companies/%s/evidence/%s/%s/%s.%s', $companyUuid, $type, $subject->getKey(), $uuid, $extension);
-            $disk = (string) config('objectstorage.evidence_disk', 'local');
+            $target = $this->storageManager->resolve($companyId, 'evidence');
+            $disk = $target['disk'];
 
             $stored = StoredFile::create([
                 'uuid' => $uuid,
@@ -37,6 +39,8 @@ class GenericEvidenceStorage
                 'category' => 'photo',
                 'sub_category' => $type,
                 'disk' => $disk,
+                'storage_profile_id' => $target['profile']?->id,
+                'storage_locator' => $target['locator'],
                 'object_key' => $key,
                 'original_name' => $file->getClientOriginalName(),
                 'extension' => $extension,
@@ -48,10 +52,10 @@ class GenericEvidenceStorage
                 'metadata' => ['subject_type' => $subject->getMorphClass(), 'subject_id' => $subject->getKey()],
             ]);
             try {
-                $this->storage->put($key, $contents, $disk);
+                $target['filesystem']->put($key, $contents);
                 app(EvidenceStorageService::class)->generateVariants($stored);
             } catch (\Throwable $e) {
-                $this->storage->delete($key, $disk);
+                $target['filesystem']->delete($key);
                 $stored->delete();
 
                 throw $e;

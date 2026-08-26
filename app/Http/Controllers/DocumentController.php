@@ -11,9 +11,9 @@ use App\Models\Project;
 use App\Services\AuditTrail;
 use App\Services\DocumentVersionService;
 use App\Services\NumberSequenceService;
+use App\Services\Storage\CompanyStorageManager;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 
 class DocumentController extends Controller
@@ -91,15 +91,23 @@ class DocumentController extends Controller
         return back()->with('status', 'Dokumen berhasil didaftarkan.');
     }
 
-    public function download(DocumentVersion $version, CurrentCompany $current)
+    public function download(DocumentVersion $version, CurrentCompany $current, CompanyStorageManager $storageManager)
     {
         abort_unless($version->document()->where('company_id', $current->id())->exists(), 404);
-        abort_unless(Storage::disk($version->disk)->exists($version->path), 404);
+        $disk = $storageManager->forDocumentVersion($version);
+        abort_unless($disk->exists($version->path), 404);
         // Nomor dokumen bisa memuat "/" dari format sekuens — header Content-Disposition
         // tidak boleh memuat slash, jadi fallback name disanitasi.
         $filename = str_replace(['/', '\\'], '-', $version->document->number.'-v'.$version->version.'.'.pathinfo($version->path, PATHINFO_EXTENSION));
 
-        return Storage::disk($version->disk)->download($version->path, $filename);
+        try {
+            if (($version->storage_locator['driver'] ?? null) === 's3') {
+                return redirect()->away($disk->temporaryUrl($version->path, now()->addMinutes(15)));
+            }
+        } catch (\Throwable) {
+        }
+
+        return $disk->download($version->path, $filename);
     }
 
     public function transmittals(CurrentCompany $current)

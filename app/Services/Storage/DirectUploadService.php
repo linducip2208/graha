@@ -22,6 +22,7 @@ class DirectUploadService
         private ObjectStorageService $storage,
         private FileValidationService $validation,
         private AuditTrail $audit,
+        private CompanyStorageManager $storageManager,
     ) {}
 
     /**
@@ -29,7 +30,8 @@ class DirectUploadService
      */
     public function requestUpload(?BoredPile $pile, int $companyId, string $category, string $filename, int $sizeBytes, User $actor): array
     {
-        $diskName = (string) config('objectstorage.evidence_disk', config('filesystems.evidence', 'local'));
+        $target = $this->storageManager->resolve($companyId, 'evidence');
+        $diskName = $target['disk'];
         $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
 
         // Validasi metadata awal — konten diverifikasi penuh saat finalize/upload.
@@ -47,6 +49,8 @@ class DirectUploadService
             'category' => in_array($category, StoredFile::CATEGORIES, true) ? $category : 'photo',
             'sub_category' => $category,
             'disk' => $diskName,
+            'storage_profile_id' => $target['profile']?->id,
+            'storage_locator' => $target['locator'],
             'object_key' => $key,
             'original_name' => $filename,
             'extension' => $extension ?: null,
@@ -62,9 +66,9 @@ class DirectUploadService
         $presigned = null;
         $expiresAt = null;
         try {
-            if ($this->storage->supportsTemporaryUrl($diskName) && method_exists($this->storage->disk($diskName), 'temporaryUploadUrl')) {
+            if (($target['profile']?->driver === 's3' || $this->storage->supportsTemporaryUrl($diskName)) && method_exists($target['filesystem'], 'temporaryUploadUrl')) {
                 $expiresAt = now()->addMinutes(30);
-                $result = $this->storage->disk($diskName)->temporaryUploadUrl($key, $expiresAt);
+                $result = $target['filesystem']->temporaryUploadUrl($key, $expiresAt);
                 $presigned = $result['url'] ?? null;
             }
         } catch (\Throwable) {
@@ -95,8 +99,8 @@ class DirectUploadService
         }
         if ($sizeBytes !== null && $sizeBytes > 0) {
             // Verifikasi ukuran fisik bila object sudah ada di disk.
-            if ($this->storage->exists($file->object_key, $file->disk)) {
-                $actual = $this->storage->size($file->object_key, $file->disk);
+            if ($this->storage->existsFile($file)) {
+                $actual = $this->storage->sizeFile($file);
                 throw_unless($actual === $sizeBytes, ValidationException::withMessages(['size' => 'Ukuran fisik tidak cocok.']));
             }
             $file->size_bytes = $sizeBytes;

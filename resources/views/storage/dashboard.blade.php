@@ -21,6 +21,11 @@
     <div class="rounded-2xl border bg-slate-50 p-5 shadow-sm {{ in_array($cat, ['as_built', 'handover']) ? 'ring-1 ring-emerald-200' : '' }}"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">{{ $label }}{{ in_array($cat, ['as_built', 'dossier', 'handover']) ? ' 🔒' : '' }}</p><p class="mt-2 text-xl font-black tabular-nums">{{ number_format((int) ($row->objects ?? 0)) }}</p><p class="text-[10px] text-slate-400">{{ number_format((float) ($row->bytes ?? 0) / 1048576, 1) }} MB</p></div>
     @endforeach
 </div>
+<div class="mt-6 grid gap-4 lg:grid-cols-2">
+@foreach(['Evidence'=>$evidenceProfile,'Documents'=>$documentProfile] as $label=>$profile)
+<div class="rounded-2xl border bg-white p-5 shadow-sm dark:bg-slate-900"><p class="text-xs font-bold uppercase tracking-wider text-slate-500">Active {{ $label }} Storage</p><h2 class="mt-2 text-lg font-black">{{ $profile?->name ?? 'Environment fallback' }}</h2><p class="mt-1 text-sm text-slate-500">{{ $profile ? ($profile->driver === 's3' ? 'S3 Compatible' : 'Local Server') : config('objectstorage.'.(strtolower($label)==='documents'?'document_disk':'evidence_disk')) }} · {{ $profile?->endpointHostname() ?? 'configured disk' }}</p>@if($profile)<p class="mt-2 text-xs">Bucket: {{ $profile->bucket ?? '-' }} · Region: {{ $profile->region ?? '-' }} · Status: <strong>{{ $profile->last_test_status ?? 'NOT TESTED' }}</strong></p>@endif</div>
+@endforeach
+</div>
 
 <div class="mt-6 grid gap-4 lg:grid-cols-3">
     <div class="rounded-2xl border bg-white p-5 shadow-sm">

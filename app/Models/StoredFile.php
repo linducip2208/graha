@@ -54,6 +54,7 @@ class StoredFile extends Model
             'latitude' => 'decimal:8',
             'longitude' => 'decimal:8',
             'size_bytes' => 'integer',
+            'storage_locator' => 'array',
         ];
     }
 
@@ -93,6 +94,11 @@ class StoredFile extends Model
     public function uploader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');
+    }
+
+    public function storageProfile(): BelongsTo
+    {
+        return $this->belongsTo(CompanyStorageProfile::class);
     }
 
     public function originalFile(): BelongsTo

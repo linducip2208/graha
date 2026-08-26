@@ -24,6 +24,7 @@ class EvidenceStorageService
         private FileValidationService $validator,
         private ImageProcessor $images,
         private AuditTrail $audit,
+        private CompanyStorageManager $storageManager,
     ) {}
 
     /**
@@ -48,7 +49,8 @@ class EvidenceStorageService
                 $uuid,
                 $extension
             );
-            $disk = (string) config('objectstorage.evidence_disk', 'local');
+            $target = $this->storageManager->resolve($pile->project->company_id, 'evidence');
+            $disk = $target['disk'];
 
             $original = StoredFile::create([
                 'uuid' => $uuid,
@@ -58,6 +60,8 @@ class EvidenceStorageService
                 'category' => 'photo',
                 'sub_category' => $category,
                 'disk' => $disk,
+                'storage_profile_id' => $target['profile']?->id,
+                'storage_locator' => $target['locator'],
                 'object_key' => $key,
                 'original_name' => $file->getClientOriginalName(),
                 'extension' => $extension,
@@ -74,10 +78,10 @@ class EvidenceStorageService
             ]);
 
             try {
-                $this->storage->put($key, $contents, $disk);
+                $target['filesystem']->put($key, $contents);
                 $this->generateVariants($original);
             } catch (\Throwable $e) {
-                $this->storage->delete($key, $disk);
+                $target['filesystem']->delete($key);
                 $original->delete();
 
                 throw $e;
@@ -96,9 +100,9 @@ class EvidenceStorageService
             return;
         }
         foreach ([['preview', ImageProcessor::PREVIEW_MAX], ['thumb', ImageProcessor::THUMB_MAX]] as [$type, $max]) {
-            $variant = $this->images->makeVariant($original->disk, $original->object_key, $max);
+            $variant = $this->images->makeVariant($this->storage->diskFor($original), $original->object_key, $max);
             $key = preg_replace('/(\.[a-z0-9]+)$/i', "-{$type}.".$variant['extension'], $original->object_key) ?? $original->object_key.".{$type}.{$variant['extension']}";
-            $this->storage->put($key, $variant['contents'], $original->disk);
+            $this->storage->diskFor($original)->put($key, $variant['contents']);
             StoredFile::create([
                 'company_id' => $original->company_id,
                 'project_id' => $original->project_id,
@@ -108,6 +112,8 @@ class EvidenceStorageService
                 'category' => $original->category,
                 'sub_category' => $original->sub_category,
                 'disk' => $original->disk,
+                'storage_profile_id' => $original->storage_profile_id,
+                'storage_locator' => $original->storage_locator,
                 'object_key' => $key,
                 'original_name' => $original->original_name,
                 'extension' => $variant['extension'],
@@ -135,9 +141,10 @@ class EvidenceStorageService
             $subCategory,
             $uuid
         );
-        $disk = (string) config('objectstorage.evidence_disk', 'local');
+        $target = $this->storageManager->resolve($pile->project->company_id, 'evidence');
+        $disk = $target['disk'];
 
-        return DB::transaction(function () use ($pile, $subCategory, $filename, $contents, $actor, $link, $sha, $uuid, $key, $disk) {
+        return DB::transaction(function () use ($pile, $subCategory, $filename, $contents, $actor, $link, $sha, $uuid, $key, $disk, $target) {
             $stored = StoredFile::create([
                 'uuid' => $uuid,
                 'company_id' => $pile->project->company_id,
@@ -146,6 +153,8 @@ class EvidenceStorageService
                 'category' => $link['category'] ?? 'as_built',
                 'sub_category' => $subCategory,
                 'disk' => $disk,
+                'storage_profile_id' => $target['profile']?->id,
+                'storage_locator' => $target['locator'],
                 'object_key' => $key,
                 'original_name' => $filename,
                 'extension' => 'pdf',
@@ -158,7 +167,7 @@ class EvidenceStorageService
                 'document_version_id' => $link['document_version_id'] ?? null,
             ]);
             try {
-                $this->storage->put($key, $contents, $disk);
+                $target['filesystem']->put($key, $contents);
             } catch (\Throwable $e) {
                 $stored->delete();
 
@@ -186,9 +195,10 @@ class EvidenceStorageService
         $sha = hash('sha256', $contents);
         $uuid = (string) Str::uuid();
         $key = sprintf('companies/%s/projects/%s/%s/%s.zip', $project->company?->uuid ?? 'c'.$project->company_id, $project->uuid, $subCategory, $uuid);
-        $disk = (string) config('objectstorage.evidence_disk', 'local');
+        $target = $this->storageManager->resolve($project->company_id, 'evidence');
+        $disk = $target['disk'];
 
-        return DB::transaction(function () use ($project, $subCategory, $filename, $contents, $actor, $link, $sha, $uuid, $key, $disk) {
+        return DB::transaction(function () use ($project, $subCategory, $filename, $contents, $actor, $link, $sha, $uuid, $key, $disk, $target) {
             $stored = StoredFile::create([
                 'uuid' => $uuid,
                 'company_id' => $project->company_id,
@@ -196,6 +206,8 @@ class EvidenceStorageService
                 'category' => $link['category'] ?? 'handover',
                 'sub_category' => $subCategory,
                 'disk' => $disk,
+                'storage_profile_id' => $target['profile']?->id,
+                'storage_locator' => $target['locator'],
                 'object_key' => $key,
                 'original_name' => $filename,
                 'extension' => 'zip',
@@ -208,7 +220,7 @@ class EvidenceStorageService
                 'document_version_id' => $link['document_version_id'] ?? null,
             ]);
             try {
-                $this->storage->put($key, $contents, $disk);
+                $target['filesystem']->put($key, $contents);
             } catch (\Throwable $e) {
                 $stored->delete();
 

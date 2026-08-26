@@ -19,13 +19,16 @@ return [
     */
 
     // Disk evidence/foto lapangan. Default mengikuti EVIDENCE_DISK lalu FILESYSTEM_DISK.
-    'evidence_disk' => env('EVIDENCE_DISK', env('FILESYSTEM_DISK', 'local')),
+    'evidence_disk' => env('EVIDENCE_DISK', env('OBJECT_STORAGE_DISK', env('FILESYSTEM_DISK', 'local'))),
 
     // Disk registry dokumen (DocumentVersionService). Default local agar perilaku existing tak berubah.
-    'document_disk' => env('DOCUMENT_DISK', 'local'),
+    'document_disk' => env('DOCUMENT_DISK', env('OBJECT_STORAGE_DISK', 'local')),
 
     // Umur temporary URL (menit) untuk disk non-local.
     'temporary_url_minutes' => (int) env('OBJECT_STORAGE_TEMP_URL_MINUTES', 15),
+
+    // Trusted-admin escape hatch for private MinIO endpoints; keep false in production.
+    'allow_private_endpoints' => (bool) env('OBJECT_STORAGE_ALLOW_PRIVATE_ENDPOINTS', false),
 
     // Batas ukuran upload (bytes) — configurable, jangan hardcode di controller.
     'max_size_image' => (int) env('OBJECT_STORAGE_MAX_IMAGE_MB', 5) * 1024 * 1024,

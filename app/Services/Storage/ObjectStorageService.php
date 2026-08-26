@@ -2,6 +2,7 @@
 
 namespace App\Services\Storage;
 
+use App\Models\StoredFile;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
@@ -15,12 +16,51 @@ use RuntimeException;
  */
 class ObjectStorageService
 {
+    public function __construct(private CompanyStorageManager $manager) {}
+
     public function disk(?string $name = null): Filesystem
     {
         $name ??= (string) config('filesystems.default', 'local');
         throw_unless(array_key_exists($name, (array) config('filesystems.disks', [])), RuntimeException::class, "Disk storage '{$name}' tidak dikenal.");
 
         return Storage::disk($name);
+    }
+
+    public function diskFor(StoredFile $file): Filesystem
+    {
+        return $this->manager->forStoredFile($file);
+    }
+
+    public function existsFile(StoredFile $file): bool
+    {
+        return $this->diskFor($file)->exists($file->object_key);
+    }
+
+    public function deleteFile(StoredFile $file): void
+    {
+        $this->diskFor($file)->delete($file->object_key);
+    }
+
+    public function getFile(StoredFile $file): string
+    {
+        return (string) $this->diskFor($file)->get($file->object_key);
+    }
+
+    public function sizeFile(StoredFile $file): int
+    {
+        return (int) $this->diskFor($file)->size($file->object_key);
+    }
+
+    public function temporaryUrlFor(StoredFile $file, ?\DateTimeInterface $expiresAt = null, array $options = []): ?string
+    {
+        if (($file->storage_locator['driver'] ?? null) !== 's3' && ! $file->storage_profile_id) {
+            return $this->temporaryUrl($file->object_key, $file->disk, $expiresAt, $options);
+        }
+        try {
+            return $this->diskFor($file)->temporaryUrl($file->object_key, $expiresAt ?? now()->addMinutes($file->storageProfile?->temporary_url_minutes ?? 15), $options);
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     public function exists(string $key, ?string $disk = null): bool

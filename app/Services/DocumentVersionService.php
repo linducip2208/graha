@@ -5,15 +5,15 @@ namespace App\Services;
 use App\Models\Document;
 use App\Models\DocumentVersion;
 use App\Models\User;
+use App\Services\Storage\CompanyStorageManager;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class DocumentVersionService
 {
-    public function __construct(private AuditTrail $audit) {}
+    public function __construct(private AuditTrail $audit, private CompanyStorageManager $storageManager) {}
 
     public function add(Document $document, UploadedFile $file, User $actor, string $reason): DocumentVersion
     {
@@ -41,19 +41,21 @@ class DocumentVersionService
         if (! in_array($mime, $allowedMimes, true) || strlen($contents) > 20 * 1024 * 1024) {
             throw ValidationException::withMessages(['file' => 'File tidak sesuai whitelist atau melebihi 20 MB.']);
         }
-        $disk ??= (string) config('objectstorage.document_disk', 'local');
-        throw_unless(array_key_exists($disk, config('filesystems.disks', [])), ValidationException::withMessages(['file' => "Disk dokumen '{$disk}' tidak dikenal."]));
+        $target = $disk === null ? $this->storageManager->resolve($document->company_id, 'document') : null;
+        $disk ??= $target['disk'];
+        $filesystem = $target['filesystem'] ?? \Storage::disk($disk);
 
-        return DB::transaction(function () use ($document, $contents, $originalName, $mime, $actor, $reason, $disk) {
+        return DB::transaction(function () use ($document, $contents, $originalName, $mime, $actor, $reason, $disk, $filesystem, $target) {
             $document = Document::lockForUpdate()->findOrFail($document->id);
             $next = ((int) $document->versions()->max('version')) + 1;
             $uuid = (string) Str::uuid();
             $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION)) ?: 'pdf';
             $path = "companies/{$document->company->uuid}/documents/{$document->id}/{$uuid}.{$extension}";
             try {
-                Storage::disk($disk)->put($path, $contents);
+                $filesystem->put($path, $contents);
                 $version = $document->versions()->create([
                     'version' => $next, 'revision' => (string) ($next - 1), 'disk' => $disk, 'path' => $path,
+                    'storage_profile_id' => ($target['profile'] ?? null)?->id, 'storage_locator' => $target['locator'] ?? null,
                     'sha256' => hash('sha256', $contents), 'size_bytes' => strlen($contents),
                     'mime_type' => $mime, 'change_reason' => $reason, 'created_by' => $actor->id,
                 ]);
@@ -62,7 +64,7 @@ class DocumentVersionService
 
                 return $version;
             } catch (\Throwable $exception) {
-                Storage::disk($disk)->delete($path);
+                $filesystem->delete($path);
 
                 throw $exception;
             }

@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use App\Services\Storage\CompanyStorageManager;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\Storage;
 
 class DocumentSignature extends Model
 {
@@ -54,9 +54,9 @@ class DocumentSignature extends Model
         if ($version !== null && hash_equals((string) $this->signed_hash, (string) $version->sha256)) {
             $checks['hash_bound'] = true;
             try {
-                $disk = Storage::disk($version->disk);
+                $disk = app(CompanyStorageManager::class)->forDocumentVersion($version);
                 $checks['file_intact'] = $disk->exists($version->path)
-                    && hash_equals((string) $version->sha256, hash_file('sha256', $disk->path($version->path)));
+                    && hash_equals((string) $version->sha256, hash('sha256', (string) $disk->get($version->path)));
             } catch (\Throwable) {
                 $checks['file_intact'] = false;
             }
