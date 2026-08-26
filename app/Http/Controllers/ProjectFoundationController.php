@@ -7,9 +7,17 @@ use App\Models\BoredPileDrillingLayer;
 use App\Models\ConcreteDelivery;
 use App\Models\Nonconformity;
 use App\Models\PileAcceptance;
+use App\Models\PileGeometryReading;
+use App\Models\PileReadinessCheck;
 use App\Models\PileTest;
+use App\Models\PileTremieLog;
 use App\Models\Project;
+use App\Models\SlurryTest;
 use App\Services\AuditTrail;
+use App\Services\FoundationForecastService;
+use App\Services\FoundationLookaheadService;
+use App\Services\FoundationProductivityService;
+use App\Services\PileCostService;
 use App\Services\PileRiskService;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Http\Request;
@@ -86,6 +94,51 @@ class ProjectFoundationController extends Controller
             $riskCounts[$risk['level']]++;
         }
 
+        // --- Advanced KPI (ADR-076/077): readiness, slurry, tremie, cost, forecast ---
+        $latestChecks = PileReadinessCheck::whereIn('bored_pile_id', $piles->pluck('id'))
+            ->whereIn('kind', [PileReadinessCheck::KIND_DRILL, PileReadinessCheck::KIND_CAST])
+            ->orderByDesc('id')->get()->unique(fn ($c) => $c->bored_pile_id.'|'.$c->kind);
+        $readyDrillIds = $latestChecks->where('kind', 'drill')->where('status', 'READY')->pluck('bored_pile_id');
+        $readyCastIds = $latestChecks->where('kind', 'cast')->where('status', 'READY_TO_CAST')->pluck('bored_pile_id');
+        $notAcceptedCount = (int) BoredPile::where('project_id', $project->id)
+            ->where('status', 'completed')
+            ->whereDoesntHave('acceptance', fn ($q) => $q->where('status', 'accepted'))->count();
+
+        $criticalSlurry = SlurryTest::whereIn('bored_pile_id', $piles->pluck('id'))
+            ->where(function ($q) {
+                $q->where('status', 'rejected')->orWhere(function ($q2) {
+                    $q2->whereIn('phase', ['before_casting'])->where('status', 'pending');
+                });
+            })->count();
+        $tremieWarnings = (int) PileTremieLog::whereIn('bored_pile_id', $piles->pluck('id'))
+            ->whereIn('flag', ['warning', 'out_of_range'])->count();
+        $geometryWarningIds = PileGeometryReading::whereIn('bored_pile_id', $piles->pluck('id'))
+            ->selectRaw('bored_pile_id, MAX(verticality_percent) as max_vert')->groupBy('bored_pile_id')
+            ->havingRaw('max_vert > 2')->pluck('bored_pile_id');
+
+        $interruptionPiles = $piles->filter(fn ($p) => collect($risks[$p->id]['reasons'])->contains('code', 'concrete_interruption'))->pluck('id');
+        $costSummary = app(PileCostService::class)->projectSummary($project);
+        $prod7 = app(FoundationProductivityService::class)->projectMetrics($project, now()->subDays(7)->startOfDay(), now());
+        $forecast = app(FoundationForecastService::class)->forecast($project);
+        $lookahead3 = app(FoundationLookaheadService::class)->build($project, 3);
+        $lookahead7 = app(FoundationLookaheadService::class)->build($project, 7);
+
+        // --- Filter klik-through dari KPI ---
+        $filter = $request->query('filter');
+        $filteredIds = match ($filter) {
+            'ready_drill' => $readyDrillIds,
+            'ready_cast' => $readyCastIds,
+            'accepted' => $piles->filter(fn ($p) => $p->acceptance?->status === 'accepted')->pluck('id'),
+            'not_accepted' => $piles->filter(fn ($p) => $p->status === 'completed' && $p->acceptance?->status !== 'accepted')->pluck('id'),
+            'critical_risk' => $piles->filter(fn ($p) => $risks[$p->id]['level'] === 'critical')->pluck('id'),
+            'slurry' => SlurryTest::whereIn('bored_pile_id', $piles->pluck('id'))->where('status', 'rejected')->distinct()->pluck('bored_pile_id'),
+            'tremie' => PileTremieLog::whereIn('bored_pile_id', $piles->pluck('id'))->whereIn('flag', ['warning', 'out_of_range'])->distinct()->pluck('bored_pile_id'),
+            'interruption' => $interruptionPiles,
+            'geometry' => $geometryWarningIds,
+            default => null,
+        };
+        $visibleRows = $filteredIds === null ? $rows : $rows->filter(fn ($row) => $filteredIds->contains($row['pile']->id))->values();
+
         // --- Peta / grid fallback ---
         $geoPiles = $piles->filter(fn ($p) => filled($p->latitude) && filled($p->longitude));
         $bounds = $this->geoBounds($geoPiles);
@@ -126,7 +179,24 @@ class ProjectFoundationController extends Controller
                 'rigs_total' => $rigsUsed,
                 'avg_cycle_hours' => $avgCycleHours,
             ],
-            'rows' => $rows,
+            'advanced' => [
+                'ready_drill' => $readyDrillIds->count(),
+                'ready_cast' => $readyCastIds->count(),
+                'not_accepted' => $notAcceptedCount,
+                'critical_slurry' => $criticalSlurry,
+                'tremie_warnings' => $tremieWarnings,
+                'interruptions' => $interruptionPiles->count(),
+                'geometry_warnings' => $geometryWarningIds->count(),
+                'cost_total' => $costSummary['total_cost'],
+                'cost_rework' => $costSummary['rework_cost'],
+                'prod7_meters_per_day' => $prod7['meters_per_day'],
+                'prod7_piles_completed' => $prod7['piles_completed'],
+                'forecast' => $forecast,
+            ],
+            'lookahead3' => $lookahead3,
+            'lookahead7' => $lookahead7,
+            'filter' => $filter,
+            'rows' => $visibleRows,
             'riskCounts' => $riskCounts,
             'mapMode' => $mapMode,
             'geoPoints' => $geoPoints,

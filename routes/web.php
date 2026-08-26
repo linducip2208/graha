@@ -157,6 +157,7 @@ Route::middleware(['auth', 'company', 'permission:project.view'])->prefix('admin
     Route::get('/bored-piles/{pile}/passport', [PilePassportController::class, 'show'])->name('piles.passport');
     Route::post('/bored-piles/{pile}/readiness-check', [PileReadinessController::class, 'check'])->middleware('permission:project.manage')->name('piles.readiness.check');
     Route::post('/bored-piles/{pile}/attest', [PileReadinessController::class, 'attest'])->middleware('permission:project.manage')->name('piles.attest');
+    Route::post('/bored-piles/{pile}/planned-date', [PileReadinessController::class, 'planDate'])->middleware('permission:project.manage')->name('piles.planned-date.update');
     Route::post('/bored-piles/{pile}/cleaning-inspections', [PileReadinessController::class, 'storeCleaning'])->middleware('permission:project.manage')->name('piles.cleaning.store');
     Route::post('/cleaning-inspections/{inspection}/decide', [PileReadinessController::class, 'decideCleaning'])->middleware('permission:qms.verify')->name('piles.cleaning.decide');
     Route::post('/bored-piles/{pile}/photos', [PilePassportController::class, 'uploadPhoto'])->middleware('permission:project.manage')->name('piles.photos.store');

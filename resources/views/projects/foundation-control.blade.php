@@ -33,6 +33,49 @@
     <div class="card-lift rounded-2xl border bg-red-50 p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-red-700">NCR Terbuka (proyek)</p><p class="mt-2 text-2xl font-black tabular-nums text-red-800">{{ $openNcrCount }}</p></div>
 </div>
 
+{{-- Advanced KPI (ADR-076/077): klik KPI → filter tabel pile --}}
+<h2 class="mt-8 font-black">Advanced Control Tower</h2>
+<div class="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+    <a href="{{ route('projects.foundation-control', ['project' => $project, 'filter' => 'ready_drill']) }}" class="card-lift rounded-2xl border bg-emerald-50 p-5 shadow-sm {{ $filter === 'ready_drill' ? 'ring-2 ring-emerald-500' : '' }}"><p class="text-xs font-bold uppercase tracking-wide text-emerald-700">Ready to Drill</p><p class="mt-2 text-2xl font-black tabular-nums text-emerald-800">{{ $advanced['ready_drill'] }}</p></a>
+    <a href="{{ route('projects.foundation-control', ['project' => $project, 'filter' => 'ready_cast']) }}" class="card-lift rounded-2xl border bg-teal-50 p-5 shadow-sm {{ $filter === 'ready_cast' ? 'ring-2 ring-teal-500' : '' }}"><p class="text-xs font-bold uppercase tracking-wide text-teal-700">Ready to Cast</p><p class="mt-2 text-2xl font-black tabular-nums text-teal-800">{{ $advanced['ready_cast'] }}</p></a>
+    <a href="{{ route('projects.foundation-control', ['project' => $project, 'filter' => 'accepted']) }}" class="rounded-2xl border bg-white p-5 shadow-sm {{ $filter === 'accepted' ? 'ring-2 ring-indigo-500' : '' }}"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">Pile Accepted</p><p class="mt-2 text-2xl font-black tabular-nums">{{ $acceptedCount }}</p></a>
+    <a href="{{ route('projects.foundation-control', ['project' => $project, 'filter' => 'not_accepted']) }}" class="card-lift rounded-2xl border bg-amber-50 p-5 shadow-sm {{ $filter === 'not_accepted' ? 'ring-2 ring-amber-500' : '' }}"><p class="text-xs font-bold uppercase tracking-wide text-amber-700">Belum Diterima</p><p class="mt-2 text-2xl font-black tabular-nums text-amber-800">{{ $advanced['not_accepted'] }}</p></a>
+    <a href="{{ route('projects.foundation-control', ['project' => $project, 'filter' => 'slurry']) }}" class="card-lift rounded-2xl border bg-cyan-50 p-5 shadow-sm {{ $filter === 'slurry' ? 'ring-2 ring-cyan-500' : '' }}"><p class="text-xs font-bold uppercase tracking-wide text-cyan-700">Critical Slurry</p><p class="mt-2 text-2xl font-black tabular-nums text-cyan-800">{{ $advanced['critical_slurry'] }}</p></a>
+    <a href="{{ route('projects.foundation-control', ['project' => $project, 'filter' => 'tremie']) }}" class="card-lift rounded-2xl border bg-orange-50 p-5 shadow-sm {{ $filter === 'tremie' ? 'ring-2 ring-orange-500' : '' }}"><p class="text-xs font-bold uppercase tracking-wide text-orange-700">Tremie Warning</p><p class="mt-2 text-2xl font-black tabular-nums text-orange-800">{{ $advanced['tremie_warnings'] }}</p></a>
+    <a href="{{ route('projects.foundation-control', ['project' => $project, 'filter' => 'interruption']) }}" class="card-lift rounded-2xl border bg-red-50 p-5 shadow-sm {{ $filter === 'interruption' ? 'ring-2 ring-red-400' : '' }}"><p class="text-xs font-bold uppercase tracking-wide text-red-700">Concrete Interruption</p><p class="mt-2 text-2xl font-black tabular-nums text-red-800">{{ $advanced['interruptions'] }}</p></a>
+    <a href="{{ route('projects.foundation-control', ['project' => $project, 'filter' => 'geometry']) }}" class="card-lift rounded-2xl border bg-violet-50 p-5 shadow-sm {{ $filter === 'geometry' ? 'ring-2 ring-violet-500' : '' }}"><p class="text-xs font-bold uppercase tracking-wide text-violet-700">Geometry Warning</p><p class="mt-2 text-2xl font-black tabular-nums text-violet-800">{{ $advanced['geometry_warnings'] }}</p></a>
+    <div class="rounded-2xl border bg-slate-900 p-5 text-white shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-300">Cost Total (aktual)</p><p class="mt-2 text-xl font-black tabular-nums">Rp {{ number_format((float) $advanced['cost_total'], 0) }}</p></div>
+    <div class="rounded-2xl border bg-red-900/80 p-5 text-white shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-red-200">Rework Cost</p><p class="mt-2 text-xl font-black tabular-nums">Rp {{ number_format((float) $advanced['cost_rework'], 0) }}</p></div>
+    <div class="rounded-2xl border bg-white p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-slate-500">Produktivitas 7 Hari</p><p class="mt-2 text-xl font-black tabular-nums">{{ $advanced['prod7_meters_per_day'] ?? '-' }} m/hari</p><p class="text-[10px] text-slate-400">{{ $advanced['prod7_piles_completed'] }} pile selesai</p></div>
+    <div class="card-lift rounded-2xl border bg-indigo-50 p-5 shadow-sm"><p class="text-xs font-bold uppercase tracking-wide text-indigo-700">Forecast Finish</p><p class="mt-2 text-lg font-black tabular-nums text-indigo-900">{{ $advanced['forecast']['forecast_completion_date'] ?? 'Data kurang' }}</p><p class="text-[10px] uppercase text-indigo-400">{{ str($advanced['forecast']['method'])->replace('_', ' ') }} · confidence {{ $advanced['forecast']['confidence'] }}</p></div>
+</div>
+
+{{-- Lookahead 3/7 hari --}}
+<h2 class="mt-8 font-black">Lookahead 3 / 7 Hari</h2>
+<p class="text-xs text-slate-400">Deterministik dari status pile + planned date + snapshot readiness terakhir — tanpa penjadwalan otomatis.</p>
+<div class="mt-2 grid gap-4 lg:grid-cols-2">
+    @foreach(['lookahead3' => 3, 'lookahead7' => 7] as $laKey => $laDays)
+    <div class="rounded-2xl border bg-white p-4 shadow-sm">
+        <h3 class="text-sm font-bold">Window {{ $laDays }} Hari</h3>
+        <table class="mt-2 w-full text-xs">
+        <thead><tr class="border-b uppercase tracking-wider"><th class="py-1.5 text-left">Pile</th><th class="text-left">Zona</th><th class="text-left">Rig</th><th class="text-left">Readiness</th><th class="text-right">Blocker</th></tr></thead>
+        <tbody>@forelse(${$laKey} as $row)
+            <tr class="border-b">
+                <td class="py-1.5 font-bold">{{ $row['pile']->pile_number }}@if($row['planned_date'])<span class="block text-[10px] font-normal text-slate-400">{{ $row['planned_date']->format('d/m') }}</span>@endif</td>
+                <td>{{ $row['zone'] ?? '-' }}</td><td>{{ $row['rig'] ?? '-' }}</td>
+                <td><span class="rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase {{ ['READY' => 'bg-emerald-100 text-emerald-800', 'NOT_READY' => 'bg-red-100 text-red-700'][$row['readiness_status']] ?? 'bg-slate-100 text-slate-600' }}">{{ str($row['readiness_status'])->replace('_', ' ') }}</span></td>
+                <td class="text-right font-mono">{{ $row['blockers'] }}{{ $row['active_constraints'] > 0 ? ' · ⚠'.$row['active_constraints'] : '' }}</td>
+            </tr>
+        @empty<tr><td colspan="5" class="py-3 text-center text-slate-400">Tidak ada pile terencana.</td></tr>@endforelse</tbody>
+        </table>
+    </div>
+    @endforeach
+</div>
+
+@if($filter)
+<p class="mt-6 inline-block rounded-xl bg-indigo-50 px-3 py-1.5 text-xs font-bold text-indigo-700">Filter aktif: {{ str($filter)->replace('_', ' ') }} · {{ $rows->count() }} pile <a href="{{ route('projects.foundation-control', $project) }}" class="ml-2 underline">hapus filter</a></p>
+@endif
+
 {{-- Risiko --}}
 <h2 class="mt-8 font-black">Risk Radar</h2>
 <p class="text-xs text-slate-400">Deterministik dari data nyata — tanpa AI. WATCH ≥ 15 poin, CRITICAL bila ada temuan kritis atau skor ≥ 60.</p>

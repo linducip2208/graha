@@ -45,6 +45,17 @@ class PileReadinessController extends Controller
         return back()->with('status', 'Attestasi terekam dan diaudit.');
     }
 
+    /** Rencana manual: set/tanggal rencana pile untuk window lookahead. */
+    public function planDate(Request $request, BoredPile $pile, CurrentCompany $current)
+    {
+        $this->authorizePile($request, $pile, $current);
+        $data = $request->validate(['planned_date' => ['nullable', 'date', 'after_or_equal:today']]);
+        $pile->update(['planned_date' => filled($data['planned_date'] ?? null) ? $data['planned_date'] : null]);
+        $this->audit->record($pile->project->company_id, $request->user()->id, 'pile_planned_date_updated', $pile);
+
+        return back()->with('status', 'Tanggal rencana pile diperbarui — lookahead 3/7 hari ikut menyesuaikan.');
+    }
+
     public function storeCleaning(Request $request, BoredPile $pile, CurrentCompany $current)
     {
         $this->authorizePile($request, $pile, $current);
