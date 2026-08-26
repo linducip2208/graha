@@ -64,7 +64,7 @@ Route::get('/docs/{category}/{slug}', [DocsController::class, 'article'])->name(
 Route::get('/piles/{publicUuid}', [PilePassportController::class, 'publicEntry'])->name('piles.public');
 Route::get('/verify/{token}', [SignatureController::class, 'verify'])->name('signatures.verify');
 // ===== User Documentation Center (ADR-085): menggantikan docs statis lama =====
-Route::get('/docs', [DocsController::class, 'index'])->name('docs.index');
+// SATU registrasi /docs saja (docs.index) — duplikat menyebabkan ambiguitas.
 Route::view('/login', 'auth.login')->middleware('guest')->name('login');
 Route::post('/login', function (Request $r) {
     $c = $r->validate(['email' => ['required', 'email'], 'password' => ['required']]);

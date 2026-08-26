@@ -16,8 +16,18 @@ class DocsController extends Controller
 
     public function index()
     {
+        $articles = $this->registry->all();
+
+        // Grouping di controller (P6-6): view tidak memanggil service berulang.
+        $grouped = collect(DocsRegistry::CATEGORIES)
+            ->map(fn ($label, $key) => ['key' => $key, 'label' => $label, 'items' => $articles->where('category', $key)->values()])
+            ->filter(fn ($group) => $group['items']->isNotEmpty())
+            ->values();
+
         return view('docs.index', [
-            'articles' => $this->registry->all(),
+            'total' => $articles->count(),
+            'quickStart' => $articles->firstWhere('slug', 'quick-start'),
+            'grouped' => $grouped,
             'categories' => DocsRegistry::CATEGORIES,
         ]);
     }

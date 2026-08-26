@@ -6,6 +6,7 @@ use App\Models\BoredPile;
 use App\Models\Project;
 use App\Services\Storage\ObjectStorageService;
 use Illuminate\Support\Collection;
+use Symfony\Component\Finder\Finder;
 
 /**
  * Registry dokumentasi file-based (P5): artikel markdown di
@@ -44,15 +45,39 @@ class DocsRegistry
         }
         $disk = $this->storage->disk(config('docs.disk', 'local'));
         $articles = collect();
-        // Baca file markdown dari resource path (filesystem app langsung).
-        foreach (glob(resource_path('docs/articles/*/*.md')) ?: [] as $file) {
-            $category = basename(dirname($file));
-            $slug = basename($file, '.md');
+
+        // Finder cross-platform (Windows/Linux) — glob bisa tidak konsisten.
+        $finder = Finder::create()
+            ->files()->name('*.md')->in(resource_path('docs/articles'))->sortByName();
+
+        foreach ($finder as $file) {
+            $category = $file->getRelativePath(); // '' = root (quick-start)
+            $slug = $file->getBasename('.md');
+            $raw = $file->getContents();
+            [$meta, $body] = $this->parseFrontMatter($raw);
+
+            if ($category === '') {
+                // Artikel khusus root: quick-start.
+                $articles->push([
+                    'slug' => $meta['slug'] ?? $slug,
+                    'category' => '_special',
+                    'category_label' => 'Panduan Cepat',
+                    'title' => $meta['title'] ?? 'Quick Start',
+                    'description' => $meta['description'] ?? '',
+                    'order' => -1,
+                    'role_tags' => [], 'permission_tags' => [],
+                    'feature_route' => null, 'visibility' => 'public',
+                    'keywords' => [], 'related' => [],
+                    'updated_at' => date('Y-m-d H:i', $file->getMTime()),
+                    'body' => trim($body), 'path' => $file->getPathname(),
+                ]);
+
+                continue;
+            }
+
             if (! isset(self::CATEGORIES[$category])) {
                 continue;
             }
-            $raw = (string) file_get_contents($file);
-            [$meta, $body] = $this->parseFrontMatter($raw);
             $articles->push([
                 'slug' => $slug,
                 'category' => $category,
@@ -68,27 +93,9 @@ class DocsRegistry
                 'visibility' => in_array($meta['visibility'] ?? 'authenticated', ['public', 'authenticated', 'admin'], true) ? ($meta['visibility'] ?? 'authenticated') : 'authenticated',
                 'keywords' => $this->csv($meta['keywords'] ?? ''),
                 'related' => $this->csv($meta['related'] ?? ''),
-                'updated_at' => date('Y-m-d H:i', (int) filemtime($file)),
+                'updated_at' => date('Y-m-d H:i', $file->getMTime()),
                 'body' => trim($body),
-                'path' => $file,
-            ]);
-        }
-        // Artikel khusus quick-start di root.
-        $quick = resource_path('docs/articles/quick-start.md');
-        if (file_exists($quick)) {
-            [$meta, $body] = $this->parseFrontMatter((string) file_get_contents($quick));
-            $articles->push([
-                'slug' => $meta['slug'] ?? 'quick-start',
-                'category' => '_special',
-                'category_label' => 'Panduan Cepat',
-                'title' => $meta['title'] ?? 'Quick Start',
-                'description' => $meta['description'] ?? '',
-                'order' => -1,
-                'role_tags' => [], 'permission_tags' => [],
-                'feature_route' => null, 'visibility' => 'public',
-                'keywords' => [], 'related' => [],
-                'updated_at' => date('Y-m-d H:i', (int) filemtime($quick)),
-                'body' => trim($body), 'path' => $quick,
+                'path' => $file->getPathname(),
             ]);
         }
 

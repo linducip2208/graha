@@ -1,6 +1,7 @@
 <div class="space-y-1">
+@php($allArticles = app(\App\Support\Docs\DocsRegistry::class)->all())
 @foreach(\App\Support\Docs\DocsRegistry::CATEGORIES as $key => $label)
-@php($items = app(\App\Support\Docs\DocsRegistry::class)->byCategory($key))
+@php($items = $allArticles->where('category', $key)->values())
 @if($items->isNotEmpty())
 <a href="{{ route('docs.category', $key) }}" class="block rounded-lg px-3 py-1.5 font-bold {{ request()->routeIs('docs.category') && request()->route('category') === $key ? 'bg-[var(--brand-primary)] text-white' : 'hover:bg-[var(--surface-muted)]' }}">{{ $label }}</a>
 @if(request()->routeIs('docs.article') && request()->route('category') === $key)
