@@ -15,7 +15,7 @@ Local gate run on 27 August 2026:
 - `migrate --pretend` and MySQL migration execution: PASS; local migrations are up to date. An overlong MySQL index name found during rehearsal was corrected before release.
 - Local `backup:database` and `backup:verify`: PASS with private gzip and SHA-256 verification.
 - Scheduler event execution: PASS; heartbeat is current on the local environment.
-- `production:check`: FAIL with four blockers, including a known demo password. The local environment is not a production candidate.
+- `production:check`: FAIL with environment blockers, including known demo accounts. The local environment is not a production candidate.
 - `accounting:verify`, `inventory:verify`, and `foundation:verify`: PASS on the local dataset.
 - Production-gate feature tests: 3 tests / 7 assertions PASS.
 
@@ -53,7 +53,7 @@ Supervisor/cron templates and runbooks exist. Actual worker, cron, HTTPS/DNS, ma
 ## 14. Open blockers
 
 1. Local environment is `local`, uses HTTP, and has demo seeding enabled.
-2. A local user account still uses the known demo password; production bootstrap now rejects missing/weak explicit credentials.
+2. Local users still include the known demo account namespace; production bootstrap now rejects missing/weak explicit credentials.
 3. Mail test has not run and no active company storage profile is configured locally.
 4. DR staging rehearsal has not been performed.
 5. Critical UAT scenarios are not signed off.

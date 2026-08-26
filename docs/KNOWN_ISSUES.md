@@ -8,7 +8,7 @@
 | PR-B04 | P1 | OPEN | Migration rehearsal dengan salinan data perusahaan yang realistis belum dilakukan. | Jalankan staging clone, `migrate --pretend`, migration, verifier, dan reconciliation. |
 | PR-B05 | P1 | OPEN | Baseline kinerja 100+ project/10.000+ pile/10.000+ dokumen belum direkam. | Load test staging dan simpan percentile/query evidence. |
 | PR-B06 | P1 | OPEN | Opening balance, AR/AP, inventory, fixed asset, WIP, cash/bank belum direkonsiliasi untuk perusahaan go-live. | Memerlukan sign-off Finance/Accounting perusahaan. |
-| PR-B07 | P0 | OPEN | Database lokal yang diaudit masih memiliki akun dengan password demo yang dikenal. | Jangan membawa akun/data demo ke production; rotasi credential dan pastikan `production:check` PASS. |
+| PR-B07 | P0 | OPEN | Database lokal yang diaudit masih memiliki akun pada namespace demo yang dikenal. | Jangan membawa akun/data demo ke production; buat admin produksi eksplisit dan pastikan `production:check` PASS. |
 | PR-L01 | P2 | BLOCKED | Vendor-specific caliper import belum tersedia. | Generic CSV tetap tersedia; menunggu spesifikasi vendor nyata. |
 | PR-L02 | P2 | BLOCKED | Unrealized FX revaluation belum tersedia. | Realized FX didukung; menunggu keputusan kebijakan accounting. |
 | PR-L03 | P2 | PARTIAL | Offline field hanya draft/retry, bukan full offline-first. | Jangan menjanjikan semua workflow berjalan offline. |
