@@ -30,7 +30,18 @@ class DatabaseSeeder extends Seeder
         if ($this->shouldSeedDemo()) {
             $this->command?->info('SEED_DEMO_DATA aktif — menjalankan demo dataset...');
             $this->call(DemoDataSeeder::class);
+
+            return;
         }
+
+        // Pesan eksplisit agar tidak terlihat seperti "demo lupa diinstall".
+        if (config('app.env') === 'production') {
+            $this->command?->warn('Demo dataset DILEWATI: environment production tidak pernah otomatis di-seed data demo (ADR-079).');
+        } else {
+            $this->command?->warn('Demo dataset DILEWATI: set SEED_DEMO_DATA=true di .env untuk mengaktifkannya.');
+        }
+        $this->command?->line('Install demo sekarang:  php artisan db:seed --class=DemoDataSeeder');
+        $this->command?->line('Reset penuh + demo:     php artisan demo:reset');
     }
 
     private function seedBaseline(): void
