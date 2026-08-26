@@ -9,11 +9,14 @@ use App\Http\Controllers\CasingController;
 use App\Http\Controllers\ContractAdminController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DocsAssetController;
+use App\Http\Controllers\DocsController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\ExperienceController;
 use App\Http\Controllers\FieldOpsController;
 use App\Http\Controllers\FinanceController;
 use App\Http\Controllers\FixedAssetController;
+use App\Http\Controllers\FoundationGroupController;
 use App\Http\Controllers\FuelTankController;
 use App\Http\Controllers\GlobalSearchController;
 use App\Http\Controllers\HseController;
@@ -51,9 +54,17 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
+// ===== User Documentation Center (ADR-085) =====
+Route::get('/docs', [DocsController::class, 'index'])->name('docs.index');
+Route::get('/docs/search', [DocsController::class, 'search'])->name('docs.search');
+Route::get('/docs/quick-start', [DocsController::class, 'quickStart'])->name('docs.quick-start');
+Route::get('/docs/assets/{path}', [DocsAssetController::class, 'show'])->where('path', '.*')->name('docs.assets');
+Route::get('/docs/{category}', [DocsController::class, 'category'])->name('docs.category');
+Route::get('/docs/{category}/{slug}', [DocsController::class, 'article'])->name('docs.article');
 Route::get('/piles/{publicUuid}', [PilePassportController::class, 'publicEntry'])->name('piles.public');
 Route::get('/verify/{token}', [SignatureController::class, 'verify'])->name('signatures.verify');
-Route::view('/docs', 'docs')->name('docs');
+// ===== User Documentation Center (ADR-085): menggantikan docs statis lama =====
+Route::get('/docs', [DocsController::class, 'index'])->name('docs.index');
 Route::view('/login', 'auth.login')->middleware('guest')->name('login');
 Route::post('/login', function (Request $r) {
     $c = $r->validate(['email' => ['required', 'email'], 'password' => ['required']]);
@@ -177,6 +188,10 @@ Route::middleware(['auth', 'company', 'permission:project.view'])->prefix('admin
     Route::post('/bored-piles/{pile}/transition', [ProjectController::class, 'transition'])->middleware('permission:project.manage');
     Route::post('/bored-piles/{pile}/concrete', [ProjectController::class, 'concrete'])->middleware('permission:project.manage');
     Route::post('/projects/{project}/constraints', [ProjectController::class, 'storeConstraint'])->middleware('permission:project.manage');
+    Route::post('/projects/{project}/foundation-groups', [FoundationGroupController::class, 'store'])->middleware('permission:project.manage')->name('projects.groups.store');
+    Route::post('/foundation-groups/{group}/piles', [FoundationGroupController::class, 'attach'])->middleware('permission:project.manage')->name('projects.groups.attach');
+    Route::post('/foundation-groups/{group}/piles/{pile}/detach', [FoundationGroupController::class, 'detach'])->middleware('permission:project.manage')->name('projects.groups.detach');
+    Route::post('/foundation-groups/{group}/delete', [FoundationGroupController::class, 'destroy'])->middleware('permission:project.manage')->name('projects.groups.delete');
     Route::post('/projects/{project}/handover-package', [ProjectHandoverController::class, 'build'])->name('projects.handover.build');
     Route::post('/constraints/{constraint}/status', [ProjectController::class, 'updateConstraintStatus'])->middleware('permission:project.manage');
     Route::post('/projects/{project}/wbs', [ProjectController::class, 'storeWbs'])->middleware('permission:project.manage');

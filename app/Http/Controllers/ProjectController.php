@@ -12,6 +12,7 @@ use App\Models\ContractChange;
 use App\Models\Customer;
 use App\Models\Document;
 use App\Models\FieldEvidence;
+use App\Models\FoundationGroup;
 use App\Models\HseIncident;
 use App\Models\Item;
 use App\Models\MaterialRequest;
@@ -26,6 +27,7 @@ use App\Models\PurchaseOrder;
 use App\Models\Rfq;
 use App\Models\Vendor;
 use App\Services\BoredPileService;
+use App\Services\FoundationGroupService;
 use App\Services\PlanningSupportService;
 use App\Services\ProjectCostingService;
 use App\Services\ProjectHealthService;
@@ -222,6 +224,9 @@ class ProjectController extends Controller
 
         if ($tab === 'piles') {
             $data['zones'] = $project->zones()->orderBy('code')->get();
+            $data['groups'] = FoundationGroup::where('project_id', $project->id)
+                ->with(['piles.acceptance'])->orderBy('name')->get();
+            $data['groupReadiness'] = app(FoundationGroupService::class)->readinessForProject($project->id);
         }
 
         if ($tab === 'documents' && $can('document.view')) {

@@ -132,10 +132,76 @@
 </div>
 <div class="mt-4 overflow-x-auto rounded-2xl border bg-white">
 <table class="w-full text-sm table-sticky"><thead><tr><th>Pile</th><th>Zona</th><th>Diameter</th><th>Depth</th><th>Beton</th><th>Status</th><th>Genealogi</th></tr></thead><tbody>@forelse($piles as $pile)
-<tr><td class="font-mono font-bold">{{ $pile->pile_number }}</td><td>{{ $pile->zone?->code }}</td><td>{{ $pile->diameter_mm }} mm</td><td>{{ $pile->actual_depth_m ?? $pile->planned_depth_m }} m</td><td>{{ $pile->actual_concrete_m3 ?? '-' }} m³</td><td>{{ str_replace('_', ' ', strtoupper($pile->status)) }}</td><td><a href="{{ route('piles.genealogy', $pile) }}" class="font-bold text-[var(--brand-primary)] hover:underline">Genealogi</a> · <a href="{{ route('piles.as-built', $pile) }}" class="text-slate-500 hover:underline">PDF</a></td></tr>
+<tr><td class="font-mono font-bold">{{ $pile->pile_number }}</td><td>{{ $pile->zone?->code }}</td><td>{{ $pile->diameter_mm }} mm</td><td>{{ $pile->actual_depth_m ?? $pile->planned_depth_m }} m</td><td>{{ $pile->actual_concrete_m3 ?? '-' }} mA3</td><td>{{ str_replace('_', ' ', strtoupper($pile->status)) }}</td><td><a href="{{ route('piles.genealogy', $pile) }}" class="font-bold text-[var(--brand-primary)] hover:underline">Genealogi</a> A� <a href="{{ route('piles.as-built', $pile) }}" class="text-slate-500 hover:underline">PDF</a></td></tr>
 @empty<tr><td colspan="7" class="p-8 text-center text-slate-500">Belum ada titik bored pile pada proyek ini.</td></tr>@endforelse
 </tbody></table>
 </div>
+
+{{-- P11: Grup pondasi / pile cap readiness --}}
+<h2 class="mt-8 text-lg font-black">Grup Pondasi / Pile Cap</h2>
+<p class="text-xs text-slate-400">Readiness grup = semua anggota complete + accepted + tanpa NCR kritis terbuka + uji tuntas + survey lengkap. Tanpa structural design check.</p>
+<div class="mt-3 space-y-4">
+@forelse($groups as $group)
+@php($r = $groupReadiness[$group->id] ?? null)
+<article class="rounded-2xl border bg-white p-5 shadow-sm">
+<div class="flex flex-wrap items-center justify-between gap-2">
+<h3 class="font-black">{{ $group->name }} <span class="ml-1 rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-600">{{ str($group->type)->replace('_', ' ') }}</span></h3>
+@if($r)
+<span class="rounded-lg px-3 py-1 text-xs font-black uppercase {{ $r['status'] === 'READY' ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white' }}">{{ $r['status'] }}</span>
+@endif
+</div>
+@if($group->notes)<p class="mt-1 text-xs text-slate-500">{{ $group->notes }}</p>@endif
+@if($r)
+<ul class="mt-2 grid gap-x-6 gap-y-1 text-[11px] sm:grid-cols-2 lg:grid-cols-3">
+@foreach($r['checks'] as $checkKey => $ok)
+<li class="{{ $ok ? 'text-emerald-700' : 'text-red-700' }}">{{ $ok ? 'A"' : 'A—' }} {{ str($checkKey)->replace('_', ' ')->title() }}</li>
+@endforeach
+</ul>
+@if(count($r['exceptions']) > 0)
+<p class="mt-2 rounded-xl border border-amber-300 bg-amber-50 p-2 text-xs text-amber-800"><strong>Exception:</strong> {{ implode(' ', $r['exceptions']) }}</p>
+@endif
+@endif
+<table class="mt-3 w-full text-xs table-sticky"><thead><tr class="uppercase text-slate-400"><th class="text-left">Pile</th><th class="text-left">Status</th><th class="text-left">Acceptance</th><th class="text-left">Catatan</th><th></th></tr></thead><tbody>
+@foreach($r['piles'] ?? [] as $row)
+<tr class="border-t">
+<td class="py-1.5 font-bold">{{ $row['pile']->pile_number }}</td>
+<td>{{ str_replace('_',' ',$row['pile']->status) }}</td>
+<td>{{ str_replace('_',' ',$row['pile']->acceptance?->status ?? '-') }}</td>
+<td class="text-red-600">{{ implode('; ', $row['issues']) ?: '-' }}</td>
+<td class="text-right">@can('project.manage')
+<form method="post" action="{{ route('projects.groups.detach', ['group' => $group, 'pile' => $row['pile']]) }}" class="inline">@csrf<button class="text-xs font-bold text-slate-400 hover:text-red-600" data-confirm="Keluarkan pile dari grup?">Keluar</button></form>
+@endcan</td>
+</tr>
+@endforeach
+</tbody></table>
+@can('project.manage')
+<form method="post" action="{{ route('projects.groups.attach', $group) }}" class="mt-2 flex flex-wrap items-center gap-2 no-print">@csrf
+<select name="bored_pile_id" required class="min-h-[38px] rounded-xl border-stone-300 text-sm">
+<option value="">+ Tambah pile anggota…</option>
+@foreach($piles as $pile)
+<option value="{{ $pile->id }}">{{ $pile->pile_number }}</option>
+@endforeach
+</select>
+<button class="min-h-[38px] rounded-xl border px-3 text-xs font-bold hover:bg-slate-50">Tambah</button>
+</form>
+<form method="post" action="{{ route('projects.groups.delete', $group) }}" class="inline no-print" data-confirm="Hapus grup ini? Pile tidak terpengaruh.">@csrf<button class="text-xs font-bold text-red-500 hover:underline">Hapus grup</button></form>
+@endcan
+</article>
+@empty
+<p class="rounded-xl border bg-white p-4 text-sm text-slate-500">Belum ada grup pondasi.</p>
+@endforelse
+</div>
+@can('project.manage')
+<details class="mt-3 rounded-xl border p-4 no-print">
+<summary class="cursor-pointer text-sm font-bold">+ Buat Grup Baru</summary>
+<form method="post" action="{{ route('projects.groups.store', $project) }}" class="mt-3 grid gap-3 sm:grid-cols-4">@csrf
+<label class="text-xs font-bold uppercase text-slate-500">Nama<input name="name" required maxlength="120" placeholder="PC-Z1-01" class="mt-1 w-full rounded-xl border-stone-300 text-sm"></label>
+<label class="text-xs font-bold uppercase text-slate-500">Tipe<select name="type" required class="mt-1 w-full rounded-xl border-stone-300 text-sm">@foreach(\App\Models\FoundationGroup::TYPES as $type)<option value="{{ $type }}">{{ str($type)->replace('_',' ') }}</option>@endforeach</select></label>
+<label class="text-xs font-bold uppercase text-slate-500 sm:col-span-2">Catatan<input name="notes" maxlength="1000" class="mt-1 w-full rounded-xl border-stone-300 text-sm"></label>
+<div class="flex items-end"><button class="min-h-[44px] rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white">Simpan Grup</button></div>
+</form>
+</details>
+@endcan
 </section>
 @endif
 

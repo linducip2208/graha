@@ -64,9 +64,9 @@ class PublicFrontendTest extends TestCase
     public function test_docs_renders_documentation_center_with_toc(): void
     {
         $html = $this->get('/docs')->assertOk()->getContent();
-        $this->assertStringContainsString('aria-label="Daftar isi"', $html);
-        $this->assertStringContainsString('Tutorial 7 Fase', $html);
-        $this->assertStringContainsString('Akun Demo', $html);
+        $this->assertStringContainsString('Documentation Center', $html);
+        $this->assertStringContainsString('Quick Start', $html);
+        $this->assertStringContainsString('Foundation Control Tower', $html);
     }
 
     public function test_login_demo_credentials_hidden_outside_local(): void

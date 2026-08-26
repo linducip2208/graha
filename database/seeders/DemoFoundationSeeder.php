@@ -8,6 +8,7 @@ use App\Models\BoredPileDrillingLayer;
 use App\Models\CompanySetting;
 use App\Models\ConcreteDelivery;
 use App\Models\Equipment;
+use App\Models\FoundationGroup;
 use App\Models\Nonconformity;
 use App\Models\PileBottomCleaningInspection;
 use App\Models\PileConcretePourInterval;
@@ -20,6 +21,8 @@ use App\Models\SlurryTest;
 use App\Models\StoredFile;
 use App\Models\Vendor;
 use App\Services\BoredPileService;
+use App\Services\PileAcceptanceService;
+use App\Services\PileDocumentService;
 use App\Services\PileReadinessService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -162,6 +165,89 @@ class DemoFoundationSeeder extends Seeder
                     $readiness->recordCheck($pile, PileReadinessCheck::KIND_CAST, $qms);
                 }
             }
+        }
+
+        $this->seedGroups($companyId, $pm, $qms);
+    }
+
+    /** P11: contoh pile cap READY (PRJ-2601) dan NOT_READY (PRJ-2602), idempotent. */
+    private function seedGroups(int $companyId, $pm, $qms): void
+    {
+        $projects = Project::where('company_id', $companyId)->get()->keyBy('code');
+
+        // --- PRJ-2601: pile cap lengkap → target READY ---
+        if (($a = $projects['PRJ-2601'] ?? null) !== null) {
+            $groupA = FoundationGroup::firstOrCreate(
+                ['project_id' => $a->id, 'name' => 'PC-Z1-01'],
+                ['company_id' => $companyId, 'type' => 'pile_cap', 'notes' => 'Demo seed: pile cap menara Z1 — 4 pile.']
+            );
+            $members = $a->boredPiles()->where('status', 'completed')->orderBy('pile_number')->take(4)->get();
+            foreach ($members as $i => $pile) {
+                DB::table('foundation_group_piles')->updateOrInsert(
+                    ['foundation_group_id' => $groupA->id, 'bored_pile_id' => $pile->id],
+                    ['sequence' => $i + 1, 'created_at' => now(), 'updated_at' => now()]
+                );
+                // Survey aktual agar cek survey lolos.
+                if (! filled($pile->actual_easting)) {
+                    $pile->update(['actual_easting' => $pile->design_easting, 'actual_northing' => $pile->design_northing]);
+                }
+                $this->prepareAndAccept($pile, $pm, $qms);
+            }
+        }
+
+        // --- PRJ-2602: campuran status → NOT_READY dengan exception nyata ---
+        if (($b = $projects['PRJ-2602'] ?? null) !== null) {
+            $groupB = FoundationGroup::firstOrCreate(
+                ['project_id' => $b->id, 'name' => 'PC-KRW-A'],
+                ['company_id' => $companyId, 'type' => 'pile_cap', 'notes' => 'Demo seed: pile cap gudang A — sebagian masih berjalan.']
+            );
+            $mixed = $b->boredPiles()->orderBy('pile_number')->get();
+            $picked = $mixed->filter(fn ($p) => in_array($p->status, ['completed', 'testing'], true))->take(3);
+            foreach ($picked as $i => $pile) {
+                DB::table('foundation_group_piles')->updateOrInsert(
+                    ['foundation_group_id' => $groupB->id, 'bored_pile_id' => $pile->id],
+                    ['sequence' => $i + 1, 'created_at' => now(), 'updated_at' => now()]
+                );
+                if ($pile->status === 'completed') {
+                    $this->prepareAndAccept($pile, $pm, $qms);
+                }
+                if (! filled($pile->actual_easting)) {
+                    $pile->update(['actual_easting' => $pile->design_easting, 'actual_northing' => $pile->design_northing]);
+                }
+            }
+        }
+    }
+
+    /** Siapkan gate lalu dorong acceptance sampai accepted — aman dijalankan ulang. */
+    private function prepareAndAccept(BoredPile $pile, $pm, $qms): void
+    {
+        $service = app(PileAcceptanceService::class);
+        $director = DemoDataSeeder::user('direktur@grahapondasi.test');
+
+        try {
+            if (! filled($pile->actual_toe_level)) {
+                $pile->update(['actual_toe_level' => bcsub('0', bcadd((string) $pile->planned_depth_m, '0.400', 3), 3)]);
+            }
+            app(PileDocumentService::class)->storeAsBuilt($pile, $pm);
+
+            if ($service->activeAcceptance($pile) === null && $pile->acceptance?->status !== 'accepted') {
+                $service->request($pile, $pm);
+            }
+            // Dorong alur dari posisi apa pun; QA dan engineer HARUS user berbeda.
+            foreach (range(1, 4) as $_) {
+                $active = $service->activeAcceptance($pile);
+                if ($active === null) {
+                    return; // sudah final (accepted/rejected).
+                }
+                match ($active->status) {
+                    'pending' => $service->reviewQa($active, $qms),
+                    'qa_review' => $service->reviewEngineer($active, $director),
+                    'engineer_review' => $service->decide($active, 'accepted', $director),
+                    default => null,
+                };
+            }
+        } catch (\Throwable $e) {
+            $this->command?->warn('prepareAndAccept '.$pile->pile_number.': '.get_class($e).' :: '.$e->getMessage());
         }
     }
 

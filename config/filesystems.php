@@ -52,6 +52,14 @@ return [
             'report' => false,
         ],
 
+        // Dokumentasi & screenshot — LOCAL ONLY (ADR-085).
+        'docs' => [
+            'driver' => 'local',
+            'root' => storage_path('app/docs'),
+            'serve' => false,
+            'throw' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

@@ -14,6 +14,7 @@ use App\Models\ProductionOrder;
 use App\Models\Warehouse;
 use App\Models\WarehouseBin;
 use App\Services\AuditTrail;
+use App\Services\DelayReason;
 use App\Services\EquipmentCostService;
 use App\Services\EquipmentService;
 use App\Services\ManufacturingService;
@@ -164,9 +165,9 @@ class OperationsController extends Controller
     public function startDowntime(Request $request, Equipment $equipment, CurrentCompany $current)
     {
         abort_unless($equipment->company_id === $current->id(), 404);
-        $data = $request->validate(['started_at' => ['required', 'date'], 'reason' => ['required', 'in:breakdown,maintenance,changeover,waiting_material,weather,other'], 'notes' => ['nullable', 'max:1000']]);
+        $data = $request->validate(['started_at' => ['required', 'date'], 'reason' => ['required', 'in:breakdown,maintenance,changeover,waiting_material,weather,other'], 'delay_reason' => ['nullable', 'in:'.implode(',', DelayReason::TYPES)], 'notes' => ['nullable', 'max:1000']]);
         throw_if(EquipmentDowntimeLog::where('equipment_id', $equipment->id)->whereNull('ended_at')->exists(), ValidationException::withMessages(['downtime' => 'Masih ada downtime berjalan. Tutup dulu sebelum membuka baru.']));
-        $log = EquipmentDowntimeLog::create([...$data, 'company_id' => $current->id(), 'equipment_id' => $equipment->id, 'recorded_by' => $request->user()->id]);
+        $log = EquipmentDowntimeLog::create([...$data, 'delay_reason' => $data['delay_reason'] ?? null, 'company_id' => $current->id(), 'equipment_id' => $equipment->id, 'recorded_by' => $request->user()->id]);
         app(AuditTrail::class)->record($current->id(), $request->user()->id, 'manufacturing.downtime_started', $log);
 
         return back()->with('status', 'Downtime dicatat (berjalan).');

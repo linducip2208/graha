@@ -43,5 +43,5 @@ foreach (glob($dir.'/*.php') as $file) {
         }
     }
 }
-echo $issues ? implode("\n", $issues) : "TIDAK ADA MASALAH";
+echo $issues ? implode("\n", $issues) : 'TIDAK ADA MASALAH';
 echo PHP_EOL;

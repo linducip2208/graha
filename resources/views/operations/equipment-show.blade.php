@@ -49,6 +49,7 @@
 <form method="post" action="/admin/operations/equipment/{{ $equipment->id }}/downtime" class="mt-3 grid gap-2 md:grid-cols-[170px_190px_1fr_150px]">@csrf
 <input type="datetime-local" name="started_at" value="{{ now()->format('Y-m-d\TH:i') }}" required class="rounded-xl border p-2 text-sm">
 <select name="reason" required class="rounded-xl border p-2 text-sm"><option value="breakdown">Breakdown</option><option value="maintenance">Maintenance</option><option value="changeover">Changeover</option><option value="waiting_material">Waiting Material</option><option value="weather">Cuaca</option><option value="other">Lainnya</option></select>
+<select name="delay_reason" class="rounded-xl border p-2 text-sm"><option value="">Delay Reason (opsional)…</option>@foreach(\App\Services\DelayReason::TYPES as $type)<option value="{{ $type }}">{{ \App\Services\DelayReason::label($type) }}</option>@endforeach</select>
 <input name="notes" placeholder="Keterangan" class="rounded-xl border p-2 text-sm">
 <button class="rounded-xl bg-slate-800 p-2 text-sm font-bold text-white">Mulai Downtime</button>
 </form>
