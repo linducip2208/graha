@@ -93,6 +93,26 @@ class BoredPile extends Model
         return $this->hasMany(PileReadinessCheck::class, 'bored_pile_id')->latest('id');
     }
 
+    public function slurryTests(): HasMany
+    {
+        return $this->hasMany(SlurryTest::class)->orderBy('tested_at');
+    }
+
+    public function tremieLogs(): HasMany
+    {
+        return $this->hasMany(PileTremieLog::class)->orderBy('sequence');
+    }
+
+    public function pourIntervals(): HasMany
+    {
+        return $this->hasMany(PileConcretePourInterval::class)->orderBy('depth_or_level_m');
+    }
+
+    public function geometryReadings(): HasMany
+    {
+        return $this->hasMany(PileGeometryReading::class)->orderBy('depth_m');
+    }
+
     public function acceptance(): HasOne
     {
         return $this->hasOne(PileAcceptance::class, 'bored_pile_id')->latestOfMany();

@@ -6,12 +6,14 @@ use App\Models\BoredPile;
 use App\Models\BoredPileDrilling;
 use App\Models\ConcreteDelivery;
 use App\Models\FieldEvidence;
+use App\Models\PileGeometryReading;
 use App\Models\PileTest;
 use App\Models\PileTremieLog;
 use App\Models\Project;
 use App\Models\SlurryTest;
 use App\Models\Vendor;
 use App\Services\FieldOpsService;
+use App\Services\PourCurveService;
 use App\Services\SlurryControlService;
 use App\Services\TremieLogService;
 use App\Support\Tenancy\CurrentCompany;
@@ -197,6 +199,40 @@ class FieldOpsController extends Controller
         };
 
         return back()->with('status', $message);
+    }
+
+    public function storePourInterval(Request $request, CurrentCompany $current, PourCurveService $service)
+    {
+        $data = $request->validate([
+            'bored_pile_id' => ['required', 'integer'],
+            'recorded_at' => ['required', 'date'],
+            'depth_or_level_m' => ['required', 'decimal:0,3', 'min:0'],
+            'incremental_volume_m3' => ['required', 'decimal:0,4', 'min:0'],
+            'concrete_delivery_id' => ['nullable', 'integer'],
+            'notes' => ['nullable', 'max:1000'],
+        ]);
+        $pile = BoredPile::whereHas('project', fn ($q) => $q->where('company_id', $current->id()))->findOrFail($data['bored_pile_id']);
+        unset($data['bored_pile_id']);
+        $service->recordInterval($pile, $data, $request->user());
+
+        return back()->with('status', 'Interval pour terekam — kurva aktual vs teoretis diperbarui.');
+    }
+
+    public function importGeometry(Request $request, CurrentCompany $current, PourCurveService $service)
+    {
+        $data = $request->validate([
+            'bored_pile_id' => ['required', 'integer'],
+            'source' => ['required', Rule::in(PileGeometryReading::SOURCES)],
+            'csv' => ['required', 'string', 'max:200000'],
+        ]);
+        $pile = BoredPile::whereHas('project', fn ($q) => $q->where('company_id', $current->id()))->findOrFail($data['bored_pile_id']);
+        try {
+            $count = $service->importGeometryCsv($pile, $data['csv'], $data['source'], $request->user());
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors());
+        }
+
+        return back()->with('status', "{$count} baris geometri lubang terimpor (sumber: {$data['source']}).");
     }
 
     public function storeTest(Request $request, CurrentCompany $current, FieldOpsService $service)

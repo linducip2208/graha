@@ -145,6 +145,8 @@ Route::middleware(['auth', 'company', 'permission:project.view'])->prefix('admin
     Route::post('/projects/field-ops/slurry', [FieldOpsController::class, 'storeSlurry'])->middleware('permission:project.manage')->name('field-ops.slurry.store');
     Route::post('/projects/field-ops/slurry/{slurryTest}/decide', [FieldOpsController::class, 'decideSlurry'])->middleware('permission:qms.verify')->name('field-ops.slurry.decide');
     Route::post('/projects/field-ops/tremie', [FieldOpsController::class, 'storeTremie'])->middleware('permission:project.manage')->name('field-ops.tremie.store');
+    Route::post('/projects/field-ops/pour-intervals', [FieldOpsController::class, 'storePourInterval'])->middleware('permission:project.manage')->name('field-ops.pour-interval.store');
+    Route::post('/projects/field-ops/geometry-import', [FieldOpsController::class, 'importGeometry'])->middleware('permission:project.manage')->name('field-ops.geometry.import');
     Route::post('/projects/field-ops/tests', [FieldOpsController::class, 'storeTest'])->middleware('permission:project.manage');
     Route::post('/projects/field-ops/tests/{test}/result', [FieldOpsController::class, 'recordTestResult'])->middleware('permission:project.manage');
     Route::post('/projects/field-ops/tests/{test}/approve', [FieldOpsController::class, 'approveTest'])->middleware('permission:project.manage');

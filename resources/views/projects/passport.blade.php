@@ -41,6 +41,9 @@
     {{-- Anomali / kesehatan --}}
     @include('projects.partials.readiness')
 
+    {{-- Pour curve + geometry + survey deviation --}}
+    @include('projects.partials.pour-geometry')
+
     @if($anomalies)
     <div class="mt-4 grid gap-2 sm:grid-cols-2">
         @foreach($anomalies as $flag)
