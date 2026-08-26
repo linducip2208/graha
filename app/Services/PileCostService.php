@@ -6,8 +6,8 @@ use App\Models\BoredPile;
 use App\Models\ConcreteDelivery;
 use App\Models\Project;
 use App\Models\PurchaseOrderItem;
+use App\Models\ReinforcementCage;
 use App\Models\StockMovement;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Per-pile cost intelligence (ADR-076): SEMUA angka dari transaksi nyata —
@@ -55,13 +55,16 @@ class PileCostService
         }
 
         // --- Steel cage: konsumsi material cage terkirim ke pile (stock movement nyata) ---
-        $cageIds = DB::table('reinforcement_cages')->where('company_id', $companyId)
-            ->whereNotNull('bored_pile_id')->whereIn('bored_pile_id', [$pile->id])->pluck('id');
+        $cageIds = ReinforcementCage::where('company_id', $companyId)
+            ->whereNotNull('bored_pile_id')->where('bored_pile_id', $pile->id)->pluck('id');
         $steelCost = '0';
         foreach ($cageIds as $cageId) {
             $steelCost = bcadd($steelCost, (string) StockMovement::where('company_id', $companyId)
-                ->where('reference', 'like', "cage-material:{$cageId}:%")
-                ->selectRaw('COALESCE(SUM(unit_cost * quantity), 0) as total')->value('total'), 2);
+                ->whereIn('movement_type', ['issue', 'return_in'])
+                ->where('reference_type', 'reinforcement_cage')
+                ->where('reference_id', (string) $cageId)
+                ->selectRaw("COALESCE(SUM(CASE WHEN movement_type = 'issue' THEN 1 ELSE -1 END * unit_cost * quantity), 0) as total")
+                ->value('total'), 2);
         }
 
         // --- Material issue langsung ke pile (stock_movements.bored_pile_id, issue minus return) ---

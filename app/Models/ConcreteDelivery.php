@@ -11,7 +11,7 @@ class ConcreteDelivery extends Model
 
     protected function casts(): array
     {
-        return ['batch_time' => 'datetime', 'arrived_at' => 'datetime', 'pour_started_at' => 'datetime', 'pour_finished_at' => 'datetime', 'ordered_volume_m3' => 'decimal:4', 'delivered_volume_m3' => 'decimal:4', 'accepted_volume_m3' => 'decimal:4', 'rejected_volume_m3' => 'decimal:4', 'slump_cm' => 'decimal:2'];
+        return ['batch_time' => 'datetime', 'arrived_at' => 'datetime', 'pour_started_at' => 'datetime', 'pour_finished_at' => 'datetime', 'ordered_volume_m3' => 'decimal:4', 'delivered_volume_m3' => 'decimal:4', 'accepted_volume_m3' => 'decimal:4', 'rejected_volume_m3' => 'decimal:4', 'slump_cm' => 'decimal:2', 'approved_at' => 'datetime'];
     }
 
     public function pile(): BelongsTo

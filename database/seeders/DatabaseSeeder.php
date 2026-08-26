@@ -7,7 +7,6 @@ use App\Models\NumberSequence;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -16,13 +15,14 @@ use Illuminate\Support\Facades\DB;
  * permission, number sequence. Data DEMO TIDAK PERNAH di-seed otomatis di
  * production — hanya bila APP_ENV local/demo DAN SEED_DEMO_DATA=true.
  *
+ * Catatan: sengaja TANPA WithoutModelEvents — trait HasUuid dan
+ * public_uuid pile mengandalkan event `creating` agar identifier QR terisi.
+ *
  * Untuk data demo eksplisit:
  *   php artisan db:seed --class=DemoDataSeeder
  */
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
     public function run(): void
     {
         $this->seedBaseline();
