@@ -2,53 +2,80 @@
 
 namespace App\Console\Commands;
 
+use App\Models\BackupRecord;
+use App\Models\CompanyStorageProfile;
+use App\Models\SystemHealthState;
+use App\Models\SystemHeartbeat;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Throwable;
 
 class ProductionReadinessCheck extends Command
 {
     protected $signature = 'production:check';
 
-    protected $description = 'Memeriksa konfigurasi dan dependency minimum sebelum deployment produksi';
+    protected $description = 'Read-only production configuration and operational dependency gate';
 
     public function handle(): int
     {
-        $checks = [
-            ['Environment production', app()->environment('production'), app()->environment()],
-            ['Debug nonaktif', ! config('app.debug'), config('app.debug') ? 'APP_DEBUG=true' : 'false'],
-            ['URL HTTPS', str_starts_with((string) config('app.url'), 'https://'), (string) config('app.url')],
-            ['APP_KEY tersedia', filled(config('app.key')), filled(config('app.key')) ? 'tersedia' : 'kosong'],
-            ['Database MySQL', config('database.default') === 'mysql', (string) config('database.default')],
-            ['Queue asynchronous', ! in_array(config('queue.default'), ['sync', 'null'], true), (string) config('queue.default')],
-            ['Mail bukan log/array', ! in_array(config('mail.default'), ['log', 'array'], true), (string) config('mail.default')],
-            ['Session terenkripsi', (bool) config('session.encrypt'), config('session.encrypt') ? 'aktif' : 'nonaktif'],
-            ['Cookie secure', (bool) config('session.secure'), config('session.secure') ? 'aktif' : 'nonaktif'],
-            ['Storage writable', is_writable(storage_path()) && is_writable(base_path('bootstrap/cache')), storage_path()],
-        ];
-
+        $checks = [];
+        $add = function (string $name, string $status, string $detail) use (&$checks) {
+            $checks[] = compact('name', 'status', 'detail');
+        };
+        $add('Environment', app()->environment('production') ? 'PASS' : 'FAIL', app()->environment());
+        $add('Debug disabled', config('app.debug') ? 'FAIL' : 'PASS', config('app.debug') ? 'APP_DEBUG=true' : 'false');
+        $key = (string) config('app.key');
+        $decodedKey = str_starts_with($key, 'base64:') ? base64_decode(substr($key, 7), true) : $key;
+        $add('APP_KEY', is_string($decodedKey) && strlen($decodedKey) >= 32 ? 'PASS' : 'FAIL', filled($key) ? 'configured' : 'missing');
+        $url = (string) config('app.url');
+        $add('APP_URL HTTPS', str_starts_with($url, 'https://') ? 'PASS' : 'FAIL', parse_url($url, PHP_URL_HOST) ?: 'invalid');
+        $add('Database driver', config('database.default') === 'mysql' ? 'PASS' : 'FAIL', (string) config('database.default'));
+        $add('Queue async', in_array(config('queue.default'), ['sync', 'null'], true) ? 'FAIL' : 'PASS', (string) config('queue.default'));
+        $add('Session secure/encrypted', config('session.secure') && config('session.encrypt') ? 'PASS' : 'FAIL', 'secure='.(int) config('session.secure').' encrypted='.(int) config('session.encrypt'));
+        $add('Session backend', config('session.driver') === 'database' ? 'PASS' : 'WARNING', (string) config('session.driver'));
+        $add('Mail transport', in_array(config('mail.default'), ['log', 'array'], true) ? 'WARNING' : 'PASS', (string) config('mail.default'));
+        $add('Writable paths', is_writable(storage_path()) && is_writable(base_path('bootstrap/cache')) ? 'PASS' : 'FAIL', 'storage + bootstrap/cache');
+        $demoEnabled = filter_var(config('app.seed_demo_data', false), FILTER_VALIDATE_BOOL);
+        $add('Demo seeding disabled', $demoEnabled ? 'FAIL' : 'PASS', 'SEED_DEMO_DATA='.($demoEnabled ? 'true' : 'false'));
         try {
             DB::select('select 1');
-            $checks[] = ['Koneksi database', true, 'terhubung'];
-            $checks[] = ['Tabel migrations', Schema::hasTable('migrations'), Schema::hasTable('migrations') ? 'tersedia' : 'tidak tersedia'];
+            $add('Database connection', 'PASS', 'connected');
             $migrator = app('migrator');
             $files = $migrator->getMigrationFiles(database_path('migrations'));
             $pending = array_diff(array_keys($files), $migrator->getRepository()->getRan());
-            $checks[] = ['Migration pending', $pending === [], $pending === [] ? 'tidak ada' : implode(', ', $pending)];
-        } catch (Throwable $exception) {
-            $checks[] = ['Koneksi database', false, $exception->getMessage()];
+            $add('Migration status', $pending === [] ? 'PASS' : 'FAIL', $pending === [] ? 'up to date' : count($pending).' pending');
+            $probe = 'production-check:'.uniqid();
+            Cache::put($probe, 'ok', 10);
+            $cacheOk = Cache::get($probe) === 'ok';
+            Cache::forget($probe);
+            $add('Cache', $cacheOk ? 'PASS' : 'FAIL', (string) config('cache.default'));
+            $heartbeat = Schema::hasTable('system_heartbeats') ? SystemHeartbeat::find('scheduler') : null;
+            $add('Scheduler heartbeat', $heartbeat && $heartbeat->last_seen_at->gte(now()->subMinutes(10)) ? 'PASS' : 'FAIL', $heartbeat?->last_seen_at?->toIso8601String() ?? 'missing');
+            $backup = Schema::hasTable('backup_records') ? BackupRecord::where('status', 'completed')->latest('finished_at')->first() : null;
+            $add('Backup freshness', $backup && $backup->finished_at->gte(now()->subDays(2)) ? 'PASS' : 'FAIL', $backup?->finished_at?->toIso8601String() ?? 'missing');
+            $verified = Schema::hasTable('backup_records') ? BackupRecord::where('verification_status', 'passed')->latest('verified_at')->first() : null;
+            $add('Verified backup', $verified ? 'PASS' : 'FAIL', $verified?->verified_at?->toIso8601String() ?? 'missing');
+            $mail = Schema::hasTable('system_health_states') ? SystemHealthState::find('mail') : null;
+            $add('Mail test', $mail?->status === 'healthy' && $mail->last_tested_at?->gte(now()->subDays(30)) ? 'PASS' : 'WARNING', $mail?->last_tested_at?->toIso8601String() ?? 'not tested');
+            $profiles = Schema::hasTable('company_storage_profiles') ? CompanyStorageProfile::where('is_active', true)->count() : 0;
+            $failedProfiles = $profiles ? CompanyStorageProfile::where('is_active', true)
+                ->where(fn ($query) => $query->whereNull('last_test_status')->orWhere('last_test_status', '!=', 'CONNECTED'))
+                ->count() : 0;
+            $add('Object storage profiles', $failedProfiles ? 'FAIL' : ($profiles ? 'PASS' : 'WARNING'), $profiles.' active - '.$failedProfiles.' unhealthy');
+        } catch (\Throwable $e) {
+            $add('Runtime dependency probe', 'FAIL', 'probe failed · reference '.substr(hash('sha256', $e::class), 0, 10));
         }
-
-        $this->table(['Pemeriksaan', 'Status', 'Detail'], array_map(fn (array $check) => [$check[0], $check[1] ? 'LULUS' : 'GAGAL', $check[2]], $checks));
-        $failed = collect($checks)->where(1, false)->count();
-        if ($failed > 0) {
-            $this->error("Production readiness GAGAL: {$failed} pemeriksaan belum terpenuhi.");
+        $this->table(['Check', 'Status', 'Detail'], array_map(fn ($row) => [$row['name'], $row['status'], $row['detail']], $checks));
+        $fails = collect($checks)->where('status', 'FAIL')->count();
+        $warnings = collect($checks)->where('status', 'WARNING')->count();
+        $this->line('PASS '.collect($checks)->where('status', 'PASS')->count()." · WARNING {$warnings} · FAIL {$fails}");
+        if ($fails) {
+            $this->error('NOT READY · release blocker masih ada.');
 
             return self::FAILURE;
         }
-
-        $this->info('Production readiness konfigurasi dasar LULUS. Tetap wajib UAT, backup restore drill, security review, dan load test.');
+        $this->warn($warnings ? 'READY WITH CONDITIONS · operator tasks/warnings belum ditutup.' : 'Configuration gate PASS; UAT dan DR rehearsal tetap gate eksternal.');
 
         return self::SUCCESS;
     }
