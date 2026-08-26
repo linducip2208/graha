@@ -57,6 +57,8 @@
 <div class="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
 @if($canStorage)
 <article class="card-lift rounded-2xl border bg-white p-6 dark:bg-slate-900"><h2 class="font-bold">🗄️ Storage & File</h2><p class="mt-2 text-sm text-slate-500">Profil Local atau S3-compatible per perusahaan, test koneksi, health, retensi, dan penggunaan.</p><a href="{{ route('settings.storage') }}" class="mt-4 inline-block rounded-xl bg-sky-700 px-4 py-2 text-sm font-bold text-white">Kelola storage</a></article>
+<article class="card-lift rounded-2xl border bg-white p-6 dark:bg-slate-900"><h2 class="font-bold">🩺 System Health</h2><p class="mt-2 text-sm text-slate-500">Database, cache, queue, scheduler, mail, storage, disk, runtime, dan backup.</p><a href="{{ route('settings.system-health') }}" class="mt-4 inline-block rounded-xl bg-emerald-700 px-4 py-2 text-sm font-bold text-white">Buka health center</a></article>
+<article class="card-lift rounded-2xl border bg-white p-6 dark:bg-slate-900"><h2 class="font-bold">🛟 Backup & Recovery</h2><p class="mt-2 text-sm text-slate-500">Backup MySQL privat, metadata checksum, retention, dan verification dry run.</p><a href="{{ route('settings.backups') }}" class="mt-4 inline-block rounded-xl bg-slate-800 px-4 py-2 text-sm font-bold text-white">Kelola backup</a></article>
 @endif
 @if($canOrganization)
 <article class="card-lift rounded-2xl border bg-white p-6">

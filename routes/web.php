@@ -45,6 +45,7 @@ use App\Http\Controllers\StockOpnameController;
 use App\Http\Controllers\StorageController;
 use App\Http\Controllers\StorageProfileController;
 use App\Http\Controllers\StoredFileController;
+use App\Http\Controllers\SystemOperationsController;
 use App\Http\Controllers\TaxController;
 use App\Http\Controllers\TenderController;
 use App\Http\Controllers\ToolController;
@@ -424,6 +425,15 @@ Route::post('/admin/experience/preview/stop', [ExperienceController::class, 'sto
 Route::get('/admin/experience/export', [ExperienceController::class, 'export'])->middleware(['auth', 'company']);
 Route::post('/admin/experience/import', [ExperienceController::class, 'import'])->middleware(['auth', 'company']);
 Route::get('/admin/settings', [SettingsController::class, 'index'])->middleware(['auth', 'company'])->name('settings.index');
+Route::prefix('/admin/settings/system')->middleware(['auth', 'company', 'permission:storage.manage'])->group(function () {
+    Route::get('/health', [SystemOperationsController::class, 'health'])->name('settings.system-health');
+    Route::post('/health/mail', [SystemOperationsController::class, 'testMail'])->name('system-health.mail');
+    Route::post('/health/jobs/{uuid}', [SystemOperationsController::class, 'failedJob'])->name('system-health.job');
+    Route::post('/health/jobs', [SystemOperationsController::class, 'failedJobs'])->name('system-health.jobs');
+    Route::get('/backups', [SystemOperationsController::class, 'backups'])->name('settings.backups');
+    Route::post('/backups', [SystemOperationsController::class, 'createBackup'])->name('backups.create');
+    Route::post('/backups/{backup}/verify', [SystemOperationsController::class, 'verifyBackup'])->name('backups.verify');
+});
 Route::prefix('/admin/settings/storage')->middleware(['auth', 'company', 'permission:storage.manage'])->group(function () {
     Route::get('/', [StorageProfileController::class, 'index'])->name('settings.storage');
     Route::post('/profiles', [StorageProfileController::class, 'store'])->name('storage-profiles.store');

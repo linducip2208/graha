@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\SystemHeartbeat;
 use App\Services\QmsService;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -20,3 +21,4 @@ Schedule::command('qms:notify-calibration')->name('calibration-due-notify')->dai
 Schedule::command('journals:post-recurring')->name('recurring-journal-post')->dailyAt('01:00')->withoutOverlapping();
 
 Schedule::command('backup:database --retention-days=14')->name('database-backup')->dailyAt('02:15')->withoutOverlapping()->onOneServer();
+Schedule::call(fn () => SystemHeartbeat::updateOrCreate(['key' => 'scheduler'], ['last_seen_at' => now(), 'metadata' => ['expected_minutes' => 5]]))->name('system-heartbeat')->everyFiveMinutes()->withoutOverlapping();
