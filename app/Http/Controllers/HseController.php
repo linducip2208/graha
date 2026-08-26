@@ -8,6 +8,7 @@ use App\Models\HseIncident;
 use App\Models\HseIncidentAction;
 use App\Models\JobSafetyAnalysis;
 use App\Models\ManagementReview;
+use App\Models\NumberSequence;
 use App\Models\PpeIssuance;
 use App\Models\Project;
 use App\Models\SafetyObservation;
