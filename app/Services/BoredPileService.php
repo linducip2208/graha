@@ -9,7 +9,7 @@ use Illuminate\Validation\ValidationException;
 
 class BoredPileService
 {
-    private const TRANSITIONS = [
+    public const TRANSITIONS = [
         'planned' => ['setting_out', 'hold'], 'setting_out' => ['drilling', 'hold'], 'drilling' => ['cleaning', 'hold'],
         'cleaning' => ['inspection', 'hold'], 'inspection' => ['cage_installation', 'rework', 'rejected', 'hold'],
         'cage_installation' => ['casting', 'hold'], 'casting' => ['testing', 'hold'], 'testing' => ['completed', 'rework', 'rejected'],
