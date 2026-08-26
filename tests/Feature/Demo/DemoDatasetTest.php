@@ -120,7 +120,11 @@ class DemoDatasetTest extends TestCase
         $this->assertFalse($seeder->shouldSeedDemo());
 
         // Simulasi db:seed penuh di production → tidak ada data demo transaksi.
-        config(['app.env' => 'production']);
+        config([
+            'app.env' => 'production',
+            'app.initial_admin_email' => 'production-admin@example.test',
+            'app.initial_admin_password' => 'production-safe-password',
+        ]);
         $this->artisan('db:seed', ['--class' => 'Database\\Seeders\\DatabaseSeeder'])->assertSuccessful();
         $this->assertSame(0, BoredPile::count());
         $this->assertSame(0, Company::where('is_demo', true)->count()); // baseline murni, tanpa demo
@@ -133,6 +137,21 @@ class DemoDatasetTest extends TestCase
         config(['app.seed_demo_data' => true]);
         $this->assertTrue($seeder->shouldSeedDemo());
         config(['app.seed_demo_data' => null]);
+    }
+
+    public function test_production_baseline_refuses_default_admin_credentials(): void
+    {
+        config([
+            'app.env' => 'production',
+            'app.initial_admin_email' => null,
+            'app.initial_admin_password' => null,
+        ]);
+
+        $this->assertDatabaseMissing('users', ['email' => 'admin@grahapondasi.test']);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('INITIAL_ADMIN_EMAIL');
+
+        (new DatabaseSeeder)->run();
     }
 
     public function test_demo_reset_command_refuses_production(): void

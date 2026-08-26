@@ -46,8 +46,15 @@ class DatabaseSeeder extends Seeder
 
     private function seedBaseline(): void
     {
+        $email = config('app.initial_admin_email');
+        $password = config('app.initial_admin_password');
+        if (config('app.env') === 'production' && (! filled($email) || ! is_string($password) || strlen($password) < 12)) {
+            throw new \RuntimeException('Production baseline membutuhkan INITIAL_ADMIN_EMAIL dan INITIAL_ADMIN_PASSWORD minimal 12 karakter.');
+        }
+        $email = $email ?: 'admin@grahapondasi.test';
+        $password = $password ?: 'password';
         $company = Company::firstOrCreate(['code' => 'GP'], ['name' => 'PT Graha Pondasi', 'is_demo' => false]);
-        $user = User::firstOrCreate(['email' => 'admin@grahapondasi.test'], ['name' => 'Super Admin', 'password' => 'password']);
+        $user = User::firstOrCreate(['email' => $email], ['name' => 'Super Admin', 'password' => $password]);
         $company->users()->syncWithoutDetaching([$user->id => ['is_default' => true, 'is_active' => true]]);
         $role = Role::firstOrCreate(['company_id' => $company->id, 'code' => 'super-admin'], ['name' => 'Super Admin', 'is_system' => true]);
         foreach (['organization.view', 'organization.manage', 'approval.view', 'approval.manage', 'approval.decide', 'document.view', 'document.manage', 'storage.manage', 'signature.view', 'signature.manage', 'signature.sign', 'audit.view', 'tender.view', 'tender.manage', 'contract.view', 'contract.manage', 'project.view', 'project.manage', 'inventory.view', 'inventory.manage', 'procurement.view', 'procurement.manage', 'manufacturing.view', 'manufacturing.manage', 'equipment.view', 'equipment.manage', 'finance.view', 'finance.manage', 'accounting.post', 'qms.view', 'qms.manage', 'qms.verify', 'qms.audit', 'hse.view', 'hse.manage', 'hse.verify', 'report.view', 'report.export'] as $code) {

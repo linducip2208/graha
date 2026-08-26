@@ -36,6 +36,10 @@ return [
     // Production tidak pernah auto-seed apa pun nilai env-nya.
     'seed_demo_data' => env('SEED_DEMO_DATA'),
 
+    // Production bootstrap credentials are consumed by DatabaseSeeder only.
+    'initial_admin_email' => env('INITIAL_ADMIN_EMAIL'),
+    'initial_admin_password' => env('INITIAL_ADMIN_PASSWORD'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Debug Mode

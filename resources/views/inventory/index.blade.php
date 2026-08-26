@@ -62,6 +62,7 @@
 <button type="button" class="min-h-[42px] rounded-xl border border-[var(--border-default)] px-4 text-sm font-bold hover:bg-[var(--surface-muted)]" data-drawer-close>Batal</button>
 <button class="btn-brand min-h-[42px] rounded-xl px-5 text-sm font-bold">Post Movement</button>
 </div>
+</form>
 </x-ui.drawer>
 
 <x-ui.drawer id="inventory-condition-drawer" title="Kondisi & In-Transit" description="Tandai stok rusak/usang (keluar dari available tanpa movement fisik), pulihkan, atau sesuaikan qty in-transit. Semua tercatat di audit trail.">

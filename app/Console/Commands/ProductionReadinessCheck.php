@@ -9,6 +9,7 @@ use App\Models\SystemHeartbeat;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 
 class ProductionReadinessCheck extends Command
@@ -41,6 +42,21 @@ class ProductionReadinessCheck extends Command
         try {
             DB::select('select 1');
             $add('Database connection', 'PASS', 'connected');
+            $defaultPasswordFound = false;
+            if (Schema::hasTable('users')) {
+                DB::table('users')->select(['id', 'password'])->orderBy('id')->chunkById(200, function ($users) use (&$defaultPasswordFound) {
+                    foreach ($users as $user) {
+                        if (Hash::check('password', $user->password)) {
+                            $defaultPasswordFound = true;
+
+                            return false;
+                        }
+                    }
+
+                    return true;
+                });
+            }
+            $add('Default passwords', $defaultPasswordFound ? 'FAIL' : 'PASS', $defaultPasswordFound ? 'known demo password detected' : 'not detected');
             $migrator = app('migrator');
             $files = $migrator->getMigrationFiles(database_path('migrations'));
             $pending = array_diff(array_keys($files), $migrator->getRepository()->getRan());

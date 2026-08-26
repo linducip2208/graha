@@ -50,7 +50,6 @@ use App\Http\Controllers\TaxController;
 use App\Http\Controllers\TenderController;
 use App\Http\Controllers\ToolController;
 use App\Http\Controllers\WorkspaceController;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -63,8 +62,8 @@ Route::get('/docs/quick-start', [DocsController::class, 'quickStart'])->name('do
 Route::get('/docs/assets/{path}', [DocsAssetController::class, 'show'])->where('path', '.*')->name('docs.assets');
 Route::get('/docs/{category}', [DocsController::class, 'category'])->name('docs.category');
 Route::get('/docs/{category}/{slug}', [DocsController::class, 'article'])->name('docs.article');
-Route::get('/piles/{publicUuid}', [PilePassportController::class, 'publicEntry'])->name('piles.public');
-Route::get('/verify/{token}', [SignatureController::class, 'verify'])->name('signatures.verify');
+Route::get('/piles/{publicUuid}', [PilePassportController::class, 'publicEntry'])->middleware('throttle:60,1')->name('piles.public');
+Route::get('/verify/{token}', [SignatureController::class, 'verify'])->middleware('throttle:60,1')->name('signatures.verify');
 // ===== User Documentation Center (ADR-085): menggantikan docs statis lama =====
 // SATU registrasi /docs saja (docs.index) — duplikat menyebabkan ambiguitas.
 Route::view('/login', 'auth.login')->middleware('guest')->name('login');
@@ -88,8 +87,8 @@ Route::get('/apps', [WorkspaceController::class, 'apps'])->middleware(['auth', '
 Route::get('/admin/my-work', [MyWorkController::class, 'index'])->middleware(['auth', 'company'])->name('my-work.index');
 Route::post('/admin/preferences/favorites', [WorkspaceController::class, 'toggleFavorite'])->middleware(['auth', 'company'])->name('preferences.favorites.toggle');
 Route::post('/admin/company/switch', [WorkspaceController::class, 'switchCompany'])->middleware(['auth'])->name('company.switch');
-Route::post('/admin/preferences/recent', [WorkspaceController::class, 'recordRecent'])->middleware(['auth', 'company'])->withoutMiddleware(VerifyCsrfToken::class)->name('preferences.recent.record');
-Route::get('/admin/search', [GlobalSearchController::class, 'query'])->middleware(['auth', 'company'])->name('global-search.query');
+Route::post('/admin/preferences/recent', [WorkspaceController::class, 'recordRecent'])->middleware(['auth', 'company'])->name('preferences.recent.record');
+Route::get('/admin/search', [GlobalSearchController::class, 'query'])->middleware(['auth', 'company', 'throttle:60,1'])->name('global-search.query');
 Route::middleware(['auth', 'company', 'permission:contract.view'])->prefix('admin/contracts')->group(function () {
     Route::get('/', [ContractController::class, 'index'])->name('contracts.index');
     Route::get('/{contract}', [ContractController::class, 'show'])->name('contracts.show');
@@ -165,8 +164,8 @@ Route::middleware(['auth', 'company', 'permission:project.view'])->prefix('admin
     Route::post('/projects/field-ops/tests/{test}/result', [FieldOpsController::class, 'recordTestResult'])->middleware('permission:project.manage');
     Route::post('/projects/field-ops/tests/{test}/approve', [FieldOpsController::class, 'approveTest'])->middleware('permission:project.manage');
     Route::post('/projects/field-ops/evidence/{type}', [FieldOpsController::class, 'uploadEvidence'])->middleware('permission:project.manage');
-    Route::get('/field-evidence/{evidence}/download', [FieldOpsController::class, 'downloadEvidence'])->name('evidence.download');
-    Route::get('/field-evidence/{evidence}/file', [FieldOpsController::class, 'fileEvidence'])->name('evidence.file');
+    Route::get('/field-evidence/{evidence}/download', [FieldOpsController::class, 'downloadEvidence'])->middleware('throttle:120,1')->name('evidence.download');
+    Route::get('/field-evidence/{evidence}/file', [FieldOpsController::class, 'fileEvidence'])->middleware('throttle:120,1')->name('evidence.file');
     Route::get('/bored-piles/{pile}/genealogy', [PileGenealogyController::class, 'show'])->name('piles.genealogy');
     Route::get('/bored-piles/{pile}/passport', [PilePassportController::class, 'show'])->name('piles.passport');
     Route::post('/bored-piles/{pile}/readiness-check', [PileReadinessController::class, 'check'])->middleware('permission:project.manage')->name('piles.readiness.check');
@@ -181,8 +180,8 @@ Route::middleware(['auth', 'company', 'permission:project.view'])->prefix('admin
     Route::post('/bored-piles/{pile}/acceptance/qa-review', [PilePassportController::class, 'reviewQa'])->middleware('permission:qms.verify')->name('piles.acceptance.qa');
     Route::post('/bored-piles/{pile}/acceptance/engineer-review', [PilePassportController::class, 'reviewEngineer'])->middleware('permission:approval.decide')->name('piles.acceptance.engineer');
     Route::post('/bored-piles/{pile}/acceptance/decide', [PilePassportController::class, 'decideAcceptance'])->middleware('permission:approval.decide')->name('piles.acceptance.decide');
-    Route::get('/files/{file}/preview', [StoredFileController::class, 'preview'])->name('files.preview');
-    Route::get('/files/{file}/download', [StoredFileController::class, 'download'])->name('files.download');
+    Route::get('/files/{file}/preview', [StoredFileController::class, 'preview'])->middleware('throttle:120,1')->name('files.preview');
+    Route::get('/files/{file}/download', [StoredFileController::class, 'download'])->middleware('throttle:120,1')->name('files.download');
     Route::get('/bored-piles/{pile}/as-built', [PileGenealogyController::class, 'asBuilt'])->name('piles.as-built');
     Route::get('/projects/{project}/piles-as-built', [PileGenealogyController::class, 'batchAsBuilt'])->name('piles.as-built.batch');
     Route::post('/project-zones', [ProjectController::class, 'zone'])->middleware('permission:project.manage');
@@ -445,5 +444,5 @@ Route::prefix('/admin/settings/storage')->middleware(['auth', 'company', 'permis
 Route::post('/admin/settings', [SettingsController::class, 'save'])->middleware(['auth', 'company', 'permission:finance.manage'])->name('settings.save');
 Route::get('/admin/storage', [StorageController::class, 'dashboard'])->middleware(['auth', 'company', 'permission:document.view'])->name('storage.dashboard');
 Route::post('/admin/storage/{file}/retention', [StorageController::class, 'retentionAction'])->middleware(['auth', 'company', 'permission:storage.manage'])->name('storage.retention');
-Route::post('/admin/storage/request-upload', [StorageController::class, 'requestUpload'])->middleware(['auth', 'company', 'permission:project.manage'])->name('storage.request-upload');
-Route::post('/admin/storage/finalize-upload', [StorageController::class, 'finalizeUpload'])->middleware(['auth', 'company', 'permission:project.manage'])->name('storage.finalize-upload');
+Route::post('/admin/storage/request-upload', [StorageController::class, 'requestUpload'])->middleware(['auth', 'company', 'permission:project.manage', 'throttle:30,1'])->name('storage.request-upload');
+Route::post('/admin/storage/finalize-upload', [StorageController::class, 'finalizeUpload'])->middleware(['auth', 'company', 'permission:project.manage', 'throttle:30,1'])->name('storage.finalize-upload');

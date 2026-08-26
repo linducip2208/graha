@@ -1,6 +1,6 @@
-<x-layouts.app title="Pile Passport {{ $pile->pile_number }} â€” {{ $pile->project->code }}">
+<x-layouts.app title="Pile Passport {{ $pile->pile_number }} — {{ $pile->project->code }}">
 <div class="page-container">
-<x-ui.page-header docs="/docs/bored-pile/pile-passport" title="Digital Pile Passport â€” {{ $pile->pile_number }}" subtitle="{{ $pile->project->code }} Â· {{ $pile->project->name }} Â· Zona {{ $pile->zone?->name ?? '-' }} Â· Grid {{ $pile->grid_reference ?? '-' }}" status="{{ str($pile->status)->replace('_',' ') }}">
+<x-ui.page-header docs="/docs/bored-pile/pile-passport" title="Digital Pile Passport — {{ $pile->pile_number }}" subtitle="{{ $pile->project->code }} · {{ $pile->project->name }} · Zona {{ $pile->zone?->name ?? '-' }} · Grid {{ $pile->grid_reference ?? '-' }}" status="{{ str($pile->status)->replace('_',' ') }}">
 <div class="flex flex-wrap gap-2 no-print">
 <a href="{{ route('piles.passport', $pile) }}" class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-bold text-white">Passport</a>
 <a href="{{ route('piles.genealogy', $pile) }}" class="rounded-xl border px-4 py-2 text-sm font-semibold">Genealogy</a>
@@ -20,20 +20,20 @@
     <dl class="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
         <div><dt class="text-xs uppercase text-slate-400">Nomor Pile</dt><dd class="font-bold">{{ $pile->pile_number }}</dd></div>
         <div><dt class="text-xs uppercase text-slate-400">Public UUID (QR)</dt><dd class="break-all font-mono text-xs">{{ $pile->public_uuid }}</dd></div>
-        <div><dt class="text-xs uppercase text-slate-400">Diameter</dt><dd>Ã˜{{ $pile->diameter_mm }} mm</dd></div>
+        <div><dt class="text-xs uppercase text-slate-400">Diameter</dt><dd>Ø{{ $pile->diameter_mm }} mm</dd></div>
         <div><dt class="text-xs uppercase text-slate-400">Kedalaman Rencana</dt><dd>{{ $pile->planned_depth_m }} m</dd></div>
         <div><dt class="text-xs uppercase text-slate-400">Kedalaman Aktual</dt><dd>{{ $pile->actual_depth_m ?? '-' }} m</dd></div>
-        <div><dt class="text-xs uppercase text-slate-400">Elevasi Platform / Toe / Cut-off</dt><dd>{{ $pile->platform_elevation ?? '-' }} / {{ $pile->design_toe_level ?? '-' }} â†’ {{ $pile->actual_toe_level ?? '-' }} / {{ $pile->cut_off_level ?? '-' }}</dd></div>
+        <div><dt class="text-xs uppercase text-slate-400">Elevasi Platform / Toe / Cut-off</dt><dd>{{ $pile->platform_elevation ?? '-' }} / {{ $pile->design_toe_level ?? '-' }} → {{ $pile->actual_toe_level ?? '-' }} / {{ $pile->cut_off_level ?? '-' }}</dd></div>
         <div><dt class="text-xs uppercase text-slate-400">Koordinat Rencana (X, Y)</dt><dd>{{ $pile->coordinate_x ?? '-' }}, {{ $pile->coordinate_y ?? '-' }}</dd></div>
         <div><dt class="text-xs uppercase text-slate-400">Grade Beton</dt><dd>{{ $pile->concrete_grade ?? '-' }}</dd></div>
-        <div><dt class="text-xs uppercase text-slate-400">Metode Drilling / Rig</dt><dd>{{ $pile->drilling_method ?? '-' }} Â· {{ \App\Models\Equipment::find($pile->rig_equipment_id)?->code ?? '-' }}</dd></div>
+        <div><dt class="text-xs uppercase text-slate-400">Metode Drilling / Rig</dt><dd>{{ $pile->drilling_method ?? '-' }} · {{ \App\Models\Equipment::find($pile->rig_equipment_id)?->code ?? '-' }}</dd></div>
     </dl>
     </x-ui.card>
 
     {{-- Ringkasan volume --}}
     <div class="mt-4 grid gap-4 sm:grid-cols-4">
-        <x-ui.stat-card label="Beton Teoretis" value="{{ $pile->theoretical_concrete_m3 ?? '-' }} mÂ³" />
-        <x-ui.stat-card label="Beton Aktual" value="{{ $pile->actual_concrete_m3 ?? '-' }} mÂ³" />
+        <x-ui.stat-card label="Beton Teoretis" value="{{ $pile->theoretical_concrete_m3 ?? '-' }} m³" />
+        <x-ui.stat-card label="Beton Aktual" value="{{ $pile->actual_concrete_m3 ?? '-' }} m³" />
         <x-ui.stat-card label="Overbreak" value="{{ $pile->overbreak_percent ?? 0 }}%" hint="{{ $pile->overbreak_exceeded ? 'Melebihi toleransi' : 'Dalam toleransi' }}" />
         <x-ui.stat-card label="Cage / Casing" value="{{ $cages->count() }} / {{ $casings->count() }}" />
     </div>
@@ -60,7 +60,7 @@
     <x-ui.card>
     <div class="flex flex-wrap items-center justify-between gap-2">
         <h2 class="font-black">Timeline Foto Evidence</h2>
-        <span class="text-xs text-slate-400">{{ $photos->count() }} foto Â· tersimpan di object storage privat</span>
+        <span class="text-xs text-slate-400">{{ $photos->count() }} foto · tersimpan di object storage privat</span>
     </div>
     <ol class="mt-4 space-y-5">
         @foreach($timeline as $phase)
@@ -71,10 +71,10 @@
             <div class="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-6">
                 @foreach($phase['photos'] as $photo)
                 <figure class="group relative">
-                    <a href="{{ route('files.preview', ['file' => $photo]) }}" target="_blank" title="{{ $photo->caption ?? $photo->original_name }} â€” {{ $photo->captured_at?->format('d/m/y H:i') ?? $photo->created_at->format('d/m/y H:i') }} oleh {{ $photo->uploader?->name }}">
+                    <a href="{{ route('files.preview', ['file' => $photo]) }}" target="_blank" title="{{ $photo->caption ?? $photo->original_name }} — {{ $photo->captured_at?->format('d/m/y H:i') ?? $photo->created_at->format('d/m/y H:i') }} oleh {{ $photo->uploader?->name }}">
                         <img src="{{ route('files.preview', ['file' => $photo, 'variant' => 'thumb']) }}" alt="{{ $photo->caption ?? $photo->original_name }}" loading="lazy" class="h-20 w-full rounded-lg border object-cover">
                     </a>
-                    <figcaption class="truncate text-[10px] text-slate-400">{{ $photo->sub_category }} Â· {{ optional($photo->captured_at ?? $photo->created_at)->format('d/m/y') }}</figcaption>
+                    <figcaption class="truncate text-[10px] text-slate-400">{{ $photo->sub_category }} · {{ optional($photo->captured_at ?? $photo->created_at)->format('d/m/y') }}</figcaption>
                 </figure>
                 @endforeach
             </div>
@@ -122,9 +122,9 @@
     <ul class="mt-2 space-y-1 text-sm">
         @forelse($documents as $doc)
         <li class="flex flex-wrap items-center justify-between gap-2 rounded-xl border p-2 text-xs">
-            <span><strong class="uppercase">{{ str($doc->category)->replace('_',' ') }}</strong>@if($doc->documentVersion?->document) Â· {{ $doc->documentVersion->document->number }} v{{ $doc->documentVersion->version }}@endif Â· {{ $doc->original_name }}</span>
+            <span><strong class="uppercase">{{ str($doc->category)->replace('_',' ') }}</strong>@if($doc->documentVersion?->document) · {{ $doc->documentVersion->document->number }} v{{ $doc->documentVersion->version }}@endif · {{ $doc->original_name }}</span>
             <span class="flex items-center gap-2 text-slate-400">
-                <span class="font-mono" title="SHA-256">{{ substr($doc->sha256, 0, 12) }}â€¦</span>
+                <span class="font-mono" title="SHA-256">{{ substr($doc->sha256, 0, 12) }}…</span>
                 <a href="{{ route('files.download', $doc) }}" class="font-bold text-slate-700 hover:underline">Unduh</a>
             </span>
         </li>
@@ -145,7 +145,7 @@
                 <span class="inline-block rounded-md px-2 py-1 text-[11px] font-bold uppercase {{ ['accepted'=>'bg-emerald-100 text-emerald-800','conditional'=>'bg-amber-100 text-amber-800','rejected'=>'bg-red-100 text-red-700'][str_replace('_review','_reviewed',$acceptance?->status ?? '')] ?? 'bg-slate-100 text-slate-700' }}">
                     {{ $acceptance?->status ? str_replace('_', ' ', $acceptance->status) : 'belum diajukan' }}
                 </span>
-                @if($acceptance?->decided_at)<span class="text-xs text-slate-400"> Â· diputuskan {{ $acceptance->decided_at->format('d/m/Y H:i') }}</span>@endif
+                @if($acceptance?->decided_at)<span class="text-xs text-slate-400"> · diputuskan {{ $acceptance->decided_at->format('d/m/Y H:i') }}</span>@endif
             </p>
             @if($acceptance?->conditions)<p class="mt-2 rounded-xl border border-amber-300 bg-amber-50 p-2 text-xs text-amber-800"><strong>Syarat kondisional:</strong> {{ $acceptance->conditions }}</p>@endif
             @if($acceptance?->rejection_reason)<p class="mt-2 rounded-xl border border-red-300 bg-red-50 p-2 text-xs text-red-800"><strong>Alasan penolakan:</strong> {{ $acceptance->rejection_reason }}</p>@endif
@@ -153,7 +153,7 @@
             <div class="mt-3 grid gap-1 sm:grid-cols-2">
                 @foreach($gates as $gate => $ok)
                 <div class="rounded-lg border px-2 py-1.5 text-xs {{ $ok ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-700' }}">
-                    {{ $ok ? 'âœ“' : 'âœ—' }} {{ str($gate)->replace('_',' ')->title() }}
+                    {{ $ok ? '✓' : '✗' }} {{ str($gate)->replace('_',' ')->title() }}
                 </div>
                 @endforeach
             </div>
@@ -195,7 +195,7 @@
     <h2 class="font-black">Soil / Bore Log</h2>
     @foreach($drillings as $drilling)
     <details class="mt-2 rounded-xl border p-3" @if($loop->first) open @endif>
-        <summary class="cursor-pointer text-sm font-bold">{{ $drilling->drilling_started_at?->format('d/m/Y H:i') ?? '-' }} â€” {{ strtoupper($drilling->status) }}{{ $drilling->verifier ? ' Â· diverifikasi '.$drilling->verifier->name : '' }}</summary>
+        <summary class="cursor-pointer text-sm font-bold">{{ $drilling->drilling_started_at?->format('d/m/Y H:i') ?? '-' }} — {{ strtoupper($drilling->status) }}{{ $drilling->verifier ? ' · diverifikasi '.$drilling->verifier->name : '' }}</summary>
         <table class="mt-2 w-full text-xs"><thead><tr><th>Dari (m)</th><th>Ke (m)</th><th>Deskripsi Tanah</th></tr></thead><tbody>
         @foreach($drilling->layers as $layer)<tr class="border-t"><td>{{ $layer->depth_from_m }}</td><td>{{ $layer->depth_to_m }}</td><td>{{ $layer->soil_description }}</td></tr>@endforeach
         </tbody></table>
@@ -211,12 +211,12 @@
     <h2 class="font-black">QR Passport</h2>
     <div class="mx-auto mt-3 w-fit max-w-full overflow-hidden rounded-xl border bg-white [&_svg]:h-48 [&_svg]:w-48">{!! $qrSvg !!}</div>
     <p class="mt-2 break-all text-center font-mono text-[10px] text-slate-400">/piles/{{ $pile->public_uuid }}</p>
-    <p class="mt-1 text-center text-xs text-slate-500">Scan di lapangan â†’ login â†’ langsung ke passport pile ini. Akses tetap ber-otorisasi.</p>
+    <p class="mt-1 text-center text-xs text-slate-500">Scan di lapangan → login → langsung ke passport pile ini. Akses tetap ber-otorisasi.</p>
     </x-ui.card>
     <x-ui.card>
     <h2 class="font-black">Linimasa Status</h2>
     <ol class="mt-2 space-y-1 text-xs">
-        @foreach($activities as $a)<li class="rounded-lg border p-2"><span class="font-mono">{{ optional($a->started_at)->format('d/m H:i') ?? '?' }}</span> {{ str($a->from_status)->replace('_',' ')->title() }} â†’ <strong>{{ str($a->to_status)->replace('_',' ')->title() }}</strong></li>
+        @foreach($activities as $a)<li class="rounded-lg border p-2"><span class="font-mono">{{ optional($a->started_at)->format('d/m H:i') ?? '?' }}</span> {{ str($a->from_status)->replace('_',' ')->title() }} → <strong>{{ str($a->to_status)->replace('_',' ')->title() }}</strong></li>
         @endforeach
         @if($activities->isEmpty())<li class="text-slate-400">Belum ada aktivitas.</li>@endif
     </ol>
