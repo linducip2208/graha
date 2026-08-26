@@ -22,15 +22,6 @@ class DocsMarkdown
 
     public static function toHtml(string $markdown): string
     {
-        // Screenshot directive: ![docs:key](key) → placeholder komponen.
-        $markdown = preg_replace_callback('/^!\[([^\]]*)\]\(([^)]+)\)$/m', function ($m) {
-            $isKey = ! str_contains($m[2], '/') && ! str_contains($m[2], '.');
-
-            return $isKey
-                ? "\n<x-docs-screenshot key=\"".e($m[2]).'" alt="'.e($m[1] ?: $m[2])."\">\n"
-                : "\n<img src=\"".e($m[2]).'" alt="'.e($m[1])."\" class=\"rounded-xl border\">\n";
-        }, $markdown);
-
         $lines = explode("\n", str_replace(["\r\n"], ["\n"], $markdown));
         $html = [];
         $inCode = false;
@@ -165,6 +156,14 @@ class DocsMarkdown
 
                 continue;
             }
+            if (preg_match('/^!\[([^\]]*)\]\(([^)]+)\)$/', trim($line), $im)) {
+                $flushPara();
+                $flushList();
+                $flushTable();
+                $html[] = self::screenshotHtml($im[1], $im[2]);
+
+                continue;
+            }
             if (str_starts_with($line, '> ')) {
                 $flushPara();
                 $flushList();
@@ -183,6 +182,37 @@ class DocsMarkdown
         }
 
         return implode("\n", $html);
+    }
+
+    /** Render directive ![alt](key) menjadi figure screenshot dari manifest. */
+    private static function screenshotHtml(string $altRaw, string $target): string
+    {
+        $isKey = ! str_contains($target, '/') && ! str_contains($target, '.');
+        if (! $isKey) {
+            return '<img src="'.e($target).'" alt="'.e($altRaw).'" class="rounded-xl border my-4">';
+        }
+        $key = str_starts_with($target, 'docs:') ? substr($target, 5) : $target;
+        $manifest = DocsScreenshotManifest::resolve($key);
+        if ($manifest === null) {
+            return '<div class="my-6 rounded-2xl border border-dashed p-6 text-center text-xs text-slate-400" role="status">'
+                .'📷 Screenshot <strong>'.e($key).'</strong> belum tersedia — jalankan <code>php artisan docs:capture --only='.e($key).'</code>.'
+                .'</div>';
+        }
+        $url = route('docs.assets', ['path' => $manifest['path']]);
+        $alt = e($altRaw !== '' && ! str_starts_with($altRaw, 'docs:') ? $altRaw : ($manifest['alt'] ?? $key));
+        $dims = '';
+        foreach (['width', 'height'] as $dim) {
+            if (! empty($manifest[$dim])) {
+                $dims .= ' '.$dim.'="'.(int) $manifest[$dim].'"';
+            }
+        }
+
+        return '<figure class="docs-shot my-6">'
+            .'<button type="button" class="block w-full cursor-zoom-in rounded-2xl border bg-white p-2 shadow-sm dark:bg-[#0f1a2e]" title="Klik untuk perbesar">'
+            .'<img src="'.e($url).'" alt="'.$alt.'" loading="lazy" decoding="async"'.$dims.' class="mx-auto max-w-full rounded-xl">'
+            .'</button>'
+            .'<figcaption class="mt-2 text-center text-xs text-slate-500">Screenshot: '.e(str_replace('-', ' ', ucwords($key, '-'))).'</figcaption>'
+            .'</figure>';
     }
 
     /** Inline: escape dulu lalu format aman. */

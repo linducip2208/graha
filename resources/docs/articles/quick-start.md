@@ -6,6 +6,8 @@ visibility: public
 keywords: mulai, panduan cepat
 ---
 
+![docs:dashboard](dashboard)
+
 ## 1. Login
 Buka alamat aplikasi → masukkan email & password → **Masuk**.
 

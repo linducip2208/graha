@@ -21,6 +21,7 @@ class DocsRegistry
         'commercial' => 'Komersial',
         'projects' => 'Proyek',
         'bored-pile' => 'Bored Pile / Foundation',
+        'foundation' => 'Panduan Bored Pile',
         'supply-chain' => 'Supply Chain',
         'equipment' => 'Workshop & Equipment',
         'finance' => 'Keuangan',
