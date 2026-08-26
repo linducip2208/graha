@@ -65,6 +65,9 @@ class DatabaseSeeder extends Seeder
     /**
      * Guard keamanan: demo dataset hanya boleh jalan otomatis di lingkungan
      * non-produksi dengan flag eksplisit. Production = TIDAK PERNAH.
+     *
+     * Flag dibaca via config (bukan env() langsung) agar deterministik saat
+     * config sudah di-cache dan mudah dites.
      */
     public function shouldSeedDemo(): bool
     {
@@ -72,7 +75,7 @@ class DatabaseSeeder extends Seeder
             return false;
         }
 
-        $flag = env('SEED_DEMO_DATA');
+        $flag = config('app.seed_demo_data');
         if ($flag !== null && $flag !== '') {
             return filter_var($flag, FILTER_VALIDATE_BOOLEAN);
         }

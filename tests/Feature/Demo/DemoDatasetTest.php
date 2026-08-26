@@ -126,12 +126,13 @@ class DemoDatasetTest extends TestCase
         $this->assertSame(0, Company::where('is_demo', true)->count()); // baseline murni, tanpa demo
 
         // Local + flag eksplisit false → juga tidak jalan.
-        config(['app.env' => 'local']);
-        $_ENV['SEED_DEMO_DATA'] = 'false';
-        putenv('SEED_DEMO_DATA=false');
+        config(['app.env' => 'local', 'app.seed_demo_data' => false]);
         $this->assertFalse($seeder->shouldSeedDemo());
-        $_ENV['SEED_DEMO_DATA'] = null;
-        putenv('SEED_DEMO_DATA');
+
+        // Flag eksplisit true → jalan.
+        config(['app.seed_demo_data' => true]);
+        $this->assertTrue($seeder->shouldSeedDemo());
+        config(['app.seed_demo_data' => null]);
     }
 
     public function test_demo_reset_command_refuses_production(): void

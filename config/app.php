@@ -31,6 +31,11 @@ return [
 
     'env' => env('APP_ENV', 'production'),
 
+    // Guard demo dataset (ADR-079): db:seed otomatis hanya menjalankan
+    // DemoDataSeeder bila environment local/demo DAN flag ini true.
+    // Production tidak pernah auto-seed apa pun nilai env-nya.
+    'seed_demo_data' => env('SEED_DEMO_DATA'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Debug Mode

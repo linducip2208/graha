@@ -130,6 +130,50 @@ class DemoFinanceSeeder extends Seeder
             $billingTwo->update(['status' => 'pending_approval']);
         }
 
+        // --- Portofolio billing lintas proyek & lintas bulan (trend pendapatan bermakna) ---
+        $workflow = ApprovalWorkflow::firstOrCreate(['company_id' => $companyId, 'name' => 'Approval Billing', 'document_type' => 'progress_billing']);
+        ApprovalStep::firstOrCreate(['approval_workflow_id' => $workflow->id, 'sequence' => 1], ['action' => 'approve', 'mode' => 'any', 'role_id' => Role::where('company_id', $companyId)->where('code', 'director')->firstOrFail()->id, 'sla_hours' => 48]);
+
+        // [proyek, number, hari lalu, progress %, gross, posted?, idempotency suffix]
+        $portfolio = [
+            ['PRJ-2601', 'PB-DEMO-003', 6, '15', '375000000', true, 'pb-demo-3'],
+            ['PRJ-2602', 'PB-KRW-001', 75, '15', '270000000', true, 'pb-krw-1'],
+            ['PRJ-2602', 'PB-KRW-002', 45, '15', '270000000', true, 'pb-krw-2'],
+            ['PRJ-2602', 'PB-KRW-003', 9, '12', '216000000', false, 'pb-krw-3'],
+            ['PRJ-2603', 'PBS-2603-001', 110, '30', '870000000', true, 'pbs-1'],
+            ['PRJ-2603', 'PBS-2603-002', 75, '30', '870000000', true, 'pbs-2'],
+            ['PRJ-2603', 'PBS-2603-003', 28, '25', '725000000', true, 'pbs-3'],
+        ];
+        foreach ($portfolio as [$projectCode, $number, $daysAgo, $progress, $gross, $posted, $suffix]) {
+            if (ProgressBilling::where('company_id', $companyId)->where('number', $number)->exists()) {
+                continue;
+            }
+            $billingProject = Project::where('company_id', $companyId)->where('code', $projectCode)->first();
+            if ($billingProject === null) {
+                continue;
+            }
+            $billing = $service->create($billingProject, [
+                'number' => $number,
+                'billing_date' => now()->subDays($daysAgo)->toDateString(),
+                'due_date' => now()->subDays($daysAgo)->addDays(30)->toDateString(),
+                'progress_percent' => $progress, 'gross_amount' => $gross,
+                'retention_percent' => '5', 'advance_recovery' => '0',
+                'tax_rate_id' => (string) $ppnOut->id, 'idempotency_key' => 'demo-billing-'.$suffix,
+            ], $finance);
+            if ($posted) {
+                ApprovalRequest::firstOrCreate(['company_id' => $companyId, 'idempotency_key' => 'demo-billing-'.$suffix.'-approval'], [
+                    'approval_workflow_id' => $workflow->id, 'approvable_type' => ProgressBilling::class, 'approvable_id' => $billing->id,
+                    'submitted_by' => $finance->id, 'status' => 'approved', 'current_sequence' => 1,
+                    'amount' => $gross, 'currency' => 'IDR', 'submitted_at' => now(), 'completed_at' => now(),
+                ]);
+                $service->activateApproved($billing, $director);
+                $service->post($billing->refresh(), $finance);
+            } else {
+                app(ApprovalEngine::class)->submit($workflow, $billing, $finance, 'demo-billing-'.$suffix.'-submit');
+                $billing->update(['status' => 'pending_approval']);
+            }
+        }
+
         foreach ([['TRF-IN-77231', now()->subDays(4), '257400000', 'Transfer masuk klien WKBM'], ['TRF-IN-77240', now()->subDays(2), '268739000', 'Transfer masuk klien WKBM'], ['TRF-99182X', now()->subDays(3), '-41625000', 'Transfer keluar vendor besi']] as [$reference, $date, $amount, $description]) {
             BankStatementLine::firstOrCreate(['bank_account_id' => $bank->id, 'reference' => $reference], [
                 'transaction_date' => $date->toDateString(), 'description' => $description, 'amount' => $amount,
