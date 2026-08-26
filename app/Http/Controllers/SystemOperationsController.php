@@ -16,14 +16,17 @@ class SystemOperationsController extends Controller
 {
     public function health(Request $request, CurrentCompany $current, SystemHealthService $health)
     {
-        $this->authorizeHigh($request, $current);
+        $this->authorizePlatform($request, 'system.view');
 
-        return view('settings.system-health', $health->checks($current->id()));
+        return view('settings.system-health', $health->checks($current->id()) + [
+            'canManageQueue' => $request->user()->hasPlatformPermission('queue.manage'),
+            'canTestMail' => $request->user()->hasPlatformPermission('mail.test'),
+        ]);
     }
 
     public function testMail(Request $request, CurrentCompany $current, AuditTrail $audit)
     {
-        $this->authorizeHigh($request, $current);
+        $this->authorizePlatform($request, 'mail.test');
         $data = $request->validate(['recipient' => ['required', 'email'], 'subject' => ['nullable', 'string', 'max:120']]);
         try {
             Mail::raw('Email uji System Health Graha. Tidak ada credential atau data bisnis pada pesan ini.', fn ($mail) => $mail->to($data['recipient'])->subject($data['subject'] ?: 'Graha System Health Test'));
@@ -41,7 +44,7 @@ class SystemOperationsController extends Controller
 
     public function failedJob(Request $request, CurrentCompany $current, string $uuid, AuditTrail $audit)
     {
-        $this->authorizeHigh($request, $current);
+        $this->authorizePlatform($request, 'queue.manage');
         $action = $request->validate(['action' => ['required', 'in:retry,delete']])['action'];
         Artisan::call($action === 'retry' ? 'queue:retry' : 'queue:forget', ['id' => $uuid]);
         $audit->record($current->id(), $request->user()->id, 'system.failed_job_'.$action, metadata: ['job_uuid' => $uuid]);
@@ -51,7 +54,7 @@ class SystemOperationsController extends Controller
 
     public function failedJobs(Request $request, CurrentCompany $current, AuditTrail $audit)
     {
-        $this->authorizeHigh($request, $current);
+        $this->authorizePlatform($request, 'queue.manage');
         $action = $request->validate(['action' => ['required', 'in:retry_all,delete_all']])['action'];
         Artisan::call($action === 'retry_all' ? 'queue:retry' : 'queue:flush', $action === 'retry_all' ? ['id' => ['all']] : []);
         $audit->record($current->id(), $request->user()->id, 'system.failed_jobs_'.$action);
@@ -61,14 +64,14 @@ class SystemOperationsController extends Controller
 
     public function backups(Request $request, CurrentCompany $current)
     {
-        $this->authorizeHigh($request, $current);
+        $this->authorizePlatform($request, 'backup.view');
 
-        return view('settings.backups', ['backups' => BackupRecord::latest()->paginate(30)]);
+        return view('settings.backups', ['backups' => BackupRecord::latest()->paginate(30), 'canManageBackup' => $request->user()->hasPlatformPermission('backup.manage')]);
     }
 
     public function createBackup(Request $request, CurrentCompany $current, BackupService $service, AuditTrail $audit)
     {
-        $this->authorizeHigh($request, $current);
+        $this->authorizePlatform($request, 'backup.manage');
         $record = $service->database($request->user()->id, 'Manual backup');
         $audit->record($current->id(), $request->user()->id, 'backup.created', $record, ['status' => $record->status, 'type' => $record->type]);
 
@@ -77,7 +80,7 @@ class SystemOperationsController extends Controller
 
     public function verifyBackup(Request $request, BackupRecord $backup, CurrentCompany $current, BackupService $service, AuditTrail $audit)
     {
-        $this->authorizeHigh($request, $current);
+        $this->authorizePlatform($request, 'backup.manage');
         $result = $service->verify($backup);
         $backup->update(['verified_at' => now(), 'verification_status' => $result['valid'] ? 'passed' : 'failed']);
         $audit->record($current->id(), $request->user()->id, 'backup.verified', $backup, ['result' => $backup->verification_status]);
@@ -85,8 +88,8 @@ class SystemOperationsController extends Controller
         return back()->with('status', $result['message']);
     }
 
-    private function authorizeHigh(Request $request, CurrentCompany $current): void
+    private function authorizePlatform(Request $request, string $permission): void
     {
-        abort_unless($request->user()->hasPermission('storage.manage', $current->id()), 403);
+        abort_unless($request->user()?->hasPlatformPermission($permission), 403);
     }
 }

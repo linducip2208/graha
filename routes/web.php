@@ -425,7 +425,7 @@ Route::post('/admin/experience/preview/stop', [ExperienceController::class, 'sto
 Route::get('/admin/experience/export', [ExperienceController::class, 'export'])->middleware(['auth', 'company']);
 Route::post('/admin/experience/import', [ExperienceController::class, 'import'])->middleware(['auth', 'company']);
 Route::get('/admin/settings', [SettingsController::class, 'index'])->middleware(['auth', 'company'])->name('settings.index');
-Route::prefix('/admin/settings/system')->middleware(['auth', 'company', 'permission:storage.manage'])->group(function () {
+Route::prefix('/admin/settings/system')->middleware(['auth', 'company'])->group(function () {
     Route::get('/health', [SystemOperationsController::class, 'health'])->name('settings.system-health');
     Route::post('/health/mail', [SystemOperationsController::class, 'testMail'])->name('system-health.mail');
     Route::post('/health/jobs/{uuid}', [SystemOperationsController::class, 'failedJob'])->name('system-health.job');

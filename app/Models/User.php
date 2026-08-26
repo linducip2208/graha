@@ -3,11 +3,13 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Services\PlatformAccessService;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -42,5 +44,15 @@ class User extends Authenticatable
     public function hasPermission(string $code, int $companyId): bool
     {
         return Role::query()->whereHas('permissions', fn ($q) => $q->where('code', $code))->whereExists(fn ($q) => $q->selectRaw('1')->from('company_user_role')->join('company_user', 'company_user.id', '=', 'company_user_role.company_user_id')->whereColumn('company_user_role.role_id', 'roles.id')->where('company_user.company_id', $companyId)->where('company_user.user_id', $this->id)->where('company_user.is_active', true))->exists();
+    }
+
+    public function platformAccessGrants(): HasMany
+    {
+        return $this->hasMany(PlatformAccessGrant::class);
+    }
+
+    public function hasPlatformPermission(string $code): bool
+    {
+        return app(PlatformAccessService::class)->allows($this, $code);
     }
 }

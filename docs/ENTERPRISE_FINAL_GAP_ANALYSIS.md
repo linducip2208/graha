@@ -4,7 +4,7 @@ Audit terhadap `main` commit `bc067e5` pada 26 Agustus 2026. Status tidak menila
 
 | Area | Status | Existing yang dipertahankan | Gap terverifikasi / tindakan |
 |---|---|---|---|
-| System Health & Observability | DONE | `SystemHealthService`, scheduler heartbeat, database/cache/queue/mail/storage/runtime/disk/backup checks, privileged queue actions, System Health di Pengaturan | Checks cepat dan tanpa bucket scan. External worker/cron tetap harus dipasang operator deployment. |
+| System Health & Observability | DONE | `SystemHealthService`, scheduler heartbeat, checks, dan platform-global grants terpisah (`system.view/manage`, `queue.manage`, `mail.test`) | `storage.manage` hanya company storage; tidak lagi membuka queue/runtime/backup. External worker/cron tetap dipasang operator deployment. |
 | Backup & Restore | PARTIAL | Metadata `BackupRecord`, gzip + SHA-256, private local output, safe `MYSQL_PWD`, retention keep-last-good, UI dan `backup:verify` | Production restore execution sengaja BLOCKED sampai automated preflight/maintenance/pre-restore/typed confirmation selesai; prosedur aman tersedia di disaster recovery guide. |
 | Approval Governance | PARTIAL | Workflow/step/request/decision, any/all/quorum, SLA due time, approved delegation, reminder command, self-approval protection | Matrix belum memiliki threshold/project/document/currency yang lengkap; delegation perlu circular/company validation dan OOO integration. |
 | Notification Preferences | PARTIAL | Database notifications, approval/operational notification, dispatcher | Belum ada preference per-user/event/channel/frequency dan digest dedupe. |
@@ -42,3 +42,10 @@ Audit terhadap `main` commit `bc067e5` pada 26 Agustus 2026. Status tidak menila
 4. MFA penuh boleh tetap PARTIAL bila dependency TOTP/QR/recovery code tidak tersedia secara bersih; tidak akan dibuat pseudo-MFA.
 5. Restore production tetap BLOCKED dari eksekusi otomatis sampai preflight, backup otomatis, typed confirmation, dan authorization teruji. Verifikasi backup boleh dirilis lebih dahulu tanpa klaim bahwa restore aman.
 6. Screenshot aktual memerlukan demo server/browser; file selalu disimpan pada disk lokal `docs`.
+
+## Scope governance
+
+- **Company-scoped:** company settings, storage profile, evidence, document, retention, dan seluruh business records. Permission company tetap dievaluasi melalui membership aktif.
+- **Platform-scoped:** database backup, global queue/failed jobs, scheduler heartbeat, runtime, mail transport test, serta infrastructure health. Akses memakai `platform_access_grants`, tidak bergantung pada company role.
+- Grant platform tidak diberikan otomatis kepada company admin. Bootstrap dilakukan eksplisit via `php artisan platform:grant user@example.com [permission]`; tanpa argument permission, command memberi bundle platform administrator.
+- `BackupRecord` sengaja global karena deployment sekarang memakai satu database instance. Jika kelak arsitektur menjadi satu database per-company, record tetap instance-local dan tidak membutuhkan `company_id` palsu.
