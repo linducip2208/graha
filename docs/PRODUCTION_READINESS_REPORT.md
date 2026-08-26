@@ -6,14 +6,17 @@ Production-gate baseline is commit `1ab35a4`; subsequent hardening must be inclu
 
 ## 2. Test results
 
-Final automated suite: 354 tests / 1,708 assertions PASS. Pint, Vite production build, Blade view cache, route discovery, docs build, controller import detector, and docs audit also PASS.
+Final automated suite: 356 tests / 1,713 assertions PASS. Pint, Vite production build, Blade view cache, route discovery, docs build, controller import detector, and docs audit also PASS.
 
 Local gate run on 27 August 2026:
 
 - `inventory:verify`: PASS, no anomaly detected.
 - `foundation:verify`: PASS, no anomaly detected.
-- `migrate --pretend`: PASS; three additive migrations are pending on the local database.
-- `production:check`: FAIL with eight blockers, including a known demo password. The local environment is not a production candidate.
+- `migrate --pretend` and MySQL migration execution: PASS; local migrations are up to date. An overlong MySQL index name found during rehearsal was corrected before release.
+- Local `backup:database` and `backup:verify`: PASS with private gzip and SHA-256 verification.
+- Scheduler event execution: PASS; heartbeat is current on the local environment.
+- `production:check`: FAIL with four blockers, including a known demo password. The local environment is not a production candidate.
+- `accounting:verify`, `inventory:verify`, and `foundation:verify`: PASS on the local dataset.
 - Production-gate feature tests: 3 tests / 7 assertions PASS.
 
 ## 3-9. Integrity summary
@@ -51,14 +54,12 @@ Supervisor/cron templates and runbooks exist. Actual worker, cron, HTTPS/DNS, ma
 
 1. Local environment is `local`, uses HTTP, and has demo seeding enabled.
 2. A local user account still uses the known demo password; production bootstrap now rejects missing/weak explicit credentials.
-3. Three migrations are pending on the audited local database.
-4. Scheduler heartbeat, fresh backup, and verified backup are absent locally.
-5. Mail test has not run and no active company storage profile is configured locally.
-6. DR staging rehearsal has not been performed.
-7. Critical UAT scenarios are not signed off.
-8. Realistic-volume performance baseline has not been performed.
-9. Target infrastructure queue/cron/HTTPS/mail configuration is not verified.
-10. Real-company opening balances and subledger reconciliation are not signed off.
+3. Mail test has not run and no active company storage profile is configured locally.
+4. DR staging rehearsal has not been performed.
+5. Critical UAT scenarios are not signed off.
+6. Realistic-volume performance baseline has not been performed.
+7. Target infrastructure queue/cron/HTTPS/mail configuration is not verified.
+8. Real-company opening balances and subledger reconciliation are not signed off.
 
 ## 15. Go-live recommendation
 

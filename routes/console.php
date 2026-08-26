@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Company;
 use App\Models\SystemHeartbeat;
 use App\Services\QmsService;
 use Illuminate\Foundation\Inspiring;

@@ -30,6 +30,12 @@ class SystemHealthBackupTest extends TestCase
         $this->assertSame('HEALTHY', $after['status']);
     }
 
+    public function test_scheduler_heartbeat_event_executes_successfully(): void
+    {
+        $this->artisan('schedule:test', ['--name' => 'system-heartbeat', '--no-interaction' => true])->assertSuccessful();
+        $this->assertDatabaseHas('system_heartbeats', ['key' => 'scheduler']);
+    }
+
     public function test_backup_verify_checks_checksum_gzip_sql_and_blocks_path_traversal(): void
     {
         Storage::fake('local');

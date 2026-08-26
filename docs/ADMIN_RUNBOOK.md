@@ -6,7 +6,7 @@
 2. Buat serta verify backup database; jangan lanjut bila verification gagal.
 3. Aktifkan maintenance, deploy code/dependency lock, jalankan migration, cache config/routes/views.
 4. Restart queue worker melalui Supervisor/systemd dan nonaktifkan maintenance.
-5. Jalankan `production:check`, `inventory:verify`, `foundation:verify`, smoke test login/project/evidence/report.
+5. Jalankan `production:check`, `accounting:verify`, `inventory:verify`, `foundation:verify`, smoke test login/project/evidence/report.
 
 ## Queue dan scheduler
 

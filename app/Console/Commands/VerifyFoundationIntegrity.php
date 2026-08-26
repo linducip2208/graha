@@ -56,6 +56,23 @@ class VerifyFoundationIntegrity extends Command
         foreach ($duplicates as $duplicate) {
             $rows[] = [$duplicate->project_id, 'DUPLICATE_PILE_NUMBER:'.$duplicate->pile_number];
         }
+        foreach (BoredPile::selectRaw('public_uuid, COUNT(*) total')->whereNotNull('public_uuid')->groupBy('public_uuid')->having('total', '>', 1)->cursor() as $duplicate) {
+            $rows[] = [$duplicate->public_uuid, 'DUPLICATE_PUBLIC_UUID'];
+        }
+        StoredFile::whereIn('category', ['as_built', 'dossier'])->whereNotNull('bored_pile_id')->with(['boredPile.project'])->chunkById(500, function ($files) use (&$rows) {
+            foreach ($files as $file) {
+                if (! $file->boredPile || (int) $file->project_id !== (int) $file->boredPile->project_id || (int) $file->company_id !== (int) $file->boredPile->project?->company_id) {
+                    $rows[] = [$file->bored_pile_id, 'PILE_DOCUMENT_SCOPE_MISMATCH'];
+                }
+            }
+        });
+        StoredFile::where('category', 'handover')->whereNotNull('project_id')->with('project')->chunkById(500, function ($files) use (&$rows) {
+            foreach ($files as $file) {
+                if (! $file->project || (int) $file->company_id !== (int) $file->project->company_id || $file->bored_pile_id !== null) {
+                    $rows[] = [$file->project_id, 'HANDOVER_SCOPE_MISMATCH'];
+                }
+            }
+        });
         $this->table(['Pile/Project ID', 'Anomaly'], $rows);
         $this->line($rows === [] ? 'PASS - tidak ada anomali foundation.' : 'FAIL - '.count($rows).' anomali ditemukan; tidak ada auto-fix.');
 

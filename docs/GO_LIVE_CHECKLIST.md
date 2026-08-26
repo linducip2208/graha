@@ -15,7 +15,7 @@
 - [ ] Import counts/balances direkonsiliasi
 - [ ] Seluruh critical scenario `UAT_SCENARIOS.md` PASS
 - [ ] DR staging rehearsal `DR_REHEARSAL.md` PASS
-- [ ] `production:check`, `inventory:verify`, `foundation:verify` PASS
+- [ ] `production:check`, `accounting:verify`, `inventory:verify`, `foundation:verify` PASS
 - [ ] System Health tidak memiliki CRITICAL
 - [ ] Release tag hanya dibuat setelah verdict PRODUCTION READY
 

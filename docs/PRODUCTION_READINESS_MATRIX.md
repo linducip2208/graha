@@ -5,10 +5,10 @@ Status: `VERIFIED` berarti dibuktikan pada code/local automated gate; `PARTIAL` 
 | Gate | Status | Evidence / remaining condition |
 |---|---|---|
 | PR-01 Zero critical blocker | BLOCKED | Open release blockers tercatat di `KNOWN_ISSUES.md`. |
-| PR-02 Database safety | PARTIAL | `migrate --pretend` sukses; no float/double migration ditemukan; realistic-data rehearsal belum dilakukan dan 3 migration lokal pending. |
+| PR-02 Database safety | PARTIAL | `migrate --pretend` dan migration MySQL lokal sukses setelah nama index diperpendek; no float/double migration ditemukan; realistic-data rehearsal belum dilakukan. |
 | PR-03 Transaction integrity | VERIFIED | 134 transaction usages; accounting, inventory, approval, document, pile, procurement flows memiliki service transaction tests. |
 | PR-04 Idempotency | PARTIAL | Unique company idempotency keys dan retry tests luas; scheduled digest/import confirmation belum tersedia penuh. |
-| PR-05 Accounting integrity | VERIFIED | Balanced journal guard, immutable posted behavior, correction flows, period lock tests PASS. |
+| PR-05 Accounting integrity | VERIFIED | Balanced journal guard, immutable posted behavior, correction flows, period lock tests, dan read-only `accounting:verify` PASS lokal. |
 | PR-06 Inventory integrity | VERIFIED | Immutable movement ledger, negative policy, lot trace, dan `inventory:verify` PASS lokal. |
 | PR-07 Foundation integrity | VERIFIED | State/gate/isolation tests dan `foundation:verify` PASS lokal. |
 | PR-08 Authorization personas | PARTIAL | Automated permission tests luas; full persona UAT target belum ditandatangani. |
@@ -17,10 +17,10 @@ Status: `VERIFIED` berarti dibuktikan pada code/local automated gate; `PARTIAL` 
 | PR-11 File security | VERIFIED | Private authorized routes, company checks, locator fallback, invalid/expired access tests exist. |
 | PR-12 Upload security | PARTIAL | Central byte/MIME/size validation exists; malformed-PDF deep parsing is not guaranteed. |
 | PR-13 Storage failure | VERIFIED | Generic S3 failures, presign fallback, temporary URL fallback, and finalize consistency tested. |
-| PR-14 Backup validation | PARTIAL | Gzip/SHA-256/verify/retention implemented; target scheduled fresh backup absent. |
+| PR-14 Backup validation | PARTIAL | Local private gzip/SHA-256 create and verify PASS; target scheduled backup/failure alert evidence remains required. |
 | PR-15 DR rehearsal | BLOCKED | `DR_REHEARSAL.md` is NOT RUN. |
 | PR-16 Queue production | BLOCKED | Supervisor template exists; target worker/restart/log evidence absent. |
-| PR-17 Scheduler production | BLOCKED | Scheduler heartbeat exists; local/target heartbeat absent. |
+| PR-17 Scheduler production | PARTIAL | Scheduler event and local heartbeat PASS; target cron and ongoing heartbeat evidence remain required. |
 | PR-18 Logging | PARTIAL | Debug gate and sanitization controls exist; target rotation/config needs operator verification. |
 | PR-19 Error handling | PARTIAL | Controlled errors exist in critical services; complete UX/manual fault injection is pending. |
 | PR-20 Monitoring | PARTIAL | System Health implemented; target mail/backup/scheduler/object profile evidence absent. |
