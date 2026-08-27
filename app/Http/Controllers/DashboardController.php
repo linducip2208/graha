@@ -22,6 +22,7 @@ use App\Models\StockBalance;
 use App\Models\Tender;
 use App\Services\ProjectHealthService;
 use App\Services\ReceivablePayableAgingService;
+use App\Support\AccessScopeService;
 use App\Support\Tenancy\CurrentCompany;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -30,7 +31,7 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request, CurrentCompany $current)
+    public function index(Request $request, CurrentCompany $current, AccessScopeService $scope)
     {
         $companyId = $current->id();
         $user = $request->user();
@@ -41,7 +42,7 @@ class DashboardController extends Controller
             $stats['Tender Aktif'] = ['value' => Tender::where('company_id', $companyId)->whereNotIn('status', ['won', 'lost', 'cancelled'])->count(), 'hint' => 'Peluang yang sedang berjalan'];
         }
         if ($can('project.view')) {
-            $projects = Project::query()->where('company_id', $companyId);
+            $projects = $scope->applyToProjectQuery(Project::query(), $user, $companyId);
             $stats['Proyek Berjalan'] = ['value' => (clone $projects)->whereIn('status', ['active', 'in_progress'])->count(), 'hint' => 'Nilai kontrak Rp '.number_format((float) (clone $projects)->whereIn('status', ['active', 'in_progress'])->sum('contract_value'), 0, ',', '.')];
         }
         if ($can('approval.view')) {
@@ -94,7 +95,7 @@ class DashboardController extends Controller
 
         $pileStatus = null;
         if ($can('project.view')) {
-            $pileStatus = BoredPile::whereHas('project', fn ($q) => $q->where('company_id', $companyId))->select('status', DB::raw('COUNT(*) as total'))->groupBy('status')->pluck('total', 'status');
+            $pileStatus = BoredPile::whereHas('project', fn ($q) => $scope->applyToProjectQuery($q, $user, $companyId))->select('status', DB::raw('COUNT(*) as total'))->groupBy('status')->pluck('total', 'status');
         }
 
         $approvals = null;
@@ -107,12 +108,12 @@ class DashboardController extends Controller
             : collect();
 
         // ===== Role-profile sections =====
-        $executive = $this->executiveCockpit($companyId, $can);
-        $projectHealth = $can('project.view') ? $this->projectHealth($companyId) : collect();
+        $executive = $this->executiveCockpit($companyId, $can, $user, $scope);
+        $projectHealth = $can('project.view') ? $this->projectHealth($companyId, $user, $scope) : collect();
         $procurementQueue = $can('procurement.view') ? [
             'rfqOpen' => Rfq::where('company_id', $companyId)->where('status', 'open')->count(),
-            'poPendingReceive' => PurchaseOrder::where('company_id', $companyId)->whereIn('status', ['approved', 'issued'])->count(),
-            'poValue' => PurchaseOrder::where('company_id', $companyId)->whereIn('status', ['approved', 'issued', 'partially_received', 'received'])->sum('total'),
+            'poPendingReceive' => $scope->applyToChildQuery(PurchaseOrder::where('company_id', $companyId), $user, $companyId)->whereIn('status', ['approved', 'issued'])->count(),
+            'poValue' => $scope->applyToChildQuery(PurchaseOrder::where('company_id', $companyId), $user, $companyId)->whereIn('status', ['approved', 'issued', 'partially_received', 'received'])->sum('total'),
         ] : null;
 
         // Dashboard Builder (ADR-063): susun ulang $stats sesuai config company
@@ -176,23 +177,25 @@ class DashboardController extends Controller
     }
 
     /** Executive cockpit: revenue MTD/YTD, cash, AR/AP, kontrak, win rate. */
-    private function executiveCockpit(int $companyId, callable $can): ?array
+    private function executiveCockpit(int $companyId, callable $can, $user, AccessScopeService $scope): ?array
     {
         if (! $can('finance.view') || ! $can('report.view')) {
             return null;
         }
-        $billing = ProgressBilling::where('company_id', $companyId)->where('status', 'posted');
+        $billing = $scope->applyToChildQuery(ProgressBilling::where('company_id', $companyId), $user, $companyId)->where('status', 'posted');
+        $projectIds = $scope->applyToProjectQuery(Project::query(), $user, $companyId)->pluck('id');
         $revenueMtd = (clone $billing)->whereBetween('billing_date', [now()->startOfMonth(), now()])->sum('gross_amount');
         $revenueYtd = (clone $billing)->whereBetween('billing_date', [now()->startOfYear(), now()])->sum('gross_amount');
         $costYtd = (float) DB::table('project_cost_ledger')->join('projects', 'projects.id', '=', 'project_cost_ledger.project_id')
             ->where('projects.company_id', $companyId)->where('project_cost_ledger.cost_type', 'actual')
+            ->whereIn('projects.id', $projectIds)
             ->whereYear('project_cost_ledger.cost_date', now()->year)->sum('project_cost_ledger.amount');
 
         return [
             'revenue_mtd' => (float) $revenueMtd,
             'revenue_ytd' => (float) $revenueYtd,
             'gp_ytd' => (float) ($revenueYtd - $costYtd),
-            'contract_active' => (float) Project::where('company_id', $companyId)->whereIn('status', ['active', 'in_progress'])->sum('contract_value'),
+            'contract_active' => (float) $scope->applyToProjectQuery(Project::query(), $user, $companyId)->whereIn('status', ['active', 'in_progress'])->sum('contract_value'),
             'win_rate' => $this->winRate($companyId),
         ];
     }
@@ -206,8 +209,12 @@ class DashboardController extends Controller
     }
 
     /** Project health: physical vs planned %, EAC variance, status hijau/kuning/merah via threshold configurable. */
-    private function projectHealth(int $companyId): Collection
+    private function projectHealth(int $companyId, $user, AccessScopeService $scope): Collection
     {
-        return app(ProjectHealthService::class)->portfolio($companyId);
+        $ids = $scope->applyToProjectQuery(Project::query(), $user, $companyId)->pluck('id');
+
+        return app(ProjectHealthService::class)->portfolio($companyId)
+            ->filter(fn (array $row) => $ids->contains($row['project']->id))
+            ->values();
     }
 }

@@ -31,6 +31,7 @@ use App\Services\FoundationGroupService;
 use App\Services\PlanningSupportService;
 use App\Services\ProjectCostingService;
 use App\Services\ProjectHealthService;
+use App\Support\AccessScopeService;
 use App\Support\Tenancy\CurrentCompany;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -39,13 +40,13 @@ use Illuminate\Validation\ValidationException;
 
 class ProjectController extends Controller
 {
-    public function index(Request $request, CurrentCompany $current)
+    public function index(Request $request, CurrentCompany $current, AccessScopeService $scope)
     {
         $companyId = $current->id();
         $view = $request->query('view'); // portfolio (default) | kanban | timeline
 
         // Saved view via query string: filter status + klien + kata kunci dapat dibagikan sebagai URL.
-        $query = Project::where('company_id', $companyId)->withCount('boredPiles')->with('customer:id,code,name')->latest();
+        $query = $scope->applyToProjectQuery(Project::query(), $request->user(), $companyId)->withCount('boredPiles')->with('customer:id,code,name')->latest();
         if ($status = $request->query('status')) {
             $query->where('status', $status);
         }
@@ -65,7 +66,7 @@ class ProjectController extends Controller
             }
         }
 
-        $allProjects = Project::where('company_id', $companyId)->withCount('boredPiles')->latest()->get();
+        $allProjects = $scope->applyToProjectQuery(Project::query(), $request->user(), $companyId)->withCount('boredPiles')->latest()->get();
         $selected = $allProjects->firstWhere('id', (int) $request->query('project')) ?? $allProjects->first();
 
         // KPI portofolio dari data riil (tanpa data rekaan).
@@ -110,9 +111,10 @@ class ProjectController extends Controller
     }
 
     /** Workspace detail proyek: satu halaman bertab menggantikan navigasi tersebar. */
-    public function show(Request $request, Project $project, CurrentCompany $current)
+    public function show(Request $request, Project $project, CurrentCompany $current, AccessScopeService $scope)
     {
         abort_unless($project->company_id === $current->id(), 404);
+        $scope->authorizeProject($request->user(), $project);
         $companyId = $current->id();
         $user = $request->user();
         $can = fn (string $permission): bool => $user->hasPermission($permission, $companyId);

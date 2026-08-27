@@ -6,7 +6,7 @@ Production-gate baseline is commit `1ab35a4`; subsequent hardening must be inclu
 
 ## 2. Test results
 
-Final automated suite: 356 tests / 1,713 assertions PASS. Pint, Vite production build, Blade view cache, route discovery, docs build, controller import detector, and docs audit also PASS.
+Final automated suite: 358 tests / 1,723 assertions PASS. Pint, Vite production build, Blade view cache, route discovery (344 routes), docs build, controller import detector, and docs audit also PASS. Selected-project data scope now has additive schema plus backend enforcement tests for project pages and permission-filtered global search.
 
 Local gate run on 27 August 2026:
 
@@ -22,6 +22,7 @@ Local gate run on 27 August 2026:
 ## 3-9. Integrity summary
 
 - Security: company and platform permission separation exists; final persona/IDOR UAT remains required.
+- Project scope: selected-project membership schema and backend filtering cover project pages, dashboard, global search, and operational report aggregates; remaining module mutation routes stay PARTIAL.
 - Database: migrations are predominantly additive with FK/unique/decimal controls; realistic existing-data migration rehearsal remains external.
 - Storage: private authorized serving, historical locator, S3-compatible runtime, fallback, checksum, retention, and tests exist.
 - Backup/DR: create/gzip/checksum/verify exists; staging restore rehearsal is NOT RUN.

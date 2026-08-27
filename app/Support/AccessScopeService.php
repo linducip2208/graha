@@ -64,7 +64,9 @@ class AccessScopeService
 
             case 'projects':
                 $ids = ProjectUserAccess::where('user_id', $user->id)
+                    ->where('company_id', $companyId)
                     ->whereIn('project_id', Project::where('company_id', $companyId)->select('id'))
+                    ->where(fn ($q) => $q->whereNull('starts_at')->orWhere('starts_at', '<=', today()))
                     ->where(fn ($q) => $q->whereNull('ends_at')->orWhere('ends_at', '>=', today()))
                     ->pluck('project_id')
                     ->all();
@@ -117,7 +119,7 @@ class AccessScopeService
             ],
             'projects' => [
                 'type' => 'projects',
-                'label' => 'Project tertentu ('.ProjectUserAccess::where('user_id', $user->id)->count().' project)',
+                'label' => 'Project tertentu ('.ProjectUserAccess::where('company_id', $companyId)->where('user_id', $user->id)->count().' project)',
             ],
             default => ['type' => 'all_company', 'label' => 'Seluruh perusahaan'],
         };
@@ -131,13 +133,15 @@ class AccessScopeService
     {
         $membership = $this->membership($user, $companyId);
 
-        if (! $membership || ($membership->data_scope ?? 'all_company') !== 'projects') {
+        if (! $membership) {
+            return [];
+        }
+        if (($membership->data_scope ?? 'all_company') === 'all_company') {
             return null;
         }
 
-        return ProjectUserAccess::where('user_id', $user->id)
-            ->whereIn('project_id', Project::where('company_id', $companyId)->select('id'))
-            ->pluck('project_id')
+        return $this->applyToProjectQuery(Project::query(), $user, $companyId)
+            ->pluck('id')
             ->all();
     }
 

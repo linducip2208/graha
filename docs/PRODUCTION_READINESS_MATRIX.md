@@ -12,8 +12,8 @@ Status: `VERIFIED` berarti dibuktikan pada code/local automated gate; `PARTIAL` 
 | PR-06 Inventory integrity | VERIFIED | Immutable movement ledger, negative policy, lot trace, dan `inventory:verify` PASS lokal. |
 | PR-07 Foundation integrity | VERIFIED | State/gate/isolation tests dan `foundation:verify` PASS lokal. |
 | PR-08 Authorization personas | PARTIAL | Automated permission tests luas; full persona UAT target belum ditandatangani. |
-| PR-09 Company isolation | PARTIAL | Storage/document/foundation/accounting tests PASS; complete route-by-route IDOR UAT remains required. |
-| PR-10 Project data scope | PARTIAL | Company isolation exists; selected-project scope coverage belum dibuktikan untuk seluruh module. |
+| PR-09 Company isolation | PARTIAL | Storage/document/foundation/accounting and selected-project search/page tests PASS; complete route-by-route IDOR UAT remains required. |
+| PR-10 Project data scope | PARTIAL | Additive membership/assignment schema and centralized backend scope now protect Project pages, Dashboard aggregates, Global Search, and operational report counts. Procurement/QMS/Equipment mutation-route coverage still requires expansion and UAT. |
 | PR-11 File security | VERIFIED | Private authorized routes, company checks, locator fallback, invalid/expired access tests exist. |
 | PR-12 Upload security | PARTIAL | Central byte/MIME/size validation exists; malformed-PDF deep parsing is not guaranteed. |
 | PR-13 Storage failure | VERIFIED | Generic S3 failures, presign fallback, temporary URL fallback, and finalize consistency tested. |

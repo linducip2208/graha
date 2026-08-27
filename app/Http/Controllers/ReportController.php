@@ -15,6 +15,7 @@ use App\Services\CashFlowStatementService;
 use App\Services\FinancialStatementService;
 use App\Services\ManufacturingWipService;
 use App\Services\ReceivablePayableAgingService;
+use App\Support\AccessScopeService;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -53,7 +54,7 @@ class ReportController extends Controller
         ]);
     }
 
-    public function operations(Request $request, CurrentCompany $current)
+    public function operations(Request $request, CurrentCompany $current, AccessScopeService $scope)
     {
         [$from, $to] = $this->range($request);
         $movements = StockMovement::where('company_id', $current->id())->whereBetween('posted_at', [$from, $to])->with('item')->latest('posted_at')->limit(500)->get();
@@ -61,10 +62,10 @@ class ReportController extends Controller
         return view('reports.index', [
             'title' => 'Laporan Operasional', 'type' => 'operations', 'from' => $from, 'to' => $to, 'rows' => $movements,
             'cards' => [
-                'Proyek' => Project::where('company_id', $current->id())->count(),
-                'Titik Bored Pile' => BoredPile::whereHas('project', fn (Builder $query) => $query->where('company_id', $current->id()))->count(),
+                'Proyek' => $scope->applyToProjectQuery(Project::query(), $request->user(), $current->id())->count(),
+                'Titik Bored Pile' => BoredPile::whereHas('project', fn (Builder $query) => $scope->applyToProjectQuery($query, $request->user(), $current->id()))->count(),
                 'Saldo Stok Aktif' => StockBalance::where('company_id', $current->id())->where('quantity', '>', 0)->count(),
-                'NCR Terbuka' => Nonconformity::where('company_id', $current->id())->where('status', '!=', 'closed')->count(),
+                'NCR Terbuka' => $scope->applyToChildQuery(Nonconformity::where('company_id', $current->id()), $request->user(), $current->id())->where('status', '!=', 'closed')->count(),
                 'Risiko Terbuka' => RiskOpportunity::where('company_id', $current->id())->where('status', 'open')->count(),
             ],
         ]);
