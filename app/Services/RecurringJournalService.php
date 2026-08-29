@@ -22,7 +22,7 @@ class RecurringJournalService
     public function create(int $companyId, array $data, User $actor): RecurringJournal
     {
         return DB::transaction(function () use ($companyId, $data, $actor) {
-            throw_unless((int) $data['day_of_month'] >= 1 && (int) $data['day_of_month'] <= 28, ValidationException::withMessages(['day_of_month' => 'Tanggal posting harus 1-28 (aman untuk semua bulan).']));
+            throw_unless((int) $data['day_of_month'] >= 1 && (int) $data['day_of_month'] <= 31, ValidationException::withMessages(['day_of_month' => 'Tanggal posting harus 1-31.']));
             $lines = $this->validateLines($companyId, $data['lines']);
             $journal = RecurringJournal::create(['company_id' => $companyId, 'name' => $data['name'], 'description' => $data['description'], 'lines' => $lines, 'day_of_month' => (int) $data['day_of_month'], 'next_run_at' => $this->firstRunDate((int) $data['day_of_month']), 'status' => 'active', 'created_by' => $actor->id]);
             $this->audit->record($companyId, $actor->id, 'finance.recurring_journal_created', $journal);
@@ -68,7 +68,7 @@ class RecurringJournalService
             $today = now()->toDateString();
             $key = 'recurring:'.$journal->id.':'.now()->format('Y-m');
             $this->accounting->post($journal->company_id, $today, 'recurring_journal', (string) $journal->id, $journal->description, $this->preparedLines($journal), $key, $actor);
-            $journal->update(['last_posted_at' => $today, 'next_run_at' => now()->addMonthNoOverflow()->setDay($journal->day_of_month)->toDateString()]);
+            $journal->update(['last_posted_at' => $today, 'next_run_at' => $this->dateForMonth(now()->addMonthNoOverflow(), (int) $journal->day_of_month)]);
             $this->audit->record($journal->company_id, $actor->id, 'finance.recurring_journal_posted', $journal);
 
             return $journal;
@@ -77,7 +77,7 @@ class RecurringJournalService
 
     private function advance(RecurringJournal $journal, bool $skipOnly = false): void
     {
-        $next = Carbon::parse($journal->next_run_at)->addMonthNoOverflow()->setDay($journal->day_of_month)->toDateString();
+        $next = $this->dateForMonth(Carbon::parse($journal->next_run_at)->addMonthNoOverflow(), (int) $journal->day_of_month);
         $journal->update(['next_run_at' => $next]);
         unset($skipOnly);
     }
@@ -86,7 +86,12 @@ class RecurringJournalService
     {
         $now = now();
 
-        return ($now->day > $day ? $now->addMonthNoOverflow() : $now)->setDay($day)->toDateString();
+        return $this->dateForMonth($now->day > $day ? $now->addMonthNoOverflow() : $now, $day);
+    }
+
+    private function dateForMonth(Carbon $month, int $day): string
+    {
+        return $month->setDay(min($day, $month->daysInMonth))->toDateString();
     }
 
     private function validateLines(int $companyId, mixed $raw): array

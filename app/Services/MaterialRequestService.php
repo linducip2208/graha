@@ -68,13 +68,13 @@ class MaterialRequestService
                 'movement_type' => 'issue',
             ])->orderByDesc('id')->value('unit_cost') ?? '0');
 
-            $returnSeq = StockMovement::where('company_id', $request->company_id)->where('item_id', $line->item_id)->where('reference_id', (string) $request->id)->where('movement_type', 'return_in')->count() + 1;
+            $returnKey = "material-return:{$request->id}:{$line->id}:".hash('sha256', $quantity);
             $this->inventory->post([
                 'company_id' => $request->company_id,
                 'item_id' => $line->item_id,
                 'warehouse_id' => $request->warehouse_id,
                 'warehouse_bin_id' => null,
-            ], 'return_in', $quantity, "material-return:{$request->id}:{$line->id}:{$returnSeq}", $actor, ['type' => 'material_return', 'id' => $request->id], $lastIssueUnitCost);
+            ], 'return_in', $quantity, $returnKey, $actor, ['type' => 'material_return', 'id' => $request->id, 'reason' => 'line:'.$line->id], $lastIssueUnitCost);
 
             $maps = AccountingMapping::where('company_id', $request->company_id)->where('event_type', 'material_issue')->get()->keyBy('entry_side');
             if ($maps->has('debit') && $maps->has('credit') && bccomp(bcmul($quantity, $lastIssueUnitCost, 2), '0', 2) === 1) {
@@ -89,7 +89,7 @@ class MaterialRequestService
                         ['account_id' => $maps['credit']->account_id, 'debit' => $reversalAmount, 'credit' => '0'],
                         ['account_id' => $maps['debit']->account_id, 'debit' => '0', 'credit' => $reversalAmount, 'project_id' => $request->project_id],
                     ],
-                    "material-return-journal:{$request->id}:{$line->id}:{$returnSeq}",
+                    "material-return-journal:{$request->id}:{$line->id}:".hash('sha256', $quantity),
                     $actor
                 );
                 $gudangEntry = $journal->entries->first(fn ($e) => (string) $e->debit === $reversalAmount);
@@ -102,7 +102,7 @@ class MaterialRequestService
                     'cost_date' => now()->toDateString(),
                 ]);
             }
-            $line->decrement('issued_quantity', $quantity);
+            $line->update(['issued_quantity' => bcsub((string) $line->issued_quantity, $quantity, 4)]);
             $this->audit->record($request->company_id, $actor->id, 'inventory.material_returned', $request);
 
             return $request->refresh();
@@ -119,9 +119,10 @@ class MaterialRequestService
             $pendingLines = $request->lines()->whereColumn('issued_quantity', '<', 'quantity')->get();
             throw_if($pendingLines->isEmpty(), ValidationException::withMessages(['issue' => 'Semua baris sudah diterbitkan.']));
             $totalCost = '0';
-            $sequence = (int) (MaterialRequest::whereKey($request->id)->max('id'));
+            $journalKey = "material-issue-journal:{$request->id}:".hash('sha256', $pendingLines->map(fn ($l) => $l->id.':'.$l->issued_quantity)->implode('|'));
             foreach ($pendingLines as $line) {
                 $quantity = $line->remaining();
+                $eventKey = "material-issue:{$request->id}:{$line->id}:".hash('sha256', (string) $line->issued_quantity);
                 $movement = $this->inventory->post([
                     'company_id' => $request->company_id,
                     'item_id' => $line->item_id,
@@ -129,9 +130,9 @@ class MaterialRequestService
                     'warehouse_bin_id' => null,
                     'project_id' => $request->project_id,
                     'bored_pile_id' => $request->bored_pile_id,
-                ], 'issue', $quantity, "material-issue:{$request->id}:{$line->id}", $actor, ['type' => 'material_request', 'id' => $request->id], '0');
+                ], 'issue', $quantity, $eventKey, $actor, ['type' => 'material_request', 'id' => $request->id, 'reason' => 'line:'.$line->id], '0');
                 $unitCost = (string) $movement->unit_cost;
-                $line->update(['issued_quantity' => $quantity]);
+                $line->update(['issued_quantity' => bcadd((string) $line->issued_quantity, $quantity, 4)]);
                 $totalCost = bcadd($totalCost, bcmul($quantity, bccomp($unitCost, '0', 4) === 1 ? $unitCost : '0', 2), 2);
             }
             if (bccomp($totalCost, '0', 2) === 1) {
@@ -147,7 +148,7 @@ class MaterialRequestService
                         ['account_id' => $maps['debit']->account_id, 'debit' => $totalCost, 'credit' => '0', 'project_id' => $request->project_id],
                         ['account_id' => $maps['credit']->account_id, 'debit' => '0', 'credit' => $totalCost],
                     ],
-                    "material-issue-journal:{$request->id}",
+                    $journalKey,
                     $actor
                 );
             }

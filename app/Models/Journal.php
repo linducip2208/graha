@@ -14,6 +14,20 @@ class Journal extends Model
         return ['journal_date' => 'date', 'posted_at' => 'datetime'];
     }
 
+    protected static function booted(): void
+    {
+        static::updating(function (self $journal): void {
+            if ($journal->getOriginal('status') === 'posted') {
+                throw new \LogicException('Posted journal immutable.');
+            }
+        });
+        static::deleting(function (self $journal): void {
+            if ($journal->status === 'posted') {
+                throw new \LogicException('Posted journal immutable.');
+            }
+        });
+    }
+
     public function entries(): HasMany
     {
         return $this->hasMany(JournalEntry::class);

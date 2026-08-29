@@ -16,6 +16,7 @@ use App\Services\FieldOpsService;
 use App\Services\PourCurveService;
 use App\Services\SlurryControlService;
 use App\Services\TremieLogService;
+use App\Support\AccessScopeService;
 use App\Support\Tenancy\CurrentCompany;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -24,10 +25,10 @@ use Illuminate\Validation\ValidationException;
 
 class FieldOpsController extends Controller
 {
-    public function index(Request $request, CurrentCompany $current)
+    public function index(Request $request, CurrentCompany $current, AccessScopeService $scope)
     {
         $companyId = $current->id();
-        $projects = Project::where('company_id', $companyId)->whereIn('status', ['active', 'in_progress'])->orderBy('code')->get();
+        $projects = $scope->applyToProjectQuery(Project::query(), $request->user(), $companyId)->whereIn('status', ['active', 'in_progress'])->orderBy('code')->get();
         $project = $projects->firstWhere('id', (int) $request->query('project')) ?? $projects->first();
         $piles = collect();
         $drillings = collect();
@@ -77,7 +78,7 @@ class FieldOpsController extends Controller
             'notes' => ['nullable', 'max:2000'],
             'layers' => ['required', 'string'],
         ]);
-        $pile = BoredPile::whereHas('project', fn ($q) => $q->where('company_id', $current->id()))->findOrFail($data['bored_pile_id']);
+        $pile = $this->findAuthorizedPile($data['bored_pile_id'], $request, $current);
         $layers = $this->parseLayers($data['layers']);
         $service->recordDrilling($pile, collect($data)->except(['bored_pile_id', 'layers'])->all(), $layers, $request->user());
 
@@ -115,7 +116,7 @@ class FieldOpsController extends Controller
             'sample_number' => ['nullable', 'max:60'],
             'idempotency_key' => ['required', 'max:120'],
         ]);
-        $pile = BoredPile::whereHas('project', fn ($q) => $q->where('company_id', $current->id()))->findOrFail($data['bored_pile_id']);
+        $pile = $this->findAuthorizedPile($data['bored_pile_id'], $request, $current);
         $data['rejected_volume_m3'] ??= '0';
         if (! empty($data['vendor_id'])) {
             abort_unless(Vendor::where('company_id', $current->id())->whereKey($data['vendor_id'])->exists(), 422);
@@ -159,7 +160,7 @@ class FieldOpsController extends Controller
             'temperature' => ['nullable', 'decimal:0,2'],
             'notes' => ['nullable', 'max:2000'],
         ]);
-        $pile = BoredPile::whereHas('project', fn ($q) => $q->where('company_id', $current->id()))->findOrFail($data['bored_pile_id']);
+        $pile = $this->findAuthorizedPile($data['bored_pile_id'], $request, $current);
         unset($data['bored_pile_id']);
         $test = $service->record($pile, $data, $request->user());
         $violations = count($service->violations($test));
@@ -189,7 +190,7 @@ class FieldOpsController extends Controller
             'concrete_level_m' => ['nullable', 'decimal:0,2', 'min:0'],
             'notes' => ['nullable', 'max:2000'],
         ]);
-        $pile = BoredPile::whereHas('project', fn ($q) => $q->where('company_id', $current->id()))->findOrFail($data['bored_pile_id']);
+        $pile = $this->findAuthorizedPile($data['bored_pile_id'], $request, $current);
         unset($data['bored_pile_id']);
         $log = $service->record($pile, $data, $request->user());
         $message = match ($log->flag) {
@@ -211,7 +212,7 @@ class FieldOpsController extends Controller
             'concrete_delivery_id' => ['nullable', 'integer'],
             'notes' => ['nullable', 'max:1000'],
         ]);
-        $pile = BoredPile::whereHas('project', fn ($q) => $q->where('company_id', $current->id()))->findOrFail($data['bored_pile_id']);
+        $pile = $this->findAuthorizedPile($data['bored_pile_id'], $request, $current);
         unset($data['bored_pile_id']);
         $service->recordInterval($pile, $data, $request->user());
 
@@ -225,7 +226,7 @@ class FieldOpsController extends Controller
             'source' => ['required', Rule::in(PileGeometryReading::SOURCES)],
             'csv' => ['required', 'string', 'max:200000'],
         ]);
-        $pile = BoredPile::whereHas('project', fn ($q) => $q->where('company_id', $current->id()))->findOrFail($data['bored_pile_id']);
+        $pile = $this->findAuthorizedPile($data['bored_pile_id'], $request, $current);
         try {
             $count = $service->importGeometryCsv($pile, $data['csv'], $data['source'], $request->user());
         } catch (ValidationException $e) {
@@ -246,7 +247,7 @@ class FieldOpsController extends Controller
             'method' => ['nullable', 'max:100'],
             'acceptance_criteria' => ['nullable', 'max:200'],
         ]);
-        $pile = BoredPile::whereHas('project', fn ($q) => $q->where('company_id', $current->id()))->findOrFail($data['bored_pile_id']);
+        $pile = $this->findAuthorizedPile($data['bored_pile_id'], $request, $current);
         $service->schedulePileTest($pile, $data, $request->user());
 
         return back()->with('status', 'Jadwal pengujian dibuat.');
@@ -333,5 +334,14 @@ class FieldOpsController extends Controller
         throw_if($layers === [], ValidationException::withMessages(['layers' => 'Minimal satu lapisan tanah.']));
 
         return $layers;
+    }
+
+    private function findAuthorizedPile(int|string $pileId, Request $request, CurrentCompany $current): BoredPile
+    {
+        $pile = BoredPile::with('project')->findOrFail((int) $pileId);
+        abort_unless($pile->project?->company_id === $current->id(), 404);
+        abort_unless(app(AccessScopeService::class)->canAccessProject($request->user(), $pile->project), 404);
+
+        return $pile;
     }
 }

@@ -9,6 +9,7 @@ use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use App\Models\User;
 use App\Models\VendorInvoice;
+use App\Models\WarehouseBin;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -49,11 +50,14 @@ class PurchaseOrderService
             throw_unless(in_array($order->status, ['approved', 'issued', 'partially_received'], true), ValidationException::withMessages(['order' => 'PO belum dapat diterima.']));
             $existing = GoodsReceipt::where('company_id', $order->company_id)->where('idempotency_key', $key)->first();
             if ($existing) {
+                throw_if($existing->purchase_order_id !== $order->id || $existing->warehouse_id !== $warehouseId || $existing->number !== $number, ValidationException::withMessages(['idempotency_key' => 'Kunci penerimaan sudah dipakai untuk dokumen berbeda.']));
+
                 return $existing;
             }$receipt = GoodsReceipt::create(['company_id' => $order->company_id, 'purchase_order_id' => $order->id, 'warehouse_id' => $warehouseId, 'number' => $number, 'received_at' => now(), 'received_by' => $actor->id, 'idempotency_key' => $key]);
             foreach ($lines as $line) {
                 $item = PurchaseOrderItem::lockForUpdate()->findOrFail($line['purchase_order_item_id']);
                 throw_unless($item->purchase_order_id === $order->id, ValidationException::withMessages(['item' => 'Item bukan milik PO.']));
+                throw_unless(WarehouseBin::where('warehouse_id', $warehouseId)->whereKey($line['warehouse_bin_id'])->exists(), ValidationException::withMessages(['warehouse_bin_id' => 'Bin bukan milik gudang penerimaan.']));
                 $after = bcadd((string) $item->received_quantity, (string) $line['quantity'], 4);
                 throw_if(bccomp($after, (string) $item->quantity, 4) === 1, ValidationException::withMessages(['quantity' => 'Penerimaan melebihi PO.']));
                 $movement = $this->inventory->post(['company_id' => $order->company_id, 'item_id' => $item->item_id, 'warehouse_id' => $warehouseId, 'warehouse_bin_id' => $line['warehouse_bin_id']], 'receipt', (string) $line['quantity'], $key.':'.$item->id, $actor, ['type' => 'goods_receipt', 'id' => $receipt->id], (string) $item->unit_price);

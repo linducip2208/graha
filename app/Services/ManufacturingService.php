@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\AccountingMapping;
 use App\Models\Item;
+use App\Models\Journal;
 use App\Models\ProductionDisposition;
 use App\Models\ProductionInspection;
 use App\Models\ProductionMaterialIssue;
@@ -48,6 +49,10 @@ class ManufacturingService
     public function complete(ProductionOrder $order, string $quantity, User $actor, string $key): ProductionOrder
     {
         return DB::transaction(function () use ($order, $quantity, $actor, $key) {
+            $completionKey = 'manufacturing-completion:'.$order->id.':'.$key;
+            if ($existing = Journal::where('company_id', $order->company_id)->where('idempotency_key', $completionKey)->first()) {
+                return $order->refresh();
+            }
             $order = ProductionOrder::with('bom')->lockForUpdate()->findOrFail($order->id);
             throw_if(bccomp($quantity, '0', 4) <= 0, ValidationException::withMessages(['quantity' => 'Output harus positif.']));
             $after = bcadd((string) $order->completed_quantity, $quantity, 4);
@@ -68,7 +73,7 @@ class ManufacturingService
             $this->accounting->post($order->company_id, now()->toDateString(), 'production_completion', (string) $order->id, 'Production completion '.$order->number, [
                 ['account_id' => $maps['finished_goods_debit']->account_id, 'debit' => $completionCost, 'credit' => '0', 'project_id' => $order->project_id],
                 ['account_id' => $maps['wip_credit']->account_id, 'debit' => '0', 'credit' => $completionCost, 'project_id' => $order->project_id],
-            ], 'manufacturing-completion:'.$order->id.':'.$key, $actor);
+            ], $completionKey, $actor);
             $order->update(['completed_quantity' => $after, 'completed_cost' => bcadd((string) $order->completed_cost, $completionCost, 2), 'status' => bccomp($after, (string) $order->planned_quantity, 4) === 0 ? 'completed' : 'in_progress']);
             $this->audit->record($order->company_id, $actor->id, 'manufacturing.production_completed', $order);
 

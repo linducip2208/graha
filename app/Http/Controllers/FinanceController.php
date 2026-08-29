@@ -140,7 +140,7 @@ class FinanceController extends Controller
     {
         $data = $request->validate([
             'name' => ['required', 'max:120'], 'description' => ['required', 'max:255'],
-            'day_of_month' => ['required', 'integer', 'min:1', 'max:28'],
+            'day_of_month' => ['required', 'integer', 'min:1', 'max:31'],
             'account_id' => ['required', 'array', 'min:2'], 'account_id.*' => ['required', 'integer'],
             'debit' => ['nullable', 'array'], 'debit.*' => ['nullable', 'decimal:0,2', 'min:0'],
             'credit' => ['nullable', 'array'], 'credit.*' => ['nullable', 'decimal:0,2', 'min:0'],

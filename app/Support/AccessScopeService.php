@@ -10,6 +10,7 @@ use App\Models\ProjectUserAccess;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Centralized access scope resolution.
@@ -48,28 +49,31 @@ class AccessScopeService
             return $query->whereRaw('1 = 0');
         }
 
-        switch ($membership->data_scope ?? 'all_company') {
+        $scope = $membership->data_scope;
+        if (! in_array($scope, ['all_company', 'branch', 'department', 'projects'], true)) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        switch ($scope) {
             case 'branch':
-                if ($membership->scope_branch_id) {
-                    $query->where('branch_id', $membership->scope_branch_id);
-                }
-                break;
+                $branch = Branch::where('company_id', $companyId)->find($membership->scope_branch_id);
+
+                return $branch ? $query->where('branch_id', $branch->id) : $query->whereRaw('1 = 0');
 
             case 'department':
-                if ($membership->scope_branch_id) {
-                    $query->where('branch_id', $membership->scope_branch_id);
+                $branch = Branch::where('company_id', $companyId)->find($membership->scope_branch_id);
+                $department = Department::where('company_id', $companyId)
+                    ->where('branch_id', $membership->scope_branch_id)
+                    ->find($membership->scope_department_id);
+                if (! $branch || ! $department) {
+                    return $query->whereRaw('1 = 0');
                 }
-                // Department tidak memetakan langsung ke project; dibatasi branch + assignment eksplisit.
-                break;
+                $ids = $this->activeAssignedProjectIds($user, $companyId);
+
+                return $query->where('branch_id', $branch->id)->whereIn('id', $ids ?: [0]);
 
             case 'projects':
-                $ids = ProjectUserAccess::where('user_id', $user->id)
-                    ->where('company_id', $companyId)
-                    ->whereIn('project_id', Project::where('company_id', $companyId)->select('id'))
-                    ->where(fn ($q) => $q->whereNull('starts_at')->orWhere('starts_at', '<=', today()))
-                    ->where(fn ($q) => $q->whereNull('ends_at')->orWhere('ends_at', '>=', today()))
-                    ->pluck('project_id')
-                    ->all();
+                $ids = $this->activeAssignedProjectIds($user, $companyId);
 
                 $query->whereIn('id', $ids ?: [0]);
                 break;
@@ -107,15 +111,20 @@ class AccessScopeService
             return ['type' => 'none', 'label' => 'Bukan member perusahaan ini'];
         }
 
-        return match ($membership->data_scope ?? 'all_company') {
+        $scope = $membership->data_scope;
+        if (! in_array($scope, ['all_company', 'branch', 'department', 'projects'], true)) {
+            return ['type' => 'none', 'label' => 'Scope akses belum dikonfigurasi'];
+        }
+
+        return match ($scope) {
             'branch' => [
                 'type' => 'branch',
-                'label' => 'Branch: '.(Branch::find($membership->scope_branch_id)?->name ?? '-'),
+                'label' => 'Branch: '.(Branch::where('company_id', $companyId)->find($membership->scope_branch_id)?->name ?? '-'),
             ],
             'department' => [
                 'type' => 'department',
-                'label' => 'Department: '.(Department::find($membership->scope_department_id)?->name ?? '-')
-                    .' @ '.(Branch::find($membership->scope_branch_id)?->name ?? '-'),
+                'label' => 'Department: '.(Department::where('company_id', $companyId)->find($membership->scope_department_id)?->name ?? '-')
+                    .' @ '.(Branch::where('company_id', $companyId)->find($membership->scope_branch_id)?->name ?? '-'),
             ],
             'projects' => [
                 'type' => 'projects',
@@ -136,7 +145,7 @@ class AccessScopeService
         if (! $membership) {
             return [];
         }
-        if (($membership->data_scope ?? 'all_company') === 'all_company') {
+        if ($membership->data_scope === 'all_company') {
             return null;
         }
 
@@ -152,6 +161,31 @@ class AccessScopeService
     {
         $ids = $this->accessibleProjectIds($user, $companyId);
 
-        return $ids === null ? $query : $query->whereIn('project_id', $ids ?: [0]);
+        if ($ids === null) {
+            return $query;
+        }
+
+        $model = $query->getModel();
+        $table = $model->getTable();
+
+        // Purchase orders inherit project scope through their purchase request.
+        // Never assume every child resource has a physical project_id column.
+        if ($table === 'purchase_orders' && method_exists($model, 'purchaseRequest')) {
+            return $query->whereHas('purchaseRequest', fn (Builder $request) => $request->whereIn('project_id', $ids ?: [0]));
+        }
+
+        return Schema::hasColumn($table, 'project_id')
+            ? $query->whereIn($table.'.project_id', $ids ?: [0])
+            : $query->whereRaw('1 = 0');
+    }
+
+    private function activeAssignedProjectIds(User $user, int $companyId): array
+    {
+        return ProjectUserAccess::where('user_id', $user->id)
+            ->where('company_id', $companyId)
+            ->whereIn('project_id', Project::where('company_id', $companyId)->select('id'))
+            ->where(fn ($q) => $q->whereNull('starts_at')->orWhere('starts_at', '<=', today()))
+            ->where(fn ($q) => $q->whereNull('ends_at')->orWhere('ends_at', '>=', today()))
+            ->pluck('project_id')->all();
     }
 }

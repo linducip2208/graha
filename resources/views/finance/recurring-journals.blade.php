@@ -20,11 +20,11 @@
 </div>
 
 @if(auth()->user()->hasPermission('finance.manage', app(\App\Support\Tenancy\CurrentCompany::class)->id()))
-<x-ui.drawer id="recurring-drawer" title="Buat Template Jurnal Berulang" description="Baris harus seimbang (total debit = kredit). Tanggal 1-28 agar aman semua bulan.">
+<x-ui.drawer id="recurring-drawer" title="Buat Template Jurnal Berulang" description="Baris harus seimbang (total debit = kredit). Tanggal 29-31 otomatis jatuh ke hari terakhir pada bulan yang lebih pendek.">
 <form method="post" action="/admin/recurring-journals" class="grid gap-4">@csrf
 <x-ui.field label="Nama template" name="name" required><input name="name" required placeholder="mis. Sewa Kantor Bulanan" class="w-full rounded-xl border border-[var(--border-default)] px-3.5"></x-ui.field>
 <x-ui.field label="Deskripsi jurnal" name="description" required><input name="description" required placeholder="muncul sebagai deskripsi jurnal" class="w-full rounded-xl border border-[var(--border-default)] px-3.5"></x-ui.field>
-<x-ui.field label="Tanggal posting tiap bulan" name="day_of_month"><input type="number" min="1" max="28" name="day_of_month" value="1" required class="w-full rounded-xl border border-[var(--border-default)] px-3.5"></x-ui.field>
+<x-ui.field label="Tanggal posting tiap bulan" name="day_of_month"><input type="number" min="1" max="31" name="day_of_month" value="1" required class="w-full rounded-xl border border-[var(--border-default)] px-3.5"></x-ui.field>
 <div id="rj-lines" class="grid gap-2">
 <div class="grid grid-cols-[1fr_100px_100px_120px] gap-2 rj-row"><select name="account_id[]" class="rounded-xl border p-2 text-sm"><option value="">Pilih akun</option>@foreach($accounts as $a)<option value="{{ $a->id }}">{{ $a->code }} — {{ $a->name }}</option>@endforeach</select><input type="number" step=".01" min="0" name="debit[]" placeholder="Debit" class="rounded-xl border p-2 text-sm"><input type="number" step=".01" min="0" name="credit[]" placeholder="Kredit" class="rounded-xl border p-2 text-sm"><select name="project_id_row[]" class="rounded-xl border p-2 text-sm"><option value="">Tanpa proyek</option>@foreach($projects as $project)<option value="{{ $project->id }}">{{ $project->code }}</option>@endforeach</select></div>
 </div>

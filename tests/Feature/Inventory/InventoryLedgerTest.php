@@ -4,12 +4,15 @@ namespace Tests\Feature\Inventory;
 
 use App\Models\Company;
 use App\Models\Item;
+use App\Models\StockBalance;
 use App\Models\StockMovement;
 use App\Models\Unit;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Models\WarehouseBin;
 use App\Services\InventoryService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
@@ -57,5 +60,48 @@ class InventoryLedgerTest extends TestCase
         $this->assertSame('2.0000', $in->quantity);
         $this->expectException(\LogicException::class);
         StockMovement::first()->update(['quantity' => '999']);
+    }
+
+    public function test_same_key_with_changed_payload_is_rejected_and_null_bin_dimension_is_unique(): void
+    {
+        [$c, $item, $w1, , $b1, , $user] = $this->base();
+        $service = app(InventoryService::class);
+        $dimension = ['company_id' => $c->id, 'item_id' => $item->id, 'warehouse_id' => $w1->id, 'warehouse_bin_id' => $b1->id];
+        $service->post($dimension, 'receipt', '10', 'same-key', $user, ['type' => 'gr', 'id' => '1'], '100');
+
+        $this->expectException(ValidationException::class);
+        $service->post($dimension, 'receipt', '11', 'same-key', $user, ['type' => 'gr', 'id' => '1'], '100');
+    }
+
+    public function test_nullable_bin_still_has_one_logical_balance(): void
+    {
+        [$c, $item, $w1] = $this->base();
+        StockBalance::create(['company_id' => $c->id, 'item_id' => $item->id, 'warehouse_id' => $w1->id, 'warehouse_bin_id' => null, 'lot_number' => '', 'quantity' => '2']);
+        $this->expectException(QueryException::class);
+        StockBalance::create(['company_id' => $c->id, 'item_id' => $item->id, 'warehouse_id' => $w1->id, 'warehouse_bin_id' => null, 'lot_number' => '', 'quantity' => '3']);
+    }
+
+    public function test_wrong_warehouse_bin_is_rejected_by_inventory_service(): void
+    {
+        [$c, $item, $w1, $w2, $b1, $b2, $user] = $this->base();
+        $this->expectException(ModelNotFoundException::class);
+        app(InventoryService::class)->post([
+            'company_id' => $c->id, 'item_id' => $item->id, 'warehouse_id' => $w1->id, 'warehouse_bin_id' => $b2->id,
+        ], 'receipt', '1', 'wrong-bin', $user, ['type' => 'gr', 'id' => '1']);
+    }
+
+    public function test_fifo_cost_layers_consume_oldest_receipt_first(): void
+    {
+        [$c, $item, $w1, , $b1, , $user] = $this->base();
+        $service = app(InventoryService::class);
+        $d = ['company_id' => $c->id, 'item_id' => $item->id, 'warehouse_id' => $w1->id, 'warehouse_bin_id' => $b1->id];
+        $service->post($d, 'receipt', '10', 'fifo-r1', $user, ['type' => 'gr', 'id' => '1'], '100');
+        $service->post($d, 'receipt', '10', 'fifo-r2', $user, ['type' => 'gr', 'id' => '2'], '200');
+        $issue = $service->post($d, 'issue', '5', 'fifo-i1', $user, ['type' => 'issue', 'id' => '1']);
+        $this->assertSame('100.0000', $issue->unit_cost);
+        $issue = $service->post($d, 'issue', '10', 'fifo-i2', $user, ['type' => 'issue', 'id' => '2']);
+        $this->assertSame('150.0000', $issue->unit_cost);
+        $this->assertDatabaseHas('inventory_cost_allocations', ['stock_movement_id' => $issue->id, 'quantity' => '5.0000', 'unit_cost' => '100.0000']);
+        $this->assertDatabaseHas('inventory_cost_allocations', ['stock_movement_id' => $issue->id, 'quantity' => '5.0000', 'unit_cost' => '200.0000']);
     }
 }

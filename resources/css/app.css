@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @custom-variant dark (&:where(.dark, .dark *));
+.bored-pile-scene{position:relative;overflow:hidden;border:1px solid rgba(125,211,252,.18);border-radius:1rem;background:linear-gradient(180deg,#0f2742 0 44%,#172033 44%);min-height:220px}.bored-pile-grid{position:absolute;inset:0;opacity:.14;background-image:linear-gradient(rgba(125,211,252,.6) 1px,transparent 1px),linear-gradient(90deg,rgba(125,211,252,.6) 1px,transparent 1px);background-size:28px 28px;animation:bpGrid 12s linear infinite}.bored-pile-svg{position:relative;display:block;width:100%;height:auto;max-height:300px}.bored-pile-depth{position:absolute;right:.7rem;top:1rem;bottom:2.3rem;display:flex;flex-direction:column;justify-content:space-between;align-items:center;font:600 .62rem/1 ui-monospace,monospace;color:#bae6fd}.bored-pile-depth i{position:relative;display:block;width:2px;flex:1;margin:.4rem 0;background:linear-gradient(#38bdf8 0 60%,#f59e0b 60%);box-shadow:0 0 10px #38bdf8}.bored-pile-depth b{position:absolute;left:50%;top:18%;width:8px;height:8px;border:2px solid #f8fafc;border-radius:50%;background:#38bdf8;transform:translate(-50%,-50%);animation:bpDepth 4.5s ease-in-out infinite}.bored-pile-labels{position:relative;display:flex;justify-content:center;gap:.45rem;padding:.55rem .75rem;border-top:1px solid rgba(255,255,255,.1);font:700 .58rem/1 ui-monospace,monospace;letter-spacing:.08em;color:#7dd3fc}.bored-pile-labels span{padding:.3rem .4rem;border-radius:.3rem;background:rgba(14,116,144,.22)}.bp-rig{animation:bpRig 1.1s ease-in-out infinite;transform-box:fill-box;transform-origin:center bottom}.bp-drill{animation:bpDrill 2.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center top}.bp-bit{animation:bpBit 2.2s ease-in-out infinite;transform-box:fill-box;transform-origin:center top}.bp-pour{animation:bpPour 1.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center top}.bp-concrete{animation:bpFill 4.5s ease-in-out infinite}.bp-cage{animation:bpCage 4.5s ease-in-out infinite;transform-box:fill-box;transform-origin:center top}.bp-soil-line{animation:bpSurvey 2.8s linear infinite}@keyframes bpGrid{to{background-position:28px 28px}}@keyframes bpRig{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(2px) rotate(.35deg)}}@keyframes bpDrill{0%,100%{transform:translateY(0)}50%{transform:translateY(35px)}}@keyframes bpBit{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(35px) rotate(180deg)}}@keyframes bpPour{0%,100%{opacity:.15;transform:translateY(-8px) scale(.8)}50%{opacity:1;transform:translateY(18px) scale(1.2)}}@keyframes bpFill{0%,20%{clip-path:inset(100% 0 0)}70%,100%{clip-path:inset(0 0 0)}}@keyframes bpCage{0%,25%{transform:translateY(-35px);opacity:.5}65%,100%{transform:translateY(0);opacity:1}}@keyframes bpDepth{0%,15%{top:18%}70%,100%{top:82%}}@keyframes bpSurvey{50%{stroke-dashoffset:28}}@media(max-width:640px){.bored-pile-scene{min-height:170px}.bored-pile-labels{font-size:.48rem;gap:.2rem}.bored-pile-depth{font-size:.5rem}.bored-pile-svg{max-height:220px}}@media(prefers-reduced-motion:reduce){.bored-pile-grid,.bp-rig,.bp-drill,.bp-bit,.bp-pour,.bp-concrete,.bp-cage,.bp-soil-line,.bored-pile-depth b{animation:none}.bp-concrete{clip-path:inset(0 0 0)}.bp-cage{transform:none;opacity:1}.bored-pile-depth b{top:82%}}
 
 /* ===== Dark mode — surface overrides untuk utility umum dipakai views ===== */
 .dark body{background:#0b1220;color:#e2e8f0}
@@ -42,6 +43,21 @@ table th,table td{padding:.8rem 1rem;text-align:left;border-bottom:1px solid #e2
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+
+@media (prefers-reduced-motion: reduce) {
+  .bored-pile-svg animateTransform { display: none; }
+}
+
+.bored-pile-canvas-scene{position:relative;overflow:hidden;min-height:220px;border:1px solid rgba(125,211,252,.2);border-radius:1rem;background:#071b35;box-shadow:inset 0 0 40px rgba(14,165,233,.08)}
+.bored-pile-canvas-scene canvas{display:block;width:100%;height:220px}
+.bored-pile-canvas-hud{position:absolute;inset:.75rem .8rem auto;display:flex;justify-content:space-between;pointer-events:none;color:#bae6fd;font:700 .62rem/1 ui-monospace,monospace;letter-spacing:.1em;text-shadow:0 0 10px #38bdf8}
+.bored-pile-canvas-hud span:first-child{color:#fbbf24}
+.bored-pile-canvas-caption{position:absolute;bottom:.65rem;left:.8rem;display:flex;align-items:center;gap:.4rem;color:#7dd3fc;font:700 .56rem/1 ui-monospace,monospace;letter-spacing:.12em;pointer-events:none}
+.bored-pile-motion-optin{position:absolute;right:.7rem;bottom:.55rem;min-height:30px;border:1px solid rgba(125,211,252,.55);border-radius:.45rem;background:rgba(7,27,53,.9);padding:.35rem .55rem;color:#e0f2fe;font:700 .58rem/1 ui-monospace,monospace;cursor:pointer}
+.bored-pile-canvas-caption i{width:6px;height:6px;border-radius:50%;background:#34d399;box-shadow:0 0 10px #34d399;animation:bpLive 1.2s ease-in-out infinite}
+@keyframes bpLive{50%{opacity:.3;transform:scale(.7)}}
+@media(max-width:640px){.bored-pile-canvas-scene{min-height:170px}.bored-pile-canvas-scene canvas{height:170px}.bored-pile-canvas-hud{font-size:.5rem}.bored-pile-canvas-caption{font-size:.45rem}}
+@media(prefers-reduced-motion:reduce){.bored-pile-canvas-caption i{animation:none}.bored-pile-canvas-scene canvas{content-visibility:auto}}
 
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',

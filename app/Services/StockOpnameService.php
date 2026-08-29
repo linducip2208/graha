@@ -24,8 +24,9 @@ class StockOpnameService
                 $balance = StockBalance::where('company_id', $companyId)
                     ->where('item_id', $line['item_id'])
                     ->where('warehouse_id', $data['warehouse_id'])
-                    ->when($line['warehouse_bin_id'] ?? null, fn ($q) => $q->where('warehouse_bin_id', $line['warehouse_bin_id']))
-                    ->orderByDesc('id')->first();
+                    ->when(array_key_exists('warehouse_bin_id', $line), fn ($q) => $line['warehouse_bin_id'] === null ? $q->whereNull('warehouse_bin_id') : $q->where('warehouse_bin_id', $line['warehouse_bin_id']))
+                    ->when(array_key_exists('lot_number', $line), fn ($q) => $q->where('lot_number', (string) ($line['lot_number'] ?? '')))
+                    ->first();
                 if (! $balance) {
                     throw ValidationException::withMessages(['lines' => "Saldo sistem tidak ditemukan untuk item #{$line['item_id']} di gudang tersebut. Gunakan adjustment biasa untuk item baru."]);
                 }
@@ -54,6 +55,10 @@ class StockOpnameService
             throw_unless($count->status === 'draft', ValidationException::withMessages(['status' => 'Opname sudah final.']));
             throw_if((int) $count->counted_by === (int) $actor->id, ValidationException::withMessages(['approver' => 'Penghitung tidak boleh menyetujui sendiri.']));
             foreach ($count->lines as $line) {
+                $live = StockBalance::where('company_id', $count->company_id)->where('item_id', $line->item_id)->where('warehouse_id', $count->warehouse_id)
+                    ->when($line->warehouse_bin_id === null, fn ($q) => $q->whereNull('warehouse_bin_id'), fn ($q) => $q->where('warehouse_bin_id', $line->warehouse_bin_id))
+                    ->where('lot_number', $line->lot_number ?? '')->lockForUpdate()->firstOrFail();
+                throw_if(bccomp((string) $live->quantity, (string) $line->system_quantity, 4) !== 0, ValidationException::withMessages(['status' => 'Stok berubah setelah opname dibuat. Hitung ulang sebelum menyetujui.']));
                 $variance = $line->variance();
                 if (bccomp($variance, '0', 4) === 0) {
                     continue;

@@ -18,7 +18,7 @@
 <p class="mt-6 text-xs text-sky-200/60">Multi-company · Approval berjenjang · Jurnal otomatis · Audit hash-chain</p>
 </div>
 <div class="relative">
-<div class="overflow-hidden rounded-2xl border border-white/15 shadow-2xl">
+<div class="mb-5 rounded-2xl border border-white/15 bg-slate-950/60 p-3 shadow-2xl backdrop-blur"><x-bored-pile-animation /></div><div class="overflow-hidden rounded-2xl border border-white/15 shadow-2xl">
 <img src="{{ $shot('dashboard-redesign-v2-1440') }}" alt="Tampilan dashboard Graha ERP" width="1440" height="900" class="h-auto w-full object-cover" fetchpriority="high">
 </div>
 <div class="absolute -left-4 top-8 hidden rounded-xl border border-white/15 bg-slate-900/90 p-3 shadow-xl backdrop-blur sm:block">

@@ -3,6 +3,7 @@
 <section class="relative hidden overflow-hidden bg-gradient-to-br from-sky-900 via-sky-950 to-slate-950 p-12 text-white lg:flex lg:flex-col lg:justify-between">
 <div class="pointer-events-none absolute inset-0 opacity-40" style="background-image:radial-gradient(circle at 20% 15%, rgba(14,165,233,.35), transparent 45%),radial-gradient(circle at 85% 80%, rgba(6,182,212,.25), transparent 40%);"></div>
 <span class="hero-orb hero-orb-one" aria-hidden="true"></span>
+<div class="relative mt-8 hidden max-w-xl lg:block"><x-bored-pile-animation /></div>
 <span class="absolute -bottom-24 -right-24 select-none text-[18rem] opacity-10" aria-hidden="true">🏗️</span>
 <div class="relative flex items-center gap-2">@if(!empty($experience['config']['logo_url'] ?? null))<img src="{{ $experience['config']['logo_url'] }}" alt="{{ $experience['config']['system_name'] ?? 'logo' }}" class="h-10 max-w-[180px] object-contain">@else<span class="grid h-10 w-10 place-items-center rounded-xl bg-white/10 text-lg backdrop-blur">🏗️</span><strong>{{ $experience["config"]["system_name"] ?? "Graha Pondasi ERP" }}</strong>@endif</div>
 <div class="relative">
