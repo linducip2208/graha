@@ -9,11 +9,21 @@
 <meta property="og:title" content="{{ $title ?? $site['system_name'] }}">
 <meta property="og:description" content="{{ $description ?? $site['footer_text'] }}">
 <meta property="og:type" content="website">
+<meta property="og:url" content="{{ url()->current() }}">
+<meta property="og:image" content="{{ asset('marketing/screens/dashboard-redesign-v2-1440.png') }}">
+<meta property="og:image:width" content="1440">
+<meta property="og:image:height" content="900">
+<meta property="og:image:alt" content="Tampilan dashboard {{ $site['system_name'] }}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="{{ asset('marketing/screens/dashboard-redesign-v2-1440.png') }}">
+<link rel="canonical" href="{{ url()->current() }}">
+<meta name="theme-color" content="#020617">
 <link rel="icon" href="{{ $site['logo_url'] ?? asset('favicon-default.svg') }}">
-<title>{{ $title ? $title.' — '.$site['system_name'] : $site['system_name'] }}</title>
+<title>{{ $title ? $title.' — '.$site['system_name'] : $site['system_name'].' · ERP Konstruksi Pondasi & Bored Pile' }}</title>
 @vite(['resources/css/app.css','resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-white text-slate-900 antialiased">
+<a href="#main-content" class="skip-link">Lewati ke konten utama</a>
 <header class="sticky top-0 z-40 border-b border-slate-200/80 bg-white/90 backdrop-blur">
 <nav aria-label="Navigasi publik" class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-5">
 <a href="/" class="flex min-w-0 items-center gap-2.5">
@@ -50,7 +60,7 @@
 </div>
 </nav>
 </header>
-<main>{{ $slot }}</main>
+<main id="main-content">{{ $slot }}</main>
 <footer class="border-t border-slate-200 bg-slate-50">
 <div class="mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:grid-cols-2 lg:grid-cols-4">
 <div class="sm:col-span-2">
@@ -62,7 +72,7 @@
 @if($site['support_email'])<p class="mt-3 text-sm text-slate-500">Kontak: <a href="mailto:{{ $site['support_email'] }}" class="font-semibold text-sky-700 hover:underline">{{ $site['support_email'] }}</a></p>@endif
 </div>
 <div>
-<p class="text-xs font-extrabold uppercase tracking-widest text-slate-400">Produk</p>
+<p class="text-xs font-extrabold uppercase tracking-widest text-slate-500">Produk</p>
 <ul class="mt-4 space-y-2.5 text-sm text-slate-600">
 <li><a href="/#modules" class="hover:text-sky-700">Komersial</a></li>
 <li><a href="/#foundation" class="hover:text-sky-700">Proyek & Pondasi</a></li>
@@ -71,7 +81,7 @@
 </ul>
 </div>
 <div>
-<p class="text-xs font-extrabold uppercase tracking-widest text-slate-400">Sistem</p>
+<p class="text-xs font-extrabold uppercase tracking-widest text-slate-500">Sistem</p>
 <ul class="mt-4 space-y-2.5 text-sm text-slate-600">
 <li><a href="/docs" class="hover:text-sky-700">Dokumentasi</a></li>
 <li><a href="/login" class="hover:text-sky-700">Masuk</a></li>
@@ -79,6 +89,6 @@
 </ul>
 </div>
 </div>
-<div class="border-t border-slate-200 py-5 text-center text-xs text-slate-400">© {{ date('Y') }} {{ $site['system_name'] }} · Powered by Laravel</div>
+<div class="border-t border-slate-200 py-5 text-center text-xs text-slate-500">© {{ date('Y') }} {{ $site['system_name'] }} · Powered by Laravel</div>
 </footer>
 </body></html>

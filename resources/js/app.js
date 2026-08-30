@@ -63,7 +63,7 @@ if(dashList){dashList.addEventListener('click',(e)=>{const btn=e.target.closest(
 
 // ===== Public homepage: product proof tab preview (screenshot asli) =====
 const proof=document.querySelector('[data-proof]');
-if(proof){const img=proof.querySelector('[data-proof-img]');const shots={dashboard:'dashboard-redesign-v2-1440',project:'projects-portfolio-v2-1440',finance:'finance-overview-v2-1440',foundation:'foundation-control-v2-1440'};proof.querySelectorAll('[data-proof-btn]').forEach((btn)=>{btn.addEventListener('click',()=>{proof.querySelectorAll('[data-proof-btn]').forEach((b)=>b.classList.toggle('active',b===btn));const key=btn.dataset.proofBtn;if(shots[key]&&img)img.src=window.location.origin+'/marketing/screens/'+shots[key]+'.png'})})}
+if(proof){const img=proof.querySelector('[data-proof-img]');const shots={dashboard:'dashboard-redesign-v2-1440',project:'projects-portfolio-v2-1440',finance:'finance-overview-v2-1440',foundation:'foundation-control-v2-1440'};proof.querySelectorAll('[data-proof-btn]').forEach((btn)=>{btn.addEventListener('click',()=>{proof.querySelectorAll('[data-proof-btn]').forEach((b)=>{b.classList.toggle('active',b===btn);b.setAttribute('aria-pressed',String(b===btn))});const key=btn.dataset.proofBtn;if(shots[key]&&img)img.src=window.location.origin+'/marketing/screens/'+shots[key]+'.png'})})}
 
 // ===== Drawer (create panel samping): [data-drawer-open="id"] / [data-drawer-close] =====
 // A11y: simpan opener, restore focus saat tutup, aria-expanded pada opener.
