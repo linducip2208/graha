@@ -17,7 +17,7 @@
 ][$tone] ?? 'stat-card-brand')
 @php($toneClass = $tones[$tone] ?? $tones['brand'])
 <article {{ $attributes->merge(['class' => "stat-card {$toneCard} rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)] transition duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-card-hover)] print:shadow-none"]) }}>
-@if($icon)<span class="mb-3 grid h-10 w-10 place-items-center rounded-xl {{ $toneClass }}"><x-ui.icon :name="$icon" class="h-5 w-5" /></span>@endif
+@if($icon)<span class="stat-icon mb-3 grid h-10 w-10 place-items-center rounded-xl {{ $toneClass }}"><x-ui.icon :name="$icon" class="h-5 w-5" /></span>@endif
 @if(filled($label))<p class="text-[13px] font-semibold text-[var(--text-secondary)]">{{ $label }}</p>@endif
 <p class="mt-1 font-extrabold tabular-nums tracking-tight {{ $valueClass }}">{{ $value }}</p>
 @if($delta)<p class="mt-1.5 inline-flex items-center gap-1 text-xs font-bold {{ str_starts_with($delta, '-') ? 'text-red-600' : 'text-emerald-600' }}">{{ $delta }}</p>@endif

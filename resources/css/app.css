@@ -83,8 +83,11 @@ table th,table td{padding:.8rem 1rem;text-align:left;border-bottom:1px solid #e2
 .tab-link.active{background:var(--brand-primary);color:#fff}
 
 /* KPI cards: clear color coding at a glance, with restrained tinted surfaces. */
-.stat-card{position:relative;overflow:hidden;border-top-width:3px;background-image:linear-gradient(135deg,color-mix(in srgb,var(--stat-accent) 7%,var(--surface-card)),var(--surface-card) 58%)}
-.stat-card::after{content:'';position:absolute;right:-22px;top:-30px;width:92px;height:92px;border-radius:999px;background:color-mix(in srgb,var(--stat-accent) 11%,transparent);pointer-events:none}
+.stat-card{position:relative;overflow:hidden;border-top-width:0;border-inline-start:5px solid var(--stat-accent);background-image:linear-gradient(135deg,color-mix(in srgb,var(--stat-accent) 13%,var(--surface-card)),var(--surface-card) 68%)}
+.stat-card::before{content:'';position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,var(--stat-accent),color-mix(in srgb,var(--stat-accent) 45%,white));pointer-events:none}
+.stat-card::after{content:'';position:absolute;right:-34px;bottom:-48px;width:150px;height:82px;transform:rotate(-18deg);background:linear-gradient(135deg,color-mix(in srgb,var(--stat-accent) 4%,transparent),color-mix(in srgb,var(--stat-accent) 18%,transparent));pointer-events:none}
+.stat-card .stat-icon{position:relative;z-index:1;background:linear-gradient(135deg,var(--stat-accent),color-mix(in srgb,var(--stat-accent) 62%,#0f172a))!important;color:#fff!important;box-shadow:0 8px 18px -10px var(--stat-accent)}
+.stat-card .stat-icon svg{filter:drop-shadow(0 1px 1px rgba(0,0,0,.2))}
 .stat-card-brand{--stat-accent:#0369a1;border-top-color:#0369a1}
 .stat-card-info{--stat-accent:#0284c7;border-top-color:#0284c7}
 .stat-card-success{--stat-accent:#059669;border-top-color:#059669}
@@ -92,6 +95,12 @@ table th,table td{padding:.8rem 1rem;text-align:left;border-bottom:1px solid #e2
 .stat-card-danger{--stat-accent:#dc2626;border-top-color:#dc2626}
 .stat-card-violet{--stat-accent:#7c3aed;border-top-color:#7c3aed}
 .dark .stat-card{background-image:linear-gradient(135deg,color-mix(in srgb,var(--stat-accent) 14%,var(--surface-card)),var(--surface-card) 62%)}
+
+/* Dashboard panels get a visible module edge so the page reads in color blocks. */
+.dashboard-shell > div.mt-6:not(:first-of-type) > article{border-top:3px solid var(--panel-accent,#0284c7)}
+.dashboard-shell > div.mt-6:not(:first-of-type) > article:nth-of-type(2){--panel-accent:#7c3aed}
+.dashboard-shell > div.mt-6:not(:first-of-type) > article:nth-of-type(3){--panel-accent:#d97706}
+.dashboard-shell > div.mt-6:not(:first-of-type) > article:nth-of-type(4){--panel-accent:#059669}
 
 /* ===== Semantic design tokens (Admin UI V2) ===== */
 :root{

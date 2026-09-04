@@ -14,7 +14,7 @@
     $kpiCards = $stats instanceof \Illuminate\Support\Collection ? $stats : collect($stats);
 @endphp
 <x-layouts.app title="Executive Dashboard">
-<section class="mx-auto max-w-[1500px] px-4 py-7 sm:px-6 lg:px-8">
+<section class="dashboard-shell mx-auto max-w-[1500px] px-4 py-7 sm:px-6 lg:px-8">
 
 {{-- ===== HEADER ===== --}}
 <header class="flex flex-wrap items-end justify-between gap-4">
