@@ -51,13 +51,13 @@
 {{-- ===== ROW 2: CHART UTAMA + ATTENTION ===== --}}
 <div class="mt-6 grid gap-5 lg:grid-cols-12">
 @if($revenueTrend && $revenueTrend->isNotEmpty())
-<article class="rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)] lg:col-span-8">
+<article class="dashboard-panel panel-revenue rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)] lg:col-span-8">
 <div class="flex items-center justify-between"><h2 class="text-[15px] font-extrabold tracking-tight">Performa Pendapatan</h2><a href="/admin/billing" class="text-xs font-bold text-[var(--brand-primary)]">Billing →</a></div>
 <p class="mt-0.5 text-xs text-[var(--text-muted)]">DPP billing posted vs PPN keluaran · 6 bulan terakhir</p>
 <div class="relative mt-4 h-64"><canvas id="chart-revenue"></canvas></div>
 </article>
 @elseif($executive)
-<article class="rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)] lg:col-span-8">
+<article class="dashboard-panel panel-revenue rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)] lg:col-span-8">
 <h2 class="text-[15px] font-extrabold tracking-tight">Ringkasan Eksekutif</h2>
 <div class="mt-4 grid gap-4 sm:grid-cols-3">
 <div class="rounded-xl bg-[var(--surface-muted)] p-4"><p class="text-[11px] font-bold uppercase tracking-wide text-[var(--text-muted)]">Pendapatan MTD</p><p class="mt-1 text-xl font-extrabold tabular-nums">Rp {{ number_format($executive['revenue_mtd'], 0, ',', '.') }}</p></div>
@@ -66,7 +66,7 @@
 </div>
 </article>
 @endif
-<article class="rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)] lg:col-span-4">
+<article class="dashboard-panel panel-attention rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)] lg:col-span-4">
 <h2 class="text-[15px] font-extrabold tracking-tight">Perlu Perhatian</h2>
 <div class="mt-4 space-y-2.5">
 @forelse($attention as $item)
@@ -87,7 +87,7 @@
 {{-- ===== ROW 3: PROJECT TABLE + ACTIVITY ===== --}}
 <div class="mt-6 grid gap-5 lg:grid-cols-12">
 @if($projectHealth->isNotEmpty())
-<article class="rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-[var(--shadow-xs)] lg:col-span-8">
+<article class="dashboard-panel panel-project rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-[var(--shadow-xs)] lg:col-span-8">
 <div class="flex items-center justify-between px-5 pt-4"><h2 class="text-[15px] font-extrabold tracking-tight">Kinerja Proyek</h2><a href="/admin/projects" class="text-xs font-bold text-[var(--brand-primary)]">Semua Proyek →</a></div>
 <div class="mt-3 overflow-x-auto px-2 pb-2">
 <table class="w-full text-sm"><thead><tr><th class="!bg-transparent">Proyek</th><th class="!bg-transparent text-right">Fisik</th><th class="!bg-transparent text-right">Varians</th><th class="!bg-transparent text-right">EAC</th><th class="!bg-transparent">Progres</th><th class="!bg-transparent">Status</th></tr></thead><tbody>
@@ -106,7 +106,7 @@
 </article>
 @endif
 @if($activity->isNotEmpty())
-<article class="rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)] {{ $projectHealth->isNotEmpty() ? 'lg:col-span-4' : 'lg:col-span-12' }}">
+<article class="dashboard-panel panel-activity rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)] {{ $projectHealth->isNotEmpty() ? 'lg:col-span-4' : 'lg:col-span-12' }}">
 <div class="flex items-center justify-between"><h2 class="text-[15px] font-extrabold tracking-tight">Aktivitas Terbaru</h2><a href="/admin/audit" class="text-xs font-bold text-[var(--brand-primary)]">Audit →</a></div>
 <ul class="mt-4 space-y-3.5">
 @foreach($activity as $log)
@@ -124,20 +124,20 @@
 @if($aging || ($pileStatus && $pileStatus->isNotEmpty()) || $procurementQueue)
 <div class="mt-6 grid gap-5 lg:grid-cols-3">
 @if($aging)
-<article class="rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)]">
+<article class="dashboard-panel panel-finance rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)]">
 <div class="flex items-center justify-between"><h2 class="text-[15px] font-extrabold tracking-tight">Aging AR/AP</h2><a href="/admin/reports/aging" class="text-xs font-bold text-[var(--brand-primary)]">Detail →</a></div>
 <p class="mt-0.5 text-xs text-[var(--text-muted)]">Piutang Rp {{ number_format((float) $aging['ar_total'], 0, ',', '.') }} · utang Rp {{ number_format((float) $aging['ap_total'], 0, ',', '.') }}</p>
 <div class="relative mt-3 h-44"><canvas id="chart-aging"></canvas></div>
 </article>
 @endif
 @if($pileStatus && $pileStatus->isNotEmpty())
-<article class="rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)]">
+<article class="dashboard-panel panel-foundation rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)]">
 <div class="flex items-center justify-between"><h2 class="text-[15px] font-extrabold tracking-tight">Status Bored Pile</h2><a href="/admin/projects" class="text-xs font-bold text-[var(--brand-primary)]">Proyek →</a></div>
 <div class="relative mt-3 h-44"><canvas id="chart-piles"></canvas></div>
 </article>
 @endif
 @if($procurementQueue)
-<article class="rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)]">
+<article class="dashboard-panel panel-procurement rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)]">
 <div class="flex items-center justify-between"><h2 class="text-[15px] font-extrabold tracking-tight">Procurement</h2><a href="/admin/procurement" class="text-xs font-bold text-[var(--brand-primary)]">Buka →</a></div>
 <div class="mt-4 space-y-3">
 <div class="flex items-center justify-between rounded-xl bg-[var(--surface-muted)] px-4 py-3"><span class="text-xs font-bold text-[var(--text-secondary)]">RFQ Terbuka</span><span class="text-lg font-extrabold tabular-nums">{{ $procurementQueue['rfqOpen'] }}</span></div>
@@ -147,7 +147,7 @@
 </article>
 @endif
 @if($journals->isNotEmpty())
-<article class="rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)]">
+<article class="dashboard-panel panel-accounting rounded-[var(--radius-card)] border border-[var(--border-subtle)] bg-[var(--surface-card)] p-5 shadow-[var(--shadow-xs)]">
 <div class="flex items-center justify-between"><h2 class="text-[15px] font-extrabold tracking-tight">Jurnal Terbaru</h2><a href="/admin/finance/journals" class="text-xs font-bold text-[var(--brand-primary)]">Buku Besar →</a></div>
 <table class="mt-3 w-full text-[13px]"><tbody>@foreach($journals as $journal)<tr class="border-b border-[var(--border-subtle)] last:border-0"><td class="py-2.5 font-mono text-xs">{{ $journal->number }}</td><td class="text-[var(--text-muted)]">{{ str($journal->source_type)->replace('_', ' ') }}</td><td class="text-right font-mono tabular-nums">{{ number_format((float) ($journal->entries->sum('debit') ?: 0), 0, ',', '.') }}</td></tr>@endforeach</tbody></table>
 </article>

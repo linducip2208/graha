@@ -97,10 +97,30 @@ table th,table td{padding:.8rem 1rem;text-align:left;border-bottom:1px solid #e2
 .dark .stat-card{background-image:linear-gradient(135deg,color-mix(in srgb,var(--stat-accent) 14%,var(--surface-card)),var(--surface-card) 62%)}
 
 /* Dashboard panels get a visible module edge so the page reads in color blocks. */
-.dashboard-shell > div.mt-6:not(:first-of-type) > article{border-top:3px solid var(--panel-accent,#0284c7)}
-.dashboard-shell > div.mt-6:not(:first-of-type) > article:nth-of-type(2){--panel-accent:#7c3aed}
-.dashboard-shell > div.mt-6:not(:first-of-type) > article:nth-of-type(3){--panel-accent:#d97706}
-.dashboard-shell > div.mt-6:not(:first-of-type) > article:nth-of-type(4){--panel-accent:#059669}
+.dashboard-panel{--panel-accent:#0284c7;border-top:3px solid var(--panel-accent)!important;background:linear-gradient(135deg,color-mix(in srgb,var(--panel-accent) 8%,var(--surface-card)),var(--surface-card) 72%)!important}
+.dashboard-panel.panel-revenue{--panel-accent:#0284c7}
+.dashboard-panel.panel-attention{--panel-accent:#d97706}
+.dashboard-panel.panel-project{--panel-accent:#0f766e}
+.dashboard-panel.panel-activity{--panel-accent:#7c3aed}
+.dashboard-panel.panel-finance{--panel-accent:#059669}
+.dashboard-panel.panel-foundation{--panel-accent:#0891b2}
+.dashboard-panel.panel-procurement{--panel-accent:#ea580c}
+.dashboard-panel.panel-accounting{--panel-accent:#4f46e5}
+.dark .dashboard-panel{background:linear-gradient(135deg,color-mix(in srgb,var(--panel-accent) 15%,var(--surface-card)),var(--surface-card) 74%)!important}
+
+/* Admin-wide panel treatment. Every resource page uses this shared surface,
+   so cards outside the dashboard receive the same visual energy. */
+.app-main article:not(.stat-card):not(.dashboard-panel){--panel-accent:#0284c7;position:relative;isolation:isolate;overflow:hidden;border-top:3px solid var(--panel-accent)!important;background:linear-gradient(135deg,color-mix(in srgb,var(--panel-accent) 6%,var(--surface-card)),var(--surface-card) 78%)!important}
+.app-main article:not(.stat-card):not(.dashboard-panel)::after{content:'';position:absolute;right:0;bottom:0;z-index:0;width:128px;height:84px;background:linear-gradient(135deg,color-mix(in srgb,var(--panel-accent) 8%,transparent),color-mix(in srgb,var(--panel-accent) 24%,transparent));clip-path:polygon(100% 0,100% 100%,0 100%);pointer-events:none}
+.app-main article:not(.stat-card):not(.dashboard-panel)>*{position:relative;z-index:1}
+.dashboard-panel::after{content:'';position:absolute;right:0;bottom:0;z-index:0;width:140px;height:88px;background:linear-gradient(135deg,color-mix(in srgb,var(--panel-accent) 7%,transparent),color-mix(in srgb,var(--panel-accent) 20%,transparent));clip-path:polygon(100% 0,100% 100%,0 100%);pointer-events:none}
+.dashboard-panel>*{position:relative;z-index:1}
+.app-main article.ui-card:nth-of-type(3n){--panel-accent:#7c3aed}
+.app-main article.ui-card:nth-of-type(3n+1){--panel-accent:#059669}
+.app-main article.ui-card:nth-of-type(3n+2){--panel-accent:#d97706}
+.app-main article.ui-card h2{border-bottom-color:color-mix(in srgb,var(--panel-accent) 20%,var(--border-subtle))}
+.app-main article.ui-card h2::before{content:'';display:inline-block;width:7px;height:7px;margin:0 .55rem .08rem 0;border-radius:2px;background:var(--panel-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--panel-accent) 12%,transparent)}
+.dark .app-main article:not(.stat-card):not(.dashboard-panel){background:linear-gradient(135deg,color-mix(in srgb,var(--panel-accent) 12%,var(--surface-card)),var(--surface-card) 80%)!important}
 
 /* ===== Semantic design tokens (Admin UI V2) ===== */
 :root{
