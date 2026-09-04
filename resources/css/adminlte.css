@@ -1,0 +1,39 @@
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+@import 'admin-lte/dist/css/adminlte.css';
+
+/* Graha brand layer: AdminLTE 4 remains the layout foundation, while domain
+   screens keep their existing semantic tokens and mobile-first spacing. */
+:root {
+    --bs-primary: #0f766e;
+    --bs-primary-rgb: 15, 118, 110;
+    --lte-sidebar-width: 16rem;
+}
+
+.app-sidebar .nav-link.active {
+    border-inline-start: 3px solid #2dd4bf;
+    padding-inline-start: calc(.75rem - 3px);
+}
+
+.app-header {
+    backdrop-filter: blur(12px) saturate(180%);
+}
+
+@media (max-width: 1024px) {
+    .app-main .page-container { padding: 1.25rem; }
+}
+
+@media (max-width: 640px) {
+    .app-main .page-container { padding: 1rem; }
+    .app-main .btn, .app-main button, .app-main a.btn { min-height: 40px; }
+    .app-main table { min-width: 680px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+@media print {
+    .app-sidebar, .app-header, .app-footer { display: none !important; }
+    .app-main { margin: 0 !important; }
+}

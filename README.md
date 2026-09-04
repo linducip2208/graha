@@ -1,11 +1,13 @@
 # Graha Pondasi ERP
 
+**Documentation:** [English](README.en.md) · [Bahasa Indonesia](README.md) · [العربية](README.ar.md)
+
 Sistem ERP terintegrasi untuk kontraktor pondasi (bored pile): dari tender, kontrak, pelaksanaan lapangan, manufacturing cage, procurement & inventory, sampai accounting Indonesia, QMS ISO 9001, HSE, document control, approval berjenjang, dan digital signing — dalam satu jejak data yang dapat diaudit.
 
 ## Stack
 
 - Laravel 13 · PHP 8.3 · MySQL 8.4
-- Blade + Tailwind CSS v4 (Vite)
+- Blade + AdminLTE 4.9.1 (Bootstrap 5.3, Vite, vanilla JS) · Tailwind CSS v4 untuk halaman domain yang sudah ada
 - PHPUnit · Laravel Pint
 - Modular monolith, multi-company (company isolation ketat)
 
@@ -48,6 +50,8 @@ php artisan migrate --seed     # --seed memuat data demo lengkap
 npm ci && npm run build
 php artisan serve
 ```
+
+AdminLTE 4.9.1 menjadi fondasi shell admin: sidebar responsif/off-canvas, navbar glass, Bootstrap 5.3, mode gelap, dukungan RTL, komponen accessible, dan bundling Vite. Asset sumber ada di `resources/css/adminlte.css` dan `resources/js/adminlte.js`.
 
 ### Akun Demo (password semua: `password`)
 

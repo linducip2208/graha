@@ -1,7 +1,7 @@
 @php($errors = $errors ?? new \Illuminate\Support\ViewErrorBag)
 @php($expCfg = $experience["config"] ?? [])
 <!doctype html>
-<html lang="id"><head>
+<html lang="id" dir="{{ app()->getLocale() === 'ar' ? 'rtl' : 'ltr' }}"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -11,7 +11,7 @@
 <meta property="og:type" content="website">
 <link rel="icon" href="{{ $expCfg['favicon_url'] ?? asset('favicon-default.svg') }}">
 <title>{{ ($expCfg['system_name'] ?? null) ? $expCfg['system_name'].' — '.config('app.name') : ($title ?? config('app.name')) }}</title>
-@vite(['resources/css/app.css','resources/js/app.js'])
+@vite(['resources/css/app.css','resources/css/adminlte.css','resources/js/adminlte.js'])
 <style>:root{@foreach(($experience["tokens"] ?? []) as $tk => $tv){{ $tk }}:{{ $tv }};@endforeach}}</style>
 </head>
 <body class="min-h-screen bg-[var(--surface-page)] text-[var(--text-primary)]" data-flash="{{ session('status') }}" data-flash-error="{{ $errors->any() ? $errors->first() : '' }}" data-authed="{{ auth()->check() ? '1' : '0' }}">
@@ -29,8 +29,8 @@
 @php($activeWorkspace = \App\Support\Navigation::activeGroupKey($appGroups, $path))
 @php($wsIcons = ['komersial' => 'flag', 'proyek' => 'cube', 'supply-chain' => 'archive', 'operations' => 'cog', 'keuangan' => 'banknote', 'quality-hse' => 'shield', 'documents-approval' => 'document', 'laporan' => 'chart'])
 @php($initials = collect(explode(' ', trim(auth()->user()->name)))->filter()->take(2)->map(fn ($w) => mb_strtoupper(mb_substr($w, 0, 1)))->implode(''))
-<div class="min-h-screen lg:grid lg:grid-cols-[232px_1fr] print:block">
-<aside id="admin-sidebar" class="fixed inset-y-0 left-0 z-40 flex w-[256px] -translate-x-full flex-col overflow-y-auto border-r transition-transform lg:sticky lg:top-0 lg:h-screen lg:w-auto lg:translate-x-0 print:hidden">
+<div class="app-wrapper min-h-screen lg:grid lg:grid-cols-[232px_1fr] print:block">
+<aside id="admin-sidebar" class="app-sidebar app-sidebar-dark fixed inset-y-0 left-0 z-40 flex w-[256px] -translate-x-full flex-col overflow-y-auto border-r transition-transform lg:sticky lg:top-0 lg:h-screen lg:w-auto lg:translate-x-0 print:hidden">
 <div class="flex h-14 shrink-0 items-center justify-between border-b px-4" style="border-color:var(--border-subtle)">
 <a href="/dashboard" class="flex min-w-0 items-center gap-2.5">
 @if(!empty($expCfg['logo_url']))<img src="{{ $expCfg['logo_url'] }}" alt="logo" class="h-7 max-w-[140px] object-contain">@else
@@ -63,10 +63,10 @@
 @foreach($group['items'] as $item)
 @php($selfActive = $activeItems->contains(fn ($m) => ($m['item']['href'] ?? null) === $item['href']))
 @php($childActive = ! empty($item['children']) && $activeItems->contains(fn ($m) => collect($item['children'])->contains(fn ($c) => ($c['href'] ?? null) === ($m['item']['href'] ?? null))))
-<a href="{{ $item['href'] }}" class="ws-link{{ $selfActive ? ' active' : '' }}">{{ $item['label'] }}</a>
+<a href="{{ $item['href'] }}" class="ws-link{{ $selfActive ? ' active' : '' }}"><x-ui.icon :name="$item['icon'] ?? 'grid'" class="h-4 w-4 shrink-0" />{{ $item['label'] }}</a>
 @if(! empty($item['children']) && ($selfActive || $childActive))
 @foreach($item['children'] as $child)
-<a href="{{ $child['href'] }}" class="ws-sublink{{ $activeItems->contains(fn ($m) => ($m['item']['href'] ?? null) === $child['href']) ? ' active' : '' }}">{{ $child['label'] }}</a>
+<a href="{{ $child['href'] }}" class="ws-sublink{{ $activeItems->contains(fn ($m) => ($m['item']['href'] ?? null) === $child['href']) ? ' active' : '' }}"><x-ui.icon :name="$child['icon'] ?? 'chevron-right'" class="h-3.5 w-3.5 shrink-0" />{{ $child['label'] }}</a>
 @endforeach
 @endif
 @endforeach
@@ -109,7 +109,7 @@
 </aside>
 <div id="sidebar-overlay" data-sidebar-close class="fixed inset-0 z-30 hidden bg-slate-950/50 lg:hidden"></div>
 <div class="min-w-0">
-<header class="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b bg-[var(--surface-card)]/90 px-3 backdrop-blur lg:px-6 print:hidden" style="border-color:var(--border-subtle)">
+<header class="app-header sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b bg-[var(--surface-card)]/90 px-3 backdrop-blur lg:px-6 print:hidden" style="border-color:var(--border-subtle)">
 <div class="flex min-w-0 flex-1 items-center gap-2">
 <button data-sidebar-open class="rounded-xl border p-2 hover:bg-[var(--surface-muted)] lg:hidden" aria-label="Buka menu"><x-ui.icon name="menu" class="h-5 w-5" /></button>
 <button id="global-search-trigger" class="flex h-10 w-10 items-center justify-center rounded-xl border text-[var(--text-muted)] transition hover:border-[var(--brand-primary)] hover:text-[var(--brand-primary)] md:h-9 md:w-72 md:justify-start md:gap-2 md:px-3 md:text-sm" aria-label="Cari (Ctrl+K)"><x-ui.icon name="search" class="h-4 w-4" /><span class="hidden md:inline">Cari apa saja…</span><kbd class="ml-auto hidden rounded border bg-[var(--surface-muted)] px-1.5 py-0.5 font-mono text-[10px] md:inline">Ctrl K</kbd></button>
@@ -142,7 +142,7 @@
 </header>
 <div id="breadcrumb-bar" class="flex flex-wrap items-center gap-1 border-b bg-[var(--surface-card)]/60 px-4 py-2 text-xs text-[var(--text-muted)] backdrop-blur lg:px-8 print:hidden" style="border-color:var(--border-subtle)"><a href="/dashboard" class="hover:text-[var(--brand-primary)]">Beranda</a>@isset($breadcrumbs)@foreach($breadcrumbs as $crumb)<span>›</span>@if(isset($crumb['href']) && !$loop->last)<a href="{{ $crumb['href'] }}" class="hover:text-[var(--brand-primary)]">{{ $crumb['label'] }}</a>@else<span class="font-semibold text-[var(--text-secondary)]">{{ $crumb['label'] }}</span>@endif @endforeach @endisset</div>
 <div id="search-palette" hidden class="fixed inset-0 z-50 flex items-start justify-center bg-slate-950/60 p-4 pt-24 print:hidden"><div class="w-full max-w-2xl overflow-hidden rounded-2xl border bg-[var(--surface-card)] shadow-2xl"><input id="search-input" type="search" placeholder="Cari proyek, tender, PO, billing, NCR, dokumen…" autocomplete="off" class="w-full border-b p-4 text-base outline-none"><div id="search-results" class="max-h-96 overflow-y-auto p-2 text-sm"></div><p class="border-t bg-[var(--surface-muted)] px-4 py-2 text-[11px] text-[var(--text-muted)]">Hasil dibatasi sesuai kewenangan perusahaan Anda · Esc untuk menutup</p></div></div>
-<main>{{ $slot }}</main></div>
+<main class="app-main">{{ $slot }}</main></div>
 </div>
 @else
 <header class="sticky top-0 z-20 border-b bg-[var(--surface-card)]/90 backdrop-blur"><nav class="mx-auto flex max-w-7xl justify-between px-5 py-4"><a href="/" class="flex items-center gap-2 font-black text-[var(--brand-primary)]">@if(!empty($expCfg['logo_url']))<img src="{{ $expCfg['logo_url'] }}" alt="logo" class="h-7 max-w-[150px] object-contain">@else<span class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-sky-500 to-cyan-600 text-sm">🏗️</span><span>{{ $expCfg['system_name'] ?? 'Graha Pondasi ERP' }}</span>@endif</a><div class="flex gap-4"><a href="/docs">Dokumentasi</a><a href="/login">Masuk</a></div></nav></header><main>{{ $slot }}</main>
