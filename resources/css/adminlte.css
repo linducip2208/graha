@@ -5,8 +5,10 @@
 /* Graha brand layer: AdminLTE 4 remains the layout foundation, while domain
    screens keep their existing semantic tokens and mobile-first spacing. */
 :root {
-    --bs-primary: #0f766e;
-    --bs-primary-rgb: 15, 118, 110;
+    --bs-primary: #0369a1;
+    --bs-primary-rgb: 3, 105, 161;
+    --bs-link-color: #0369a1;
+    --bs-link-hover-color: #075985;
     --lte-sidebar-width: 16rem;
 }
 
@@ -14,6 +16,32 @@
     border-inline-start: 3px solid #2dd4bf;
     padding-inline-start: calc(.75rem - 3px);
 }
+
+/* The workspace shell is intentionally colorful by module, while keeping
+   text contrast and the enterprise graphite surface consistent. */
+#workspace-nav .ws-group { --ws-accent: #0284c7; }
+#workspace-nav .ws-group:nth-of-type(2) { --ws-accent: #7c3aed; }
+#workspace-nav .ws-group:nth-of-type(3) { --ws-accent: #059669; }
+#workspace-nav .ws-group:nth-of-type(4) { --ws-accent: #d97706; }
+#workspace-nav .ws-group:nth-of-type(5) { --ws-accent: #e11d48; }
+#workspace-nav .ws-group:nth-of-type(6) { --ws-accent: #0891b2; }
+#workspace-nav .ws-group:nth-of-type(7) { --ws-accent: #4f46e5; }
+#workspace-nav .ws-group:nth-of-type(8) { --ws-accent: #c026d3; }
+#workspace-nav .ws-group:nth-of-type(9) { --ws-accent: #0f766e; }
+#workspace-nav .ws-group > .ws-row > svg:first-child { color: var(--ws-accent); }
+#workspace-nav .ws-group.ws-active > .ws-row {
+    color: var(--ws-accent);
+    background: color-mix(in srgb, var(--ws-accent) 12%, transparent);
+    box-shadow: inset 3px 0 0 var(--ws-accent);
+}
+#workspace-nav .ws-group.ws-active > .ws-row > svg:first-child { color: var(--ws-accent); }
+#workspace-nav .ws-group .ws-link.active,
+#workspace-nav .ws-group .ws-sublink.active {
+    color: var(--ws-accent);
+    background: color-mix(in srgb, var(--ws-accent) 10%, transparent);
+}
+#workspace-nav .ws-group .ws-link.active::before,
+#workspace-nav .ws-group .ws-sublink.active::before { background: var(--ws-accent); }
 
 .app-header {
     backdrop-filter: blur(12px) saturate(180%);

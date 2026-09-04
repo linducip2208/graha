@@ -76,11 +76,22 @@ table th,table td{padding:.8rem 1rem;text-align:left;border-bottom:1px solid #e2
 .dark .chip-active{background:#0c3a52;color:#7dd3fc;border-color:#0ea5e9}
 
 /* ===== Experience tokens wiring (ADR-058) ===== */
-:root{--brand-primary:#0369a1;--brand-primary-hover:#075985;--brand-secondary:#0e7490;--brand-accent:#38bdf8}
+:root{--brand-primary:#0369a1;--brand-primary-hover:#075985;--brand-secondary:#0e7490;--brand-accent:#38bdf8;--brand-gradient:linear-gradient(135deg,#0369a1 0%,#0e7490 52%,#7c3aed 100%)}
 .btn-brand{background:var(--brand-primary)!important;color:#fff!important}.btn-brand:hover{background:var(--brand-primary-hover)!important}
 .btn-danger{background:#b91c1c;color:#fff}.btn-danger:hover{background:#991b1b}
 .admin-link.active{background:color-mix(in srgb,var(--brand-primary) 12%,transparent);color:var(--brand-primary);font-weight:700}
 .tab-link.active{background:var(--brand-primary);color:#fff}
+
+/* KPI cards: clear color coding at a glance, with restrained tinted surfaces. */
+.stat-card{position:relative;overflow:hidden;border-top-width:3px;background-image:linear-gradient(135deg,color-mix(in srgb,var(--stat-accent) 7%,var(--surface-card)),var(--surface-card) 58%)}
+.stat-card::after{content:'';position:absolute;right:-22px;top:-30px;width:92px;height:92px;border-radius:999px;background:color-mix(in srgb,var(--stat-accent) 11%,transparent);pointer-events:none}
+.stat-card-brand{--stat-accent:#0369a1;border-top-color:#0369a1}
+.stat-card-info{--stat-accent:#0284c7;border-top-color:#0284c7}
+.stat-card-success{--stat-accent:#059669;border-top-color:#059669}
+.stat-card-warning{--stat-accent:#d97706;border-top-color:#d97706}
+.stat-card-danger{--stat-accent:#dc2626;border-top-color:#dc2626}
+.stat-card-violet{--stat-accent:#7c3aed;border-top-color:#7c3aed}
+.dark .stat-card{background-image:linear-gradient(135deg,color-mix(in srgb,var(--stat-accent) 14%,var(--surface-card)),var(--surface-card) 62%)}
 
 /* ===== Semantic design tokens (Admin UI V2) ===== */
 :root{
@@ -111,7 +122,7 @@ table th,table td{padding:.8rem 1rem;text-align:left;border-bottom:1px solid #e2
 #admin-sidebar{background:var(--surface-sidebar);border-color:var(--border-subtle)}
 #admin-sidebar .shell-link{display:flex;align-items:center;gap:.65rem;border-radius:var(--radius-control);padding:.55rem .7rem;font-size:.83rem;font-weight:600;color:var(--text-sidebar);transition:background .15s,color .15s}
 #admin-sidebar .shell-link:hover{background:color-mix(in srgb,var(--brand-primary) 7%,transparent);color:var(--brand-primary)}
-#admin-sidebar .shell-link.active{background:var(--surface-sidebar-active);color:var(--brand-primary);font-weight:700}
+#admin-sidebar .shell-link.active{background:linear-gradient(90deg,color-mix(in srgb,var(--brand-primary) 16%,transparent),color-mix(in srgb,var(--brand-accent) 7%,transparent));color:var(--brand-primary);font-weight:700;box-shadow:inset 3px 0 0 var(--brand-primary)}
 #admin-sidebar .shell-section{margin:1.1rem .5rem .35rem;font-size:.62rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--text-sidebar-muted)}
 .dark #admin-sidebar .shell-link{color:var(--text-sidebar,#cbd5e1)}
 .dark #admin-sidebar .shell-link:hover{color:#fff}
@@ -120,6 +131,7 @@ table th,table td{padding:.8rem 1rem;text-align:left;border-bottom:1px solid #e2
 
 /* ===== Premium table polish (fasa 2) ===== */
 table th{font-weight:700;background:var(--surface-table-header)}
+table thead tr{border-top:2px solid color-mix(in srgb,var(--brand-primary) 24%,transparent)}
 table tbody tr{transition:background-color .15s}
 table tbody tr:hover{background:color-mix(in srgb,var(--brand-primary) 4%,transparent)}
 table td{font-variant-numeric:tabular-nums}
