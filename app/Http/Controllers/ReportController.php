@@ -7,6 +7,7 @@ use App\Models\BoredPile;
 use App\Models\JournalEntry;
 use App\Models\Nonconformity;
 use App\Models\Project;
+use App\Models\ReinforcementCage;
 use App\Models\RiskOpportunity;
 use App\Models\StockBalance;
 use App\Models\StockMovement;
@@ -38,19 +39,21 @@ class ReportController extends Controller
         return view('reports.index', [
             'title' => 'Laporan Bisnis & Tender', 'type' => 'executive', 'from' => $from, 'to' => $to, 'rows' => $rows,
             'cards' => ['Tender' => (clone $tenders)->count(), 'Menang' => $won, 'Kalah' => $lost, 'Win Rate %' => $decided ? round($won / $decided * 100, 2) : 0],
+            'quickFilters' => $this->quickFilters(),
         ]);
     }
 
     public function finance(Request $request, CurrentCompany $current)
     {
         [$from, $to] = $this->range($request);
-        $entries = JournalEntry::query()->whereHas('journal', fn (Builder $query) => $query->where('company_id', $current->id())->whereBetween('journal_date', [$from->toDateString(), $to->toDateString()]))->with(['journal', 'account'])->limit(500)->get();
+        $entries = JournalEntry::query()->whereHas('journal', fn (Builder $query) => $query->where('company_id', $current->id())->where('status', 'posted')->whereBetween('journal_date', [$from->toDateString(), $to->toDateString()]))->with(['journal', 'account'])->limit(500)->get();
         $debit = $entries->reduce(fn (string $carry, JournalEntry $entry) => bcadd($carry, $entry->debit, 2), '0');
         $credit = $entries->reduce(fn (string $carry, JournalEntry $entry) => bcadd($carry, $entry->credit, 2), '0');
 
         return view('reports.index', [
             'title' => 'Laporan Keuangan', 'type' => 'finance', 'from' => $from, 'to' => $to, 'rows' => $entries,
             'cards' => ['Total Debit' => $debit, 'Total Kredit' => $credit, 'Jurnal' => $entries->pluck('journal_id')->unique()->count(), 'Akun Aktif' => Account::where('company_id', $current->id())->where('is_active', true)->count()],
+            'quickFilters' => $this->quickFilters(),
         ]);
     }
 
@@ -68,6 +71,7 @@ class ReportController extends Controller
                 'NCR Terbuka' => $scope->applyToChildQuery(Nonconformity::where('company_id', $current->id()), $request->user(), $current->id())->where('status', '!=', 'closed')->count(),
                 'Risiko Terbuka' => RiskOpportunity::where('company_id', $current->id())->where('status', 'open')->count(),
             ],
+            'quickFilters' => $this->quickFilters(),
         ]);
     }
 
@@ -75,9 +79,13 @@ class ReportController extends Controller
     {
         [$from, $to] = $this->range($request);
         $rows = $service->reconcile($current->id());
+        $cages = ReinforcementCage::where('company_id', $current->id())
+            ->with('pile.project')
+            ->orderByDesc('created_at')
+            ->get();
 
         return view('reports.manufacturing', [
-            'from' => $from, 'to' => $to, 'rows' => $rows,
+            'from' => $from, 'to' => $to, 'rows' => $rows, 'cages' => $cages,
             'totalActual' => $rows->reduce(fn (string $carry, array $row) => bcadd($carry, $row['actual_cost'], 2), '0'),
             'totalWip' => $rows->reduce(fn (string $carry, array $row) => bcadd($carry, $row['residual_wip'], 2), '0'),
             'anomalies' => $rows->where('anomaly', true)->count(),
@@ -147,10 +155,26 @@ class ReportController extends Controller
 
     private function range(Request $request): array
     {
-        $data = $request->validate(['from' => ['nullable', 'date'], 'to' => ['nullable', 'date', 'after_or_equal:from']]);
-        $from = Carbon::parse($data['from'] ?? now()->startOfMonth()->toDateString())->startOfDay();
-        $to = Carbon::parse($data['to'] ?? now()->toDateString())->endOfDay();
+        $data = $request->validate(['from' => ['nullable', 'date_format:Y-m-d'], 'to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:from'], 'all' => ['nullable', 'boolean']]);
+        $to = isset($data['to']) ? Carbon::createFromFormat('!Y-m-d', $data['to'])->endOfDay() : now()->endOfDay();
+        $from = ($data['all'] ?? false)
+            ? Carbon::create(2000, 1, 1)->startOfDay()
+            : (isset($data['from']) ? Carbon::createFromFormat('!Y-m-d', $data['from'])->startOfDay() : now()->startOfYear()->startOfDay());
 
         return [$from, $to];
+    }
+
+    private function quickFilters(): array
+    {
+        $today = now();
+
+        return [
+            ['label' => 'Hari Ini', 'from' => $today->toDateString(), 'to' => $today->toDateString()],
+            ['label' => 'Bulan Ini', 'from' => $today->copy()->startOfMonth()->toDateString(), 'to' => $today->toDateString()],
+            ['label' => 'Bulan Lalu', 'from' => $today->copy()->subMonthNoOverflow()->startOfMonth()->toDateString(), 'to' => $today->copy()->subMonthNoOverflow()->endOfMonth()->toDateString()],
+            ['label' => 'Kuartal Ini', 'from' => $today->copy()->firstOfQuarter()->toDateString(), 'to' => $today->toDateString()],
+            ['label' => 'Tahun Ini', 'from' => $today->copy()->startOfYear()->toDateString(), 'to' => $today->toDateString()],
+            ['label' => 'Semua Periode', 'all' => true],
+        ];
     }
 }
